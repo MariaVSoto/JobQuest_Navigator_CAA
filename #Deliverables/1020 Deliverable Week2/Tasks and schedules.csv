@@ -1,0 +1,86 @@
+Epic,User Story,Task,Start Date,End Date,Duration (days)
+Epic 1,User Story 1.1,Research Google Jobs API,5/24/2025,5/24/2025,1
+Epic 1,User Story 1.1,Implement API & Fetch Data,5/24/2025,5/24/2025,2
+Epic 1,User Story 1.1,Create Backend Service,5/25/2025,5/25/2025,1
+Epic 1,User Story 1.1,Write Unit Tests,5/25/2025,5/25/2025,1
+Epic 1,User Story 1.2,Design UI Mockups,5/26/2025,5/26/2025,1
+Epic 1,User Story 1.2,Implement Map Component,5/26/2025,5/27/2025,3
+Epic 1,User Story 1.2,Integrate Job Data with Pins,5/28/2025,5/28/2025,2
+Epic 1,User Story 1.2,Write UI Tests,5/29/2025,5/29/2025,2
+Epic 1,User Story 1.3,Implement Geolocation,5/30/2025,5/30/2025,1
+Epic 1,User Story 1.3,Filtering & Highlighting,5/30/2025,5/31/2025,2
+Epic 1,User Story 1.3,UI Filter Updates,5/31/2025,5/31/2025,1
+Epic 1,User Story 1.3,Testing & Bug Fixes,6/1/2025,6/1/2025,1
+Epic 1,User Story 1.4,Add Filter UI Controls,6/1/2025,6/1/2025,1
+Epic 1,User Story 1.4,Implement Sorting Logic,6/2/2025,6/2/2025,1
+Epic 1,User Story 1.4,Persist Filter Settings,6/2/2025,6/2/2025,1
+Epic 2,User Story 2.1,Design Version Control Model,6/3/2025,6/3/2025,1
+Epic 2,User Story 2.1,Backend Versioning Logic,6/3/2025,6/4/2025,3
+Epic 2,User Story 2.1,Build Version UI,6/5/2025,6/5/2025,2
+Epic 2,User Story 2.1,Unit/Integration Tests,6/6/2025,6/6/2025,2
+Epic 2,User Story 2.2,Research Jobscan API,6/7/2025,6/7/2025,1
+Epic 2,User Story 2.2,Implement Integration,6/7/2025,6/8/2025,2
+Epic 2,User Story 2.2,UI for Template Selection,6/8/2025,6/8/2025,1
+Epic 2,User Story 2.2,Testing,6/9/2025,6/9/2025,1
+Epic 2,User Story 2.3,Design Recommendation Algo,6/9/2025,6/10/2025,2
+Epic 2,User Story 2.3,Backend AI Service,6/10/2025,6/11/2025,3
+Epic 2,User Story 2.3,UI Integration,6/12/2025,6/12/2025,2
+Epic 2,User Story 2.3,Testing & Tuning,6/13/2025,6/13/2025,1
+Epic 2,User Story 2.4,Design UI Mockups,6/13/2025,6/13/2025,1
+Epic 2,User Story 2.4,Implement Recommendation UI,6/14/2025,6/14/2025,2
+Epic 2,User Story 2.4,Connect UI Backend,6/14/2025,6/14/2025,1
+Epic 2,User Story 2.4,UI Tests,6/15/2025,6/15/2025,1
+Epic 3,User Story 3.1,Develop AI Suggestion Engine,6/15/2025,6/16/2025,3
+Epic 3,User Story 3.1,Integrate with Editor,6/17/2025,6/17/2025,2
+Epic 3,User Story 3.1,Testing & Validation,6/18/2025,6/18/2025,2
+Epic 3,User Story 3.1,Documentation,6/19/2025,6/19/2025,1
+Epic 3,User Story 3.2,Design Suggestion UI,6/19/2025,6/19/2025,1
+Epic 3,User Story 3.2,Accept/Reject Functionality,6/20/2025,6/20/2025,2
+Epic 3,User Story 3.2,Sync with Versioning,6/21/2025,6/21/2025,1
+Epic 3,User Story 3.2,Testing,6/21/2025,6/21/2025,1
+Epic 3,User Story 3.3,Feedback Data Collection,6/22/2025,6/22/2025,2
+Epic 3,User Story 3.3,Retraining Pipeline,6/23/2025,6/24/2025,3
+Epic 3,User Story 3.3,Integrate Updated Model,6/24/2025,6/25/2025,2
+Epic 3,User Story 3.3,Testing & Monitoring,6/25/2025,6/25/2025,1
+Epic 4,User Story 4.1,Research Careerflow API,6/26/2025,6/26/2025,1
+Epic 4,User Story 4.1,Implement Integration,6/26/2025,6/27/2025,2
+Epic 4,User Story 4.1,UI for Skill Gaps,6/27/2025,6/27/2025,1
+Epic 4,User Story 4.1,Testing,6/28/2025,6/28/2025,1
+Epic 4,User Story 4.2,Research Indeed Data,6/28/2025,6/29/2025,2
+Epic 4,User Story 4.2,Data Fetching & Processing,6/29/2025,6/30/2025,3
+Epic 4,User Story 4.2,Integrate Skill Gap Results,7/1/2025,7/1/2025,2
+Epic 4,User Story 4.2,Testing,7/2/2025,7/2/2025,1
+Epic 4,User Story 4.3,Design Roadmap UI,7/2/2025,7/2/2025,1
+Epic 4,User Story 4.3,Implement Visualization,7/3/2025,7/4/2025,3
+Epic 4,User Story 4.3,Add Interaction Features,7/4/2025,7/4/2025,1
+Epic 4,User Story 4.3,Testing,7/5/2025,7/5/2025,1
+Epic 4,User Story 4.4,Design Alert Logic,7/5/2025,7/5/2025,1
+Epic 4,User Story 4.4,Notification System,7/6/2025,7/6/2025,2
+Epic 4,User Story 4.4,Alert Preferences UI,7/6/2025,7/6/2025,1
+Epic 4,User Story 4.4,Testing,7/7/2025,7/7/2025,1
+Epic 5,User Story 5.1,Design Data Model,7/7/2025,7/7/2025,1
+Epic 5,User Story 5.1,Backend Tracking Logic,7/8/2025,7/8/2025,2
+Epic 5,User Story 5.1,Application UI,7/9/2025,7/9/2025,1
+Epic 5,User Story 5.1,Testing,7/9/2025,7/9/2025,1
+Epic 5,User Story 5.2,Design Dashboard UI,7/10/2025,7/10/2025,1
+Epic 5,User Story 5.2,Filtering and Sorting,7/10/2025,7/11/2025,2
+Epic 5,User Story 5.2,Connect UI Backend,7/11/2025,7/11/2025,1
+Epic 5,User Story 5.2,Testing,7/12/2025,7/12/2025,1
+Epic 5,User Story 5.3,Implement Notification Triggers,7/12/2025,7/12/2025,1
+Epic 5,User Story 5.3,Build Notification System,7/13/2025,7/13/2025,1
+Epic 5,User Story 5.3,Notification UI,7/13/2025,7/13/2025,1
+Epic 6,User Story 6.1,Research LinkedIn Jobs API,7/14/2025,7/14/2025,2
+Epic 6,User Story 6.1,Fetch & Store Data,7/15/2025,7/16/2025,3
+Epic 6,User Story 6.1,UI Integration,7/16/2025,7/17/2025,2
+Epic 6,User Story 6.1,Testing,7/17/2025,7/17/2025,1
+Epic 6,User Story 6.2,Design Question Gen Model,7/18/2025,7/19/2025,3
+Epic 6,User Story 6.2,Implement AI Service,7/19/2025,7/20/2025,3
+Epic 6,User Story 6.2,Question Review UI,7/21/2025,7/21/2025,2
+Epic 6,User Story 6.3,Design Dossier UI,7/22/2025,7/22/2025,1
+Epic 6,User Story 6.3,Implement Components,7/22/2025,7/23/2025,3
+Epic 6,User Story 6.3,Add Notes Feature,7/24/2025,7/24/2025,1
+Epic 6,User Story 6.3,Testing,7/24/2025,7/24/2025,1
+Epic 6,User Story 6.4,Design Module Architecture,7/25/2025,7/25/2025,1
+Epic 6,User Story 6.4,Integrate Components,7/25/2025,7/26/2025,3
+Epic 6,User Story 6.4,Progress Tracking,7/27/2025,7/27/2025,1
+Epic 6,User Story 6.4,Testing,7/27/2025,7/27/2025,1
