@@ -7,7 +7,9 @@ from math import radians, cos, sin, asin, sqrt
 # Set your Adzuna and Google API keys
 APP_ID = os.getenv('ADZUNA_APP_ID', '3aea9429')
 APP_KEY = os.getenv('ADZUNA_APP_KEY', '47c6c2410fe3c75a1a1e7e90eb21fa95')
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', 'AIzaSyDbaKrOSvYAoAHHJjX2aoA-N70mE4BUx08')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY environment variable not set.")
 
 # Haversine formula to calculate distance between two lat/lon points (in km)
 def haversine(lat1, lon1, lat2, lon2):
