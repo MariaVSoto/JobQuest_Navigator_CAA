@@ -1,0 +1,14 @@
+# Ignore Terraform files and folders
+*.tf
+.terraform/
+
+# Ignore Obsidian files/folders
+.obsidian/
+
+# Ignore Git folder (should be ignored by default)
+.git/
+
+# (Optional) Ignore other system files
+.DS_Store
+Thumbs.db
+
