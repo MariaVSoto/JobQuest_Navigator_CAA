@@ -25,11 +25,8 @@ flowchart TD
     end
 
     subgraph External Services
-        Q[Google for Jobs API]
-        R[Jobscan API]
-        S[Careerflow API]
-        T[Indeed API]
-        U[LinkedIn API]
+        Q[Adzuna API]
+        R[Google Map API]
         V[OpenAI API]
     end
 
@@ -49,13 +46,13 @@ flowchart TD
 
     %% Microservices to External Services
     MS1 --> Q
-    MS2 --> R
+    MS1 --> R
+    MS2 -.-> S3[S3 Storage]
     MS3 --> V
-    MS4 --> S
-    MS4 --> T
+    MS4 --> MS6
     MS5 --> MS2
     MS5 --> MS6
-    MS7 --> U
+    MS7 --> V
     MS8 --> MS9
 
     %% Notification Service can be triggered by others
@@ -75,8 +72,8 @@ flowchart TD
 ---
 
 **Core Microservices:**
-- **Job Data Service**: Handles job data aggregation and search.
-- **Resume Management Service**: Manages resume versions and storage.
+- **Job Data Service**: Handles job data aggregation (only Adzuna) and geo-display (Google Map). Writes job data to MySQL.
+- **Resume Management Service**: Manages resume versions and storage, all files and history are stored in S3.
 - **AI Suggestion Service**: Provides AI-driven resume and job suggestions.
 - **Application Tracking Service**: Tracks job applications and statuses.
 - **User Profile Service**: Manages user accounts and profiles.
@@ -85,6 +82,8 @@ flowchart TD
 **Supporting Microservices:**
 - **Certification Service**: Manages certification roadmap and recommendations.
 - **Notification Service**: Sends alerts and updates to users.
-- **Interview Prep Service**: Provides company research and interview preparation tools.
+- **Interview Prep Service**: Uses OpenAI API to generate company background and job analysis (no LinkedIn integration).
 
 > Core services are essential for the platform's main value proposition and user flows. Supporting services enhance user experience and platform functionality. 
+
+> Note: Jobscan, Careerflow, Indeed, and LinkedIn APIs have been removed from the architecture as per the latest requirements. Resume management is now fully based on S3 storage. 
