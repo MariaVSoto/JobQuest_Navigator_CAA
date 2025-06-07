@@ -1,0 +1,242 @@
+openapi: 3.0.3
+info:
+  title: JobQuest Resume Suggestion API
+  version: 1.0.0
+  description: |
+    API for AI-driven resume suggestions and feedback collection.
+    Part of JobQuest Navigator Epic 3.
+
+servers:
+  - url: http://localhost:8000
+    description: Local Development
+
+tags:
+  - name: Suggestions
+    description: Resume improvement suggestions
+  - name: Feedback
+    description: User feedback collection
+  - name: Model
+    description: AI model management
+
+paths:
+  /api/suggestions/analyze:
+    post:
+      tags: [Suggestions]
+      summary: Analyze resume against job description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resumeId:
+                  type: string
+                jobId:
+                  type: string
+      responses:
+        '200':
+          description: Analysis results with suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Suggestion'
+
+  /api/suggestions/{resumeId}:
+    get:
+      tags: [Suggestions]
+      summary: Get suggestions for a specific resume
+      parameters:
+        - in: path
+          name: resumeId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Suggestion'
+
+  /api/suggestions/feedback:
+    post:
+      tags: [Feedback]
+      summary: Submit feedback on suggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                suggestionId:
+                  type: string
+                action:
+                  type: string
+                  enum: [accept, reject, modify]
+                feedbackText:
+                  type: string
+      responses:
+        '201':
+          description: Feedback recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+
+  /api/feedback/history:
+    get:
+      tags: [Feedback]
+      summary: Get feedback history
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of feedback entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feedback'
+
+  /api/model/train:
+    post:
+      tags: [Model]
+      summary: Trigger model retraining
+      responses:
+        '202':
+          description: Model training started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trainingId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [started, in_progress, completed, failed]
+
+  /api/model/performance:
+    get:
+      tags: [Model]
+      summary: Get model performance metrics
+      responses:
+        '200':
+          description: Model performance data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelPerformance'
+
+components:
+  schemas:
+    Suggestion:
+      type: object
+      properties:
+        id:
+          type: string
+        resumeId:
+          type: string
+        jobId:
+          type: string
+        suggestionType:
+          type: string
+          enum: [keyword, format, content]
+        suggestionText:
+          type: string
+        confidenceScore:
+          type: number
+          format: float
+        createdAt:
+          type: string
+          format: date-time
+
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: string
+        suggestionId:
+          type: string
+        userId:
+          type: string
+        action:
+          type: string
+          enum: [accept, reject, modify]
+        feedbackText:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ModelPerformance:
+      type: object
+      properties:
+        version:
+          type: string
+        accuracy:
+          type: number
+          format: float
+        precision:
+          type: number
+          format: float
+        recall:
+          type: number
+          format: float
+        f1Score:
+          type: number
+          format: float
+        lastUpdated:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 

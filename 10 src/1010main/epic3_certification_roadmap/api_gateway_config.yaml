@@ -1,0 +1,137 @@
+openapi: 3.0.3
+info:
+  title: JobQuest API Gateway Configuration
+  version: 1.0.0
+  description: API Gateway configuration for Epic3 Resume Suggestion services
+
+servers:
+  - url: http://localhost:8000
+    description: Local Development
+  - url: https://api.jobquest.com
+    description: Production
+
+paths:
+  /api/v1/suggestions/analyze:
+    post:
+      x-route:
+        service: resume-suggestion-service
+        path: /api/suggestions/analyze
+      security:
+        - bearerAuth: []
+
+  /api/v1/suggestions/{resumeId}:
+    get:
+      x-route:
+        service: resume-suggestion-service
+        path: /api/suggestions/{resumeId}
+      security:
+        - bearerAuth: []
+
+  /api/v1/suggestions/feedback:
+    post:
+      x-route:
+        service: feedback-service
+        path: /api/suggestions/feedback
+      security:
+        - bearerAuth: []
+
+  /api/v1/feedback/history:
+    get:
+      x-route:
+        service: feedback-service
+        path: /api/feedback/history
+      security:
+        - bearerAuth: []
+
+  /api/v1/model/train:
+    post:
+      x-route:
+        service: model-training-service
+        path: /api/model/train
+      security:
+        - bearerAuth: []
+
+  /api/v1/model/performance:
+    get:
+      x-route:
+        service: model-training-service
+        path: /api/model/performance
+      security:
+        - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+x-services:
+  resume-suggestion-service:
+    url: http://resume-suggestion-service:8080
+    health: /health
+    timeout: 10s
+    retries: 3
+    circuit-breaker:
+      threshold: 5
+      timeout: 30s
+
+  feedback-service:
+    url: http://feedback-service:8080
+    health: /health
+    timeout: 5s
+    retries: 3
+    circuit-breaker:
+      threshold: 5
+      timeout: 30s
+
+  model-training-service:
+    url: http://model-training-service:8080
+    health: /health
+    timeout: 30s
+    retries: 3
+    circuit-breaker:
+      threshold: 5
+      timeout: 60s
+
+x-middleware:
+  - name: cors
+    config:
+      allowedOrigins:
+        - https://jobquest.com
+        - https://app.jobquest.com
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+      allowedHeaders:
+        - Authorization
+        - Content-Type
+
+  - name: rate-limit
+    config:
+      rate: 100
+      burst: 200
+      period: 1m
+
+  - name: logging
+    config:
+      level: info
+      format: json
+
+  - name: metrics
+    config:
+      enabled: true
+      path: /metrics
+
+x-monitoring:
+  prometheus:
+    enabled: true
+    path: /metrics
+  tracing:
+    enabled: true
+    service: api-gateway
+    sampler:
+      type: probabilistic
+      param: 0.1 
