@@ -4,7 +4,7 @@ Here's a detailed design:
 
 ## 1. Detailed Microservices Architecture Diagram (Mermaid)
 
-This diagram expands slightly on your initial one by explicitly showing an API Gateway, which is standard practice for microservice architectures accessed by frontends. It also clarifies some external service connections based on the project analysis.
+This diagram expands on your initial one by explicitly showing an API Gateway, and clarifies external service connections based on the latest project decisions.
 
 ```mermaid
 flowchart TD
@@ -41,40 +41,28 @@ flowchart TD
 
     %% Databases
     DB1[MySQL DB]
-    DB2[MongoDB]
+    S3[S3 Storage]
 
     %% Microservices to Databases
     MS1 --> DB1
-    MS2 --> DB2
-    MS3 --> DB2
+    MS2 --> S3
+    MS3 --> DB1
     MS4 --> DB1
     MS5 --> DB1
-    MS6 --> DB2
+    MS6 --> DB1
     MS7 --> DB1
     MS8 --> DB1
     MS9 --> DB1
 
     %% External Services
-    Ext1[Google for Jobs API]
-    Ext2[Canada Job Bank API]
-    Ext3[Jobscan API]
-    Ext4[Careerflow API]
-    Ext5[Indeed API]
-    Ext6[LinkedIn API]
-    Ext7[OpenAI API]
-    Ext8[Google Maps API]
-    Ext9[Adzuna API]
+    Ext1[Adzuna API]
+    Ext2[Google Map API]
+    Ext3[OpenAI API]
 
     MS1 --> Ext1
     MS1 --> Ext2
-    MS1 --> Ext8
-    MS1 --> Ext9
-    MS2 --> Ext3
-    MS3 --> Ext7
-    MS4 --> Ext4
-    MS4 --> Ext5
-    MS7 --> Ext6
-    MS7 --> Ext7
+    MS7 --> Ext3
+    MS3 --> Ext3
 
     %% Inter-service communication
     MS2 --> MS3
@@ -93,7 +81,6 @@ flowchart TD
     MS5 -.->|auth| MS9
     MS7 -.->|auth| MS9
     MS8 -.->|auth| MS9
-
 ```
 
 ## 2. Microservice Responsibilities and API Endpoints
@@ -103,58 +90,61 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 *   **MS1: Job Data Service [Core]**
-    - **Responsibilities**: Aggregates job listings from various sources (**Adzuna API**, Google for Jobs, Canada Job Bank, **Indeed API, etc.**), stores them, provides search and filtering capabilities. **Parses and standardizes location data (e.g., city, region). Normalizes salary data (e.g., handles hourly vs. annual, currency).** Integrates with Google Maps API for geo-visualization.
+    - **Responsibilities**: Aggregates job listings from Adzuna API, stores them in MySQL, provides search and filtering capabilities. Parses and standardizes location data (e.g., city, region). Normalizes salary data. Integrates with Google Maps API for geo-visualization. Future expansion to other job APIs is possible.
     - **Primary Database**: MySQL (for structured job data)
     - **Key API Endpoints**:
       - GET /jobs: List jobs with pagination, filtering (location, keywords, etc.).
-        - Query Params: q, location, radius, page, limit, source, **salaryMin (annualized), salaryMax (annualized), employmentType, isRemote**.
       - GET /jobs/{jobId}: Get details for a specific job.
-      - POST /jobs/search: Advanced search, potentially for map view (e.g., bounds).
-        - Body: { "latitude": X, "longitude": Y, "radius": Z, "keywords": "...", ... }
+      - POST /jobs/search: Advanced search, potentially for map view.
       - GET /jobs/sources: List available job sources.
-    - **External Integrations**: **Adzuna API**, Google for Jobs API, Canada Job Bank API, **Indeed API (for job listings if applicable)**, Google Maps API.
+    - **External Integrations**: Adzuna API, Google Map API.
 
 ---
 
 **MS2: Resume Management Service [Core]**
-*   **Responsibilities**: Manages user resumes, including versioning, storage, parsing (potentially via Jobscan), and retrieval.
-*   **Primary Database**: MongoDB (for flexible resume document storage)
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
+*   **Responsibilities**: Manages user resumes, including versioning, storage（all files and history in S3），and retrieval. Database only stores metadata (S3 path, version, user, etc.).
+*   **Primary Storage**: S3 (for all resume files and versions)
 *   **Key API Endpoints**:
-    *   `POST /users/{userId}/resumes`: Upload a new resume (creates first version).
-        *   Body: `multipart/form-data` with resume file.
-        *   Response: Resume metadata, ID.
+    *   `POST /users/{userId}/resumes`: Upload a new resume (creates first version, stores in S3, enforces file size limit).
     *   `GET /users/{userId}/resumes`: List all resumes for a user.
     *   `GET /users/{userId}/resumes/{resumeId}`: Get a specific resume (latest version or specific version).
-        *   Query Params: `version` (optional)
-    *   `PUT /users/{userId}/resumes/{resumeId}`: Update resume content (creates a new version).
-        *   Body: Resume content (e.g., JSON representation or new file).
+    *   `PUT /users/{userId}/resumes/{resumeId}`: Update resume content (creates a new version, stores in S3).
     *   `DELETE /users/{userId}/resumes/{resumeId}`: Delete a resume.
     *   `GET /users/{userId}/resumes/{resumeId}/versions`: List all versions of a resume.
-    *   `POST /users/{userId}/resumes/{resumeId}/parse`: Trigger parsing/analysis of a resume (e.g., via Jobscan).
-*   **External Integrations**: Jobscan API.
-*   **Internal Integrations**: AI Suggestion Service (sends resume data for analysis), Application Tracking Service (provides resume details).
+*   **S3 Path Recommendation**: `resumes/{user_id}/{resume_id}/{version_id}/{filename}`
+*   **File Size Limit**: e.g., 10MB per file (configurable)
+*   **Internal Integrations**: AI Suggestion Service, Application Tracking Service.
 
 ---
 
 **MS3: AI Suggestion Service [Core]**
-*   **Responsibilities**: Provides AI-driven suggestions for resume improvements, job matches, and potentially initial interview question ideas based on job descriptions. Manages feedback loop for suggestions.
-*   **Primary Database**: MongoDB (to store suggestion data, feedback, model parameters if any)
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
+*   **Responsibilities**: Provides AI-driven suggestions for resume improvements, job matches, and initial interview question ideas based on job descriptions. Manages feedback loop for suggestions.
+*   **Primary Database**: MySQL (to store suggestion data, feedback, model parameters if any)
 *   **Key API Endpoints**:
     *   `POST /suggestions/resume`: Generate suggestions for a given resume.
-        *   Body: `{ "resumeId": "...", "jobDescriptionText": "..." (optional) }`
     *   `POST /suggestions/job-match`: Suggest jobs based on a resume.
-        *   Body: `{ "resumeId": "..." }`
     *   `GET /users/{userId}/resumes/{resumeId}/suggestions`: Get suggestions for a specific resume.
     *   `POST /suggestions/{suggestionId}/feedback`: Submit feedback on a suggestion.
-        *   Body: `{ "accepted": true/false, "comment": "..." }`
 *   **External Integrations**: OpenAI API.
-*   **Internal Integrations**: Resume Management Service (receives resume data, sends back suggestions).
+*   **Internal Integrations**: Resume Management Service.
 
 ---
 
 **MS4: Certification Service**
-*   **Responsibilities**: Manages certification roadmaps, integrates with Careerflow for skill gap analysis, and Indeed for real-time certification recommendations. Notifies users of market demand changes for certifications.
-*   **Primary Database**: MySQL (for structured certification data, user progress)
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
+*   **Responsibilities**: Manages certification roadmaps and recommendations.
+*   **Primary Database**: MySQL
 *   **Key API Endpoints**:
     *   `GET /certifications`: List available certifications.
         *   Query Params: `skill`, `industry`, etc.
@@ -164,14 +154,14 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
     *   `GET /certifications/recommendations`: Get current market recommendations.
         *   Query Params: `jobTitle`, `industry`.
     *   `POST /users/{userId}/certifications/{certificationId}/track`: User starts tracking/pursuing a certification.
-*   **External Integrations**: Careerflow API, Indeed API.
-*   **Internal Integrations**: Notification Service (for market demand alerts).
+*   **Internal Integrations**: Notification Service.
 
 ---
 
 **MS5: Application Tracking Service [Core]**
+
 *   **Responsibilities**: Tracks user job applications, including the resume version used, application status, and related notes.
-*   **Primary Database**: MySQL (for structured application data)
+*   **Primary Database**: MySQL
 *   **Key API Endpoints**:
     *   `POST /users/{userId}/applications`: Create a new job application entry.
         *   Body: `{ "jobId": "...", "resumeId": "...", "resumeVersion": "...", "status": "Applied", "notes": "..." }`
@@ -180,57 +170,62 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
     *   `PUT /users/{userId}/applications/{applicationId}`: Update an application (e.g., status, notes).
         *   Body: `{ "status": "Interview Scheduled", "notes": "..." }`
     *   `DELETE /users/{userId}/applications/{applicationId}`: Delete an application entry.
-*   **Internal Integrations**: Resume Management Service (to link to specific resume versions), Notification Service (for status updates).
+*   **Internal Integrations**: Resume Management Service, Notification Service.
 
 ---
 
 **MS6: Notification Service**
-*   **Responsibilities**: Manages and sends notifications to users (in-app, email, push) for various events like application status updates, new AI suggestions, certification market demand changes.
-*   **Primary Database**: MongoDB (for storing notification history, user preferences)
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
+*   **Responsibilities**: Manages and sends notifications to users for various events.
+*   **Primary Database**: MySQL
 *   **Key API Endpoints**:
     *   `GET /users/{userId}/notifications`: Get notifications for a user.
         *   Query Params: `unreadOnly`, `page`, `limit`.
     *   `POST /users/{userId}/notifications/{notificationId}/read`: Mark a notification as read.
     *   `GET /users/{userId}/notifications/preferences`: Get user notification preferences.
     *   `PUT /users/{userId}/notifications/preferences`: Update user notification preferences.
-    *   *(Internal endpoints for other services to trigger notifications, likely via message queue or direct HTTP calls)*
-        *   `POST /internal/notifications/send` (protected, service-to-service)
-            *   Body: `{ "userId": "...", "type": "APP_STATUS_UPDATE", "payload": {...} }`
-*   **Internal Integrations**: Triggered by Application Tracking, Certification Service, AI Suggestion Service, etc.
+    *   `POST /internal/notifications/send` (protected, service-to-service)
+        *   Body: `{ "userId": "...", "type": "APP_STATUS_UPDATE", "payload": {...} }`
+*   **Internal Integrations**: Application Tracking, Certification Service, AI Suggestion Service, etc.
 
 ---
 
 **MS7: Interview Prep Service**
-*   **Responsibilities**: Provides tools for interview preparation, including AI-generated company research (via LinkedIn/OpenAI), predictive interview question generation, and a space for users to store notes.
-*   **Primary Database**: MySQL (for user-specific prep notes, saved company research if any)
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
+*   **Responsibilities**: Provides tools for interview preparation, including AI-generated company research and predictive interview question generation（all via OpenAI API），and a space for users to store notes.
+*   **Primary Database**: MySQL
 *   **Key API Endpoints**:
-    *   `GET /interview-prep/company-insights`: Get insights for a company.
-        *   Query Params: `companyName` or `companyId`.
-    *   `POST /interview-prep/generate-questions`: Generate potential interview questions.
-        *   Body: `{ "jobId": "...", "companyName": "..." }`
+    *   `GET /interview-prep/company-insights`: Get insights for a company (via OpenAI API, user provides company name/description).
+    *   `POST /interview-prep/generate-questions`: Generate potential interview questions (via OpenAI API).
     *   `GET /users/{userId}/interview-prep/notes`: Get user's interview prep notes for a job/company.
-        *   Query Params: `applicationId` or `jobId`.
     *   `POST /users/{userId}/interview-prep/notes`: Save/update interview prep notes.
-        *   Body: `{ "applicationId": "...", "jobId": "...", "notesContent": "..." }`
-*   **External Integrations**: LinkedIn API (or other job data sources for company info), OpenAI API.
+*   **External Integrations**: OpenAI API.
 
 ---
 
 **MS8: User Profile Service [Core]**
+
 *   **Responsibilities**: Manages user profiles, including personal information, preferences, settings (excluding authentication credentials).
-*   **Primary Database**: MySQL (for structured user profile data)
+*   **Primary Database**: MySQL
 *   **Key API Endpoints**:
     *   `GET /users/{userId}/profile`: Get user profile.
     *   `PUT /users/{userId}/profile`: Update user profile.
         *   Body: `{ "firstName": "...", "lastName": "...", "preferences": {...} }`
     *   (User creation might be linked with Auth Service registration)
-*   **Internal Integrations**: Auth Service (coordinates on user identity).
+*   **Internal Integrations**: Auth Service.
 
 ---
 
 **MS9: Auth Service [Core]**
+
 *   **Responsibilities**: Handles user authentication (login, registration, password reset) and authorization (issuing and validating tokens like JWTs).
-*   **Primary Database**: MySQL (for storing user credentials - hashed passwords, etc.)
+*   **Primary Database**: MySQL
 *   **Key API Endpoints**:
     *   `POST /auth/register`: Register a new user.
         *   Body: `{ "email": "...", "password": "..." }`
@@ -245,7 +240,7 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
     *   `POST /auth/reset-password`: Reset password using a token.
         *   Body: `{ "token": "...", "newPassword": "..." }`
     *   `GET /auth/validate-token` (internal or for API Gateway): Validate an access token.
-*   **Internal Integrations**: User Profile Service (coordinates on user identity), API Gateway (token validation).
+*   **Internal Integrations**: User Profile Service, API Gateway.
 
 ---
 
@@ -374,97 +369,14 @@ CREATE TABLE InterviewPrepNotes (
 );
 ```
 
+### S3 (Resume Storage)
+<<<<<<< HEAD
+=======
 
-
-### MongoDB (Non-Relational/Semi-Structured Data)
-
-**Collection: `resumes` (managed by Resume Management Service)**
-```json
-{
-  "_id": ObjectId("60d5f1f772a9f1e4a8c8e8e8"), // Auto-generated
-  "userId": "uuid-user-123", // Corresponds to Users.id in MySQL
-  "originalFileName": "MyResume_v2.pdf",
-  "storagePath": "/path/to/resumes/user-123/uuid-resume-abc/original.pdf", // Or S3 key
-  "createdAt": ISODate("2023-01-15T10:00:00Z"),
-  "updatedAt": ISODate("2023-01-18T12:30:00Z"),
-  "tags": ["tech", "backend", "final"],
-  "versions": [
-    {
-      "versionId": ObjectId("60d5f1f772a9f1e4a8c8e8e9"), // Unique ID for this version
-      "versionNumber": 1,
-      "createdAt": ISODate("2023-01-15T10:00:00Z"),
-      "parsedContent": { // From Jobscan or similar
-        "text": "Full text of resume...",
-        "skills": ["Python", "Django", "React"],
-        "experience": [
-          { "title": "Software Engineer", "company": "Tech Corp", "duration": "2 years" }
-        ],
-        // ... other structured data
-      },
-      "jobscanAnalysisId": "jobscan-xyz-123" // If applicable
-    },
-    {
-      "versionId": ObjectId("60d5f1f772a9f1e4a8c8e8f0"),
-      "versionNumber": 2,
-      "createdAt": ISODate("2023-01-18T12:30:00Z"),
-      "parsedContent": { /* ... updated content ... */ },
-      "jobscanAnalysisId": "jobscan-abc-456"
-    }
-  ],
-  "currentVersionId": ObjectId("60d5f1f772a9f1e4a8c8e8f0") // Points to the active version
-}
-// Indexes: userId, userId_tags
-```
-
-**Collection: `ai_suggestions` (managed by AI Suggestion Service)**
-```json
-{
-  "_id": ObjectId("60d5f2a072a9f1e4a8c8e8f1"),
-  "userId": "uuid-user-123",
-  "resumeId": ObjectId("60d5f1f772a9f1e4a8c8e8e8"), // Refers to 'resumes' collection
-  "resumeVersionId": ObjectId("60d5f1f772a9f1e4a8c8e8f0"), // Specific version suggestion is for
-  "jobDescriptionContext": "Software Engineer role requiring Python, AWS...", // Optional
-  "suggestionType": "RESUME_IMPROVEMENT", // or "JOB_MATCH", "INTERVIEW_QUESTION"
-  "suggestions": [
-    {
-      "id": "sugg-1",
-      "area": "Skills section", // e.g., 'Skills section', 'Experience bullet point'
-      "originalText": "Proficient in Python.",
-      "suggestedText": "Expert in Python with 5+ years of experience in web development.",
-      "reasoning": "Strengthens claim and adds context.",
-      "priority": "High"
-    }
-    // ... more suggestions
-  ],
-  "feedback": { // User feedback on this set of suggestions
-    "overallRating": 4, // 1-5
-    "acceptedSuggestions": ["sugg-1"],
-    "rejectedSuggestions": [],
-    "comments": "Very helpful!"
-  },
-  "createdAt": ISODate("2023-01-19T14:00:00Z")
-}
-// Indexes: userId, resumeId, suggestionType
-```
-
-**Collection: `notifications` (managed by Notification Service)**
-```json
-{
-  "_id": ObjectId("60d5f3b372a9f1e4a8c8e8f2"),
-  "userId": "uuid-user-123",
-  "type": "APPLICATION_STATUS_UPDATE", // e.g., NEW_AI_SUGGESTION, CERT_MARKET_DEMAND
-  "title": "Application Status Updated",
-  "message": "Your application for 'Software Engineer at Tech Corp' has been updated to 'Interview Scheduled'.",
-  "payload": { // type-specific data
-    "applicationId": "uuid-application-xyz",
-    "newStatus": "Interview Scheduled"
-  },
-  "isRead": false,
-  "createdAt": ISODate("2023-01-20T09:00:00Z"),
-  "readAt": null
-}
-// Indexes: userId, userId_isRead, createdAt
-```
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
+- All resume files and versions are stored in S3.
+- S3 path format: `resumes/{user_id}/{resume_id}/{version_id}/{filename}`
+- File size limit: 10MB per file (configurable)
 
 ## 4. Frontend Component Structure and State Management Strategy (React.js)
 
@@ -568,4 +480,33 @@ src/
     4.  If a mutation affects global state (e.g., updating user profile details might affect a `userName` displayed in the header), the `onSuccess` callback of `useMutation` can dispatch an action to update the Redux store.
 
 This detailed design should provide a solid blueprint for developing JobQuest Navigator. Remember that this is a starting point, and you'll likely refine details as development progresses.
+
+## 2024年6月架构决策更新
+
+### 1. Job Data Service
+- 只集成 Adzuna（职位数据抓取）和 Google Map（地理展示），不再集成 Google for Jobs、Canada Job Bank、Indeed 等。
+- 职位数据抓取后直接写入 MySQL，表结构按 jobs 表实现，未来可扩展其他职位API。
+- Google Map 仅用于地理展示，不做职位数据抓取。
+
+### 2. Resume Management Service
+- 简历文件和历史全部存储在 S3，数据库只存元数据（如 S3 路径、版本号、用户等）。
+- 推荐 S3 路径结构：`resumes/{user_id}/{resume_id}/{version_id}/{filename}`。
+- 上传文件大小有限制（如 10MB），超出则拒绝上传。
+- 不再使用 MongoDB 存储简历内容。
+
+### 3. 移除无实际需求的外部API
+- Jobscan、Careerflow、Indeed、LinkedIn 相关内容全部从架构图和实现中移除。
+
+### 4. Interview Prep Service
+- 只用 OpenAI API 生成公司背景和职位分析。
+- 用户可输入公司名/职位描述，系统动态生成内容。
+- 不再集成 LinkedIn API。
+
+### 5. 其他说明
+- 以上变更已同步到微服务架构图、接口设计和数据库设计。
+- 后续如需扩展其他外部API，可在 Job Data Service 预留扩展点。
+
+---
+
+（以下为原有详细设计内容，已根据上述决策在相关章节做出同步调整）
 

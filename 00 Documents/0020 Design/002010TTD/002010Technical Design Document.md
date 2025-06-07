@@ -1,82 +1,118 @@
-Technical Design Document (TDD)
+# Technical Design Document (TDD)
 
-1. Technology Stack Selection
+## 1. Technology Stack Selection
 
-   : According to the functional requirements in the PRD (such as Geolocation-Based Job Mapping, AI Suggestion Engine, etc.), select appropriate frontend, backend, database, and third-party services.
+Based on project requirements and your preferences, the following technology stack is selected:
 
-   - Frontend: React.js
-   - Backend: Django (supports API integration and AI models).
-   - Database: MongoDB and MySQL (store job data, user resume versions, etc.).
-   - Map Service: Google Maps API (for job map functionality).
-   - AI Service: OpenAI API.
-   - Third-party API: Canada Job Bank.
+- **Frontend:** React.js  
+- **Backend:** Django (Python, full-featured, powerful ORM, suitable for rapid development and robust microservices)  
+- **Database:** MySQL (for all structured data, including users, jobs, applications, certifications, interviews, etc.)  
+- **File/Object Storage:** AWS S3 (for all resume files and version history, only metadata stored in MySQL)  
+- **Map/Geo Service:** Google Maps API (for geolocation display and geocoding)  
+- **AI Service:** OpenAI API (for AI-powered suggestions, interview preparation, etc.)  
+- **Job Data API:** Adzuna (the only job data aggregation source for now, extensible in the future)  
+- **CI/CD:** GitHub Actions (for automated testing, building, and deployment)
+- **CD Environment & Infrastructure:** Provisioned and managed using Terraform
+- **API Debugging & Testing:** Performed using Postman
 
-2. Architecture Design
+---
 
-   : Design the system architecture to ensure modular development (such as frontend-backend separation, microservice architecture supporting independent development for different Epics).
+## 2. Architecture Design
 
-   - Draw a system architecture diagram to clarify the data flow and interactions between modules (e.g., when a user requests job data, how the map UI interacts with the backend API).
+The system adopts a frontend-backend separation and an API Gateway + microservices architecture. The boundaries of each microservice, external dependencies, and database types are as follows:
 
-   ```mermaid
-   flowchart LR
-       %% Client Layer (Frontend)
-       subgraph Client Layer
-           Frontend[Frontend Application:React.js]
-           MapUI[Job Map Interface]
-           ResumeUI[Resume Management Interface]
-           Dashboard[Dashboard]
-           Frontend --> MapUI
-           Frontend --> ResumeUI
-           Frontend --> Dashboard
-       end
-   
-       %% Application Layer (Backend)
-       subgraph Application Layer
-           Django[Django Backend:Django REST Framework]
-           APIEndpoints[API Endpoints:jobs, resumes, etc.]
-           BusinessLogic[Business Logic Modules:Job Processing, Resume Management, etc]
-           AsyncTasks[Async Task Processor:Celery + Redis]
-           Django --> APIEndpoints
-           Django --> BusinessLogic
-           Django --> AsyncTasks
-       end
-   
-       %% Data Layer (Database)
-       subgraph Data Layer
-           MySQL[MySQL:Structured Data: Users, Jobs, Applications]
-           MongoDB[MongoDB:Unstructured Data, Resume Versions, AI Suggestions]
-       end
-   
-       %% External Services Layer
-       subgraph External Services
-           CanadaJobBank[Canada Job Bank API:Job Data]
-           GoogleMaps[Google Maps API:Map & Geolocation]
-           OpenAI[OpenAI API:AI Suggestions & Interview Questions]
-       end
-   
-       %% Interactions
-       %% Frontend to Backend
-       Frontend -->|HTTP RESTful API| Django
-       MapUI -->|Direct SDK Call| GoogleMaps
-   
-       %% Backend to Database
-       Django -->|Read/Write Structured Data| MySQL
-       Django -->|Read/Write Unstructured Data| MongoDB
-   
-       %% Backend to External Services
-       Django -->|Fetch Job Data| CanadaJobBank
-       Django -->|Generate AI Suggestions & Questions| OpenAI
-       Django -->|Geocoding Support| GoogleMaps
-   
-       %% Data Flow Example Comments (not displayed in diagram, for reference only)
-       %% Job Search Flow: Frontend -> Django -> CanadaJobBank -> MySQL -> Django -> Frontend -> GoogleMaps
-       %% Resume Suggestion Flow: Frontend -> Django -> OpenAI -> MongoDB -> Django -> Frontend
-   
-   ```
+- All APIs are uniformly prefixed with `/api/v1/` and routed to each microservice by the API Gateway.
+- Authentication is handled by the Auth Service and enforced at the API Gateway.
+- All resume files and version history are stored in S3, with only metadata in MySQL.
+- Only Adzuna (job data), Google Maps (geolocation), and OpenAI (AI suggestions/interview) are integrated. There is no MongoDB, Canada Job Bank, LinkedIn, Indeed, etc.
 
-3. Environment Setup
+```mermaid
+flowchart TD
+    %% User and Frontend
+    User[User]
+    Frontend[Web/Mobile Client]
+    User --> Frontend
 
-   : Set up development, testing, and production environments to ensure team members can work synchronously.
+    %% API Gateway
+    APIGW[API Gateway]
+    Frontend --> APIGW
 
-   - Use Docker for environment consistency management.
-   - Configure CI/CD tools (such as Jenkins or GitHub Actions) to support continuous integration and deployment.
+    %% Microservices
+    MS1[Job Data Service]
+    MS2[Resume Management Service]
+    MS3[AI Suggestion Service]
+    MS4[Certification Service]
+    MS5[Application Tracking Service]
+    MS6[Notification Service]
+    MS7[Interview Prep Service]
+    MS8[User Profile Service]
+    MS9[Auth Service]
+
+    %% API Gateway to Microservices
+    APIGW --> MS1
+    APIGW --> MS2
+    APIGW --> MS3
+    APIGW --> MS4
+    APIGW --> MS5
+    APIGW --> MS6
+    APIGW --> MS7
+    APIGW --> MS8
+    APIGW --> MS9
+
+    %% Databases
+    DB1[MySQL DB]
+    S3[S3 Storage]
+
+    %% Microservices to Databases
+    MS1 --> DB1
+    MS2 --> S3
+    MS3 --> DB1
+    MS4 --> DB1
+    MS5 --> DB1
+    MS6 --> DB1
+    MS7 --> DB1
+    MS8 --> DB1
+    MS9 --> DB1
+
+    %% External Services
+    Ext1[Adzuna API]
+    Ext2[Google Map API]
+    Ext3[OpenAI API]
+
+    MS1 --> Ext1
+    MS1 --> Ext2
+    MS7 --> Ext3
+    MS3 --> Ext3
+
+    %% Inter-service communication
+    MS2 --> MS3
+    MS3 --> MS2
+    MS5 --> MS2
+    MS5 --> MS6
+    MS4 --> MS6
+    MS8 --> MS9
+    MS9 --> MS8
+
+    %% Authorization (dashed line)
+    MS1 -.->|auth| MS9
+    MS2 -.->|auth| MS9
+    MS3 -.->|auth| MS9
+    MS4 -.->|auth| MS9
+    MS5 -.->|auth| MS9
+    MS7 -.->|auth| MS9
+    MS8 -.->|auth| MS9
+```
+
+For detailed microservice responsibilities, API endpoints, database schema, and S3 path conventions, please refer to the "Detailed Microservices Architecture design.md".
+
+---
+
+## 3. Environment Setup
+
+- Use Docker for consistent development, testing, and production environments.
+- Use GitHub Actions for CI/CD automation.
+- All services support containerized deployment, making it easy to switch between local and cloud environments.
+
+---
+
+If you need further details for each microservice (API, DB schema, etc.), just let me know!

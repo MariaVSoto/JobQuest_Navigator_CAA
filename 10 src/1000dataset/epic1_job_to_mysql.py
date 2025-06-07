@@ -56,7 +56,7 @@ def parse_datetime(val):
 def main():
     # Fetch Adzuna API (Canada, first 3 pages, 50 per page)
     all_jobs = []
-    for page in range(1, 4):
+    for page in range(1, 8):
         API_URL = f"https://api.adzuna.com/v1/api/jobs/ca/search/{page}?app_id={APP_ID}&app_key={APP_KEY}"
         PARAMS = {
             'results_per_page': 50,
