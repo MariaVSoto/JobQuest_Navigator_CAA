@@ -5,6 +5,8 @@ info:
   description: |
     API for geolocation-based job discovery, map integration, and job filtering.
     Part of JobQuest Navigator Epic 1.
+    
+    **Note:** Currently, only Adzuna is supported as the external job source. The API is designed for future extensibility.
 
 servers:
   - url: http://localhost:8000
@@ -19,7 +21,9 @@ paths:
     get:
       tags: [Job Search]
       summary: Retrieve Job Listings
-      description: Fetch job listings based on user location and filters. Supports geolocation-based job mapping.
+      description: |
+        Fetch job listings based on user location and filters. Supports geolocation-based job mapping.
+        **Currently, only Adzuna is supported as the job data source.**
       parameters:
         - in: query
           name: latitude
@@ -114,33 +118,34 @@ components:
           description: Company name.
         location:
           type: string
-          example: Toronto, ON
+          example: London, UK
           description: Job location.
         latitude:
           type: number
           format: float
-          example: 43.6532
+          example: 51.5074
           description: Latitude of job location.
         longitude:
           type: number
           format: float
-          example: -79.3832
+          example: -0.1278
           description: Longitude of job location.
-        postingDate:
+        postedAt:
           type: string
-          format: date
-          example: 2023-10-15
-          description: Date the job was posted.
-        source:
+          format: date-time
+          example: 2023-10-15T12:00:00Z
+          description: Date and time the job was posted (ISO 8601).
+        sourceApi:
           type: string
-          example: Canada Job Bank
-          description: Source of the job listing.
+          example: Adzuna
+          description: Source API of the job listing (currently only Adzuna).
       required:
         - id
         - title
         - company
         - location
-        - postingDate
+        - postedAt
+        - sourceApi
 
   securitySchemes:
     bearerAuth:
