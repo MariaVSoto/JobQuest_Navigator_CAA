@@ -6,6 +6,7 @@ Based on project requirements and your preferences, the following technology sta
 
 - **Frontend:** React.js  
 - **Backend:** Django (Python, full-featured, powerful ORM, suitable for rapid development and robust microservices)  
+- **Backend runtime:** Lambda (serverless deployment for backend services; enables automatic scaling, pay-per-use billing, and simplified infrastructure management. Each microservice or API endpoint can be deployed as an independent Lambda function, integrated with API Gateway for HTTP access. This approach reduces operational overhead and is well-suited for event-driven or microservice architectures.)
 - **Database:** MySQL (for all structured data, including users, jobs, applications, certifications, interviews, etc.)  
 - **File/Object Storage:** AWS S3 (for all resume files and version history, only metadata stored in MySQL)  
 - **Map/Geo Service:** Google Maps API (for geolocation display and geocoding)  
