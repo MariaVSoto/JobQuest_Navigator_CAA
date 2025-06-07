@@ -102,6 +102,10 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 **MS2: Resume Management Service [Core]**
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
 *   **Responsibilities**: Manages user resumes, including versioning, storage（all files and history in S3），and retrieval. Database only stores metadata (S3 path, version, user, etc.).
 *   **Primary Storage**: S3 (for all resume files and versions)
 *   **Key API Endpoints**:
@@ -118,6 +122,10 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 **MS3: AI Suggestion Service [Core]**
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
 *   **Responsibilities**: Provides AI-driven suggestions for resume improvements, job matches, and initial interview question ideas based on job descriptions. Manages feedback loop for suggestions.
 *   **Primary Database**: MySQL (to store suggestion data, feedback, model parameters if any)
 *   **Key API Endpoints**:
@@ -131,6 +139,10 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 **MS4: Certification Service**
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
 *   **Responsibilities**: Manages certification roadmaps and recommendations.
 *   **Primary Database**: MySQL
 *   **Key API Endpoints**:
@@ -147,6 +159,7 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 **MS5: Application Tracking Service [Core]**
+
 *   **Responsibilities**: Tracks user job applications, including the resume version used, application status, and related notes.
 *   **Primary Database**: MySQL
 *   **Key API Endpoints**:
@@ -162,6 +175,10 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 **MS6: Notification Service**
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
 *   **Responsibilities**: Manages and sends notifications to users for various events.
 *   **Primary Database**: MySQL
 *   **Key API Endpoints**:
@@ -177,6 +194,10 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 **MS7: Interview Prep Service**
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
 *   **Responsibilities**: Provides tools for interview preparation, including AI-generated company research and predictive interview question generation（all via OpenAI API），and a space for users to store notes.
 *   **Primary Database**: MySQL
 *   **Key API Endpoints**:
@@ -189,6 +210,7 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 **MS8: User Profile Service [Core]**
+
 *   **Responsibilities**: Manages user profiles, including personal information, preferences, settings (excluding authentication credentials).
 *   **Primary Database**: MySQL
 *   **Key API Endpoints**:
@@ -201,6 +223,7 @@ All endpoints should be prefixed with `/api/v1/`. The API Gateway will route req
 ---
 
 **MS9: Auth Service [Core]**
+
 *   **Responsibilities**: Handles user authentication (login, registration, password reset) and authorization (issuing and validating tokens like JWTs).
 *   **Primary Database**: MySQL
 *   **Key API Endpoints**:
@@ -347,6 +370,10 @@ CREATE TABLE InterviewPrepNotes (
 ```
 
 ### S3 (Resume Storage)
+<<<<<<< HEAD
+=======
+
+>>>>>>> d122106e2a513a88873391d1717ac49cbec37a93
 - All resume files and versions are stored in S3.
 - S3 path format: `resumes/{user_id}/{resume_id}/{version_id}/{filename}`
 - File size limit: 10MB per file (configurable)
