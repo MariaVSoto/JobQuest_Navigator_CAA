@@ -1,0 +1,187 @@
+{
+  "python": {
+    "name": "PCAP – Certified Associate in Python Programming",
+    "link": "https://pythoninstitute.org/pcap",
+    "description": "Industry-recognized certification for Python programming proficiency."
+  },
+  "nmap": {
+    "name": "Practical Network Penetration Tester (PNPT)",
+    "link": "https://tcm-sec.com/collections/courses/products/practical-network-penetration-tester-pnpt",
+    "description": "Covers network scanning and enumeration tools like Nmap."
+  },
+  "wireshark": {
+    "name": "Wireshark Certified Network Analyst (WCNA)",
+    "link": "https://www.wiresharktraining.com/certification.html",
+    "description": "Certification for network analysis and troubleshooting using Wireshark."
+  },
+  "burp suite": {
+    "name": "Burp Suite Certified Practitioner",
+    "link": "https://portswigger.net/certification",
+    "description": "Official certification for web application security testing with Burp Suite."
+  },
+  "sqlmap": {
+    "name": "Offensive Security Certified Professional (OSCP)",
+    "link": "https://www.offensive-security.com/pwk-oscp/",
+    "description": "Covers SQL injection and other web security testing tools."
+  },
+  "metasploit": {
+    "name": "Metasploit Pro Certified Specialist",
+    "link": "https://www.rapid7.com/services/certification/",
+    "description": "Certification for penetration testing using Metasploit."
+  },
+  "volatility": {
+    "name": "GIAC Certified Forensic Analyst (GCFA)",
+    "link": "https://www.giac.org/certification/certified-forensic-analyst-gcfa/",
+    "description": "Covers memory forensics and malware analysis with tools like Volatility."
+  },
+  "kali linux": {
+    "name": "Offensive Security Certified Professional (OSCP)",
+    "link": "https://www.offensive-security.com/pwk-oscp/",
+    "description": "Industry-standard certification for penetration testing with Kali Linux."
+  },
+  "aws": {
+    "name": "AWS Certified Solutions Architect – Associate",
+    "link": "https://aws.amazon.com/certification/certified-solutions-architect-associate/",
+    "description": "Certification for designing and deploying scalable systems on AWS."
+  },
+  "terraform": {
+    "name": "HashiCorp Certified: Terraform Associate",
+    "link": "https://www.hashicorp.com/certification/terraform-associate",
+    "description": "Certification for infrastructure as code using Terraform."
+  },
+  "ansible": {
+    "name": "Red Hat Certified Specialist in Ansible Automation",
+    "link": "https://www.redhat.com/en/services/certification/rhce",
+    "description": "Certification for IT automation using Ansible."
+  },
+  "excel": {
+    "name": "Microsoft Office Specialist: Excel Associate",
+    "link": "https://www.microsoft.com/en-us/learning/certification-exams.aspx",
+    "description": "Certification for proficiency in Microsoft Excel."
+  },
+  "tableau": {
+    "name": "Tableau Desktop Specialist",
+    "link": "https://www.tableau.com/learn/certification",
+    "description": "Entry-level certification for Tableau data visualization."
+  },
+  "power bi": {
+    "name": "Microsoft Certified: Data Analyst Associate (Power BI)",
+    "link": "https://learn.microsoft.com/en-us/certifications/power-bi-data-analyst-associate/",
+    "description": "Certification for data analysis and visualization with Power BI."
+  },
+  "agile": {
+    "name": "Certified ScrumMaster (CSM)",
+    "link": "https://www.scrumalliance.org/get-certified/scrum-master-track/certified-scrummaster",
+    "description": "Industry-standard certification for Agile and Scrum methodologies."
+  },
+  "scrum": {
+    "name": "Professional Scrum Master (PSM I)",
+    "link": "https://www.scrum.org/professional-scrum-certifications",
+    "description": "Certification for Scrum framework and Agile project management."
+  },
+  "communication": {
+    "name": "Effective Communication Certificate (Coursera)",
+    "link": "https://www.coursera.org/learn/wharton-communication-skills",
+    "description": "Course on professional communication skills."
+  },
+  "problem-solving": {
+    "name": "Critical Thinking & Problem-Solving (edX)",
+    "link": "https://www.edx.org/learn/critical-thinking",
+    "description": "Course on critical thinking and problem-solving skills."
+  },
+  "data analysis": {
+    "name": "Google Data Analytics Professional Certificate",
+    "link": "https://grow.google/certificates/data-analytics/",
+    "description": "Comprehensive certification for data analysis skills."
+  },
+  "data visualization": {
+    "name": "Data Visualization with Tableau (Coursera)",
+    "link": "https://www.coursera.org/specializations/data-visualization-tableau",
+    "description": "Specialization in data visualization using Tableau."
+  },
+  "sql": {
+    "name": "Oracle Database SQL Certified Associate",
+    "link": "https://education.oracle.com/oracle-database-sql-certified-associate/trackp_457",
+    "description": "Certification for SQL and database management."
+  },
+  "machine learning": {
+    "name": "AWS Certified Machine Learning – Specialty",
+    "link": "https://aws.amazon.com/certification/certified-machine-learning-specialty/",
+    "description": "Certification for machine learning on AWS."
+  },
+  "deep learning": {
+    "name": "Deep Learning Specialization (Coursera)",
+    "link": "https://www.coursera.org/specializations/deep-learning",
+    "description": "Comprehensive specialization in deep learning."
+  },
+  "statistical analysis": {
+    "name": "SAS Certified Statistical Business Analyst",
+    "link": "https://www.sas.com/en_us/certification/credentials/analytics/statistical-business-analyst.html",
+    "description": "Certification for statistical analysis using SAS."
+  },
+  "predictive analytics": {
+    "name": "Predictive Analytics for Business (Udacity)",
+    "link": "https://www.udacity.com/course/predictive-analytics-for-business-nanodegree--nd008",
+    "description": "Nanodegree for predictive analytics in business."
+  },
+  "business intelligence": {
+    "name": "Certified Business Intelligence Professional (CBIP)",
+    "link": "https://tdwi.org/pages/education/cbip-certification/cbip-home.aspx",
+    "description": "Certification for business intelligence professionals."
+  },
+  "patient care": {
+    "name": "Certified Medical-Surgical Registered Nurse (CMSRN)",
+    "link": "https://www.medsurgnurse.org/certification",
+    "description": "Certification for patient care in medical-surgical nursing."
+  },
+  "medication administration": {
+    "name": "Medication Administration Certificate",
+    "link": "https://www.nurse.com/ce/medication-administration",
+    "description": "Certificate for safe medication administration."
+  },
+  "emr": {
+    "name": "Certified Electronic Health Records Specialist (CEHRS)",
+    "link": "https://www.nhanow.com/certification/cehrs",
+    "description": "Certification for electronic medical records management."
+  },
+  "bls": {
+    "name": "Basic Life Support (BLS) Certification",
+    "link": "https://cpr.heart.org/en/cpr-courses-and-kits/healthcare-professional/basic-life-support-bls-training",
+    "description": "Certification for basic life support in healthcare."
+  },
+  "acls": {
+    "name": "Advanced Cardiovascular Life Support (ACLS) Certification",
+    "link": "https://cpr.heart.org/en/cpr-courses-and-kits/healthcare-professional/advanced-cardiovascular-life-support-acls-training",
+    "description": "Certification for advanced cardiovascular life support."
+  },
+  "adobe creative suite": {
+    "name": "Adobe Certified Professional",
+    "link": "https://learning.adobe.com/certification.html",
+    "description": "Certification for Adobe Creative Cloud tools."
+  },
+  "figma": {
+    "name": "Figma UI/UX Design Certificate (Coursera)",
+    "link": "https://www.coursera.org/projects/figma-ux-design",
+    "description": "Certificate for UI/UX design using Figma."
+  },
+  "canva": {
+    "name": "Canva Design School Certificate",
+    "link": "https://www.canva.com/designschool/certifications/",
+    "description": "Certificate for design skills using Canva."
+  },
+  "branding": {
+    "name": "Brand Management Certification (Coursera)",
+    "link": "https://www.coursera.org/learn/brand-management",
+    "description": "Certification for brand management and strategy."
+  },
+  "art direction": {
+    "name": "Art Direction Specialization (Coursera)",
+    "link": "https://www.coursera.org/specializations/art-direction",
+    "description": "Specialization in art direction for creative professionals."
+  },
+  "visual design": {
+    "name": "Google UX Design Certificate",
+    "link": "https://grow.google/certificates/ux-design/",
+    "description": "Certificate for visual and UX design."
+  }
+} 

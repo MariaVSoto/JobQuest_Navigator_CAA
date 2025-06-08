@@ -1,77 +1,70 @@
-# Skill Gap Analysis Tool
+# Skill Gap Analysis Tool (Epic 4)
 
-A real-time skill gap analysis tool that helps users identify their current skill levels, required skill levels for their target role, and provides personalized recommendations for skill development.
+A modern skill analysis tool that uses AI/NLP (spaCy) to extract relevant skills from your resume and recommends certifications for each skill.
 
 ## Features
-
-- Real-time skill analysis based on job market data
-- Detailed skill gap assessment
-- Personalized learning paths
-- Certification recommendations
-- Market trend analysis
-- Priority-based skill development recommendations
+- AI-powered skill extraction using spaCy (Python)
+- Accurate filtering of generic/common words
+- Certification recommendations for each extracted skill
+- Simple web-based test page (test.html)
+- Easy local setup (Node.js + Python)
 
 ## Technologies Used
-
 - Node.js
 - Express.js
-- React
 - TypeScript
-- Axios
-- Cheerio
+- Python 3
+- spaCy (en_core_web_sm)
 
 ## Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
 ```bash
 git clone [your-repository-url]
-cd [repository-name]
+cd "[repository-name]/10 src/1010main/epic4_certification_roadmap"
 ```
 
-2. Install dependencies:
+2. **Install Node.js dependencies:**
 ```bash
 npm install
 ```
 
-3. Start the development server:
+3. **Install Python dependencies:**
 ```bash
-npm run dev
+pip install spacy
+python -m spacy download en_core_web_sm
 ```
 
-4. Open your browser and navigate to `http://localhost:3000`
+4. **Start the development server:**
+```bash
+npx ts-node server.ts
+```
+
+5. **Open your browser and navigate to** `http://localhost:3001`
 
 ## Project Structure
-
 ```
 epic4_certification_roadmap/
 ├── api/
-│   └── realTimeApi.ts
-├── services/
-│   └── skillGapService.ts
-├── components/
-│   └── RealTimeSkillTest.tsx
+│   └── skillCertApi.ts
+├── extract_skills.py
 ├── test.html
-├── server.js
+├── server.ts
+├── certificationMap.json
+├── skills-list.json
 ├── package.json
-└── tsconfig.json
+├── tsconfig.json
+├── ...
 ```
 
 ## Usage
-
-1. Enter your resume or skills in the text area
-2. Specify your target role
+1. Enter your resume in the text area on the test page
+2. (Optionally) Enter your target role
 3. Click "Analyze Skills" to get:
-   - Current skill levels
-   - Required skill levels
-   - Skill gaps
-   - Market trends
-   - Priority scores
-   - Detailed recommendations
-   - Certification paths
-   - Learning paths
+   - Extracted skills (AI/NLP-based)
+   - Recommended certifications for each skill
 
 ## Contributing
-
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
@@ -79,11 +72,8 @@ epic4_certification_roadmap/
 5. Open a Pull Request
 
 ## License
-
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
-
-- Indeed API for job market data
-- Various certification providers for their programs
+- spaCy for NLP
 - Open source community for tools and libraries 

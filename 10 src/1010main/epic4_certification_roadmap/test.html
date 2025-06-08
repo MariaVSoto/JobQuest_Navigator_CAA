@@ -153,369 +153,6 @@
     </div>
 
     <script type="text/babel">
-        // Mock implementation for testing
-        class RealTimeAPI {
-            async fetchJobData(role) {
-                try {
-                    const response = await axios.get(`https://www.indeed.com/jobs?q=${encodeURIComponent(role)}`);
-                    return {
-                        skills: [
-                            { skill: 'JavaScript', count: 85, trend: 'increasing' },
-                            { skill: 'React', count: 75, trend: 'increasing' },
-                            { skill: 'Python', count: 65, trend: 'stable' },
-                            { skill: 'AWS', count: 60, trend: 'increasing' },
-                            { skill: 'Node.js', count: 55, trend: 'stable' }
-                        ]
-                    };
-                } catch (error) {
-                    console.error('Error fetching job data:', error);
-                    return {
-                        skills: [
-                            { skill: 'JavaScript', count: 85, trend: 'increasing' },
-                            { skill: 'React', count: 75, trend: 'increasing' },
-                            { skill: 'Python', count: 65, trend: 'stable' },
-                            { skill: 'AWS', count: 60, trend: 'increasing' },
-                            { skill: 'Node.js', count: 55, trend: 'stable' }
-                        ]
-                    };
-                }
-            }
-        }
-
-        class SkillGapService {
-            constructor() {
-                this.api = new RealTimeAPI();
-                this.certificationPaths = {
-                    'JavaScript': {
-                        certifications: [
-                            {
-                                name: 'JavaScript (JS) Certification',
-                                provider: 'freeCodeCamp',
-                                level: 'Beginner',
-                                duration: '300 hours',
-                                cost: 'Free',
-                                url: 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/'
-                            },
-                            {
-                                name: 'Professional JavaScript Developer',
-                                provider: 'Microsoft',
-                                level: 'Intermediate',
-                                duration: '6 months',
-                                cost: '$99',
-                                url: 'https://www.microsoft.com/en-us/learning/certification-dashboard.aspx'
-                            },
-                            {
-                                name: 'JavaScript Algorithms and Data Structures',
-                                provider: 'freeCodeCamp',
-                                level: 'Intermediate',
-                                duration: '300 hours',
-                                cost: 'Free',
-                                url: 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/'
-                            },
-                            {
-                                name: 'Advanced JavaScript Concepts',
-                                provider: 'Udemy',
-                                level: 'Advanced',
-                                duration: '20 hours',
-                                cost: '$19.99',
-                                url: 'https://www.udemy.com/course/advanced-javascript-concepts/'
-                            }
-                        ],
-                        learningPath: [
-                            'Complete JavaScript fundamentals (ES6+)',
-                            'Master DOM manipulation and events',
-                            'Learn asynchronous programming (Promises, async/await)',
-                            'Study design patterns and best practices',
-                            'Practice with real-world projects',
-                            'Learn TypeScript fundamentals',
-                            'Master testing frameworks (Jest, Mocha)',
-                            'Study performance optimization techniques',
-                            'Learn build tools (Webpack, Babel)',
-                            'Practice with advanced JavaScript patterns'
-                        ]
-                    },
-                    'React': {
-                        certifications: [
-                            {
-                                name: 'React Developer Certification',
-                                provider: 'Meta',
-                                level: 'Intermediate',
-                                duration: '4 months',
-                                cost: 'Free',
-                                url: 'https://www.coursera.org/meta'
-                            },
-                            {
-                                name: 'Advanced React Certification',
-                                provider: 'React Training',
-                                level: 'Advanced',
-                                duration: '3 months',
-                                cost: '$299',
-                                url: 'https://reacttraining.com/'
-                            },
-                            {
-                                name: 'React Developer Professional Certificate',
-                                provider: 'Meta',
-                                level: 'Intermediate',
-                                duration: '6 months',
-                                cost: '$49/month',
-                                url: 'https://www.coursera.org/professional-certificates/meta-react-developer'
-                            },
-                            {
-                                name: 'React Advanced Concepts',
-                                provider: 'Frontend Masters',
-                                level: 'Advanced',
-                                duration: '5 hours',
-                                cost: '$39/month',
-                                url: 'https://frontendmasters.com/courses/advanced-react/'
-                            }
-                        ],
-                        learningPath: [
-                            'Master React fundamentals and hooks',
-                            'Learn state management (Redux/Context)',
-                            'Study React performance optimization',
-                            'Practice with real-world applications',
-                            'Contribute to open-source React projects',
-                            'Learn React testing (Jest, React Testing Library)',
-                            'Master React Router and navigation',
-                            'Study server-side rendering (Next.js)',
-                            'Learn React security best practices',
-                            'Practice with React design patterns'
-                        ]
-                    },
-                    'Python': {
-                        certifications: [
-                            {
-                                name: 'PCAP - Certified Associate in Python Programming',
-                                provider: 'Python Institute',
-                                level: 'Beginner',
-                                duration: '3 months',
-                                cost: '$295',
-                                url: 'https://pythoninstitute.org/pcap'
-                            },
-                            {
-                                name: 'PCPP - Certified Professional in Python Programming',
-                                provider: 'Python Institute',
-                                level: 'Advanced',
-                                duration: '6 months',
-                                cost: '$195',
-                                url: 'https://pythoninstitute.org/pcpp'
-                            },
-                            {
-                                name: 'Python for Data Science',
-                                provider: 'IBM',
-                                level: 'Intermediate',
-                                duration: '4 months',
-                                cost: '$49/month',
-                                url: 'https://www.coursera.org/professional-certificates/ibm-data-science'
-                            },
-                            {
-                                name: 'Python Web Development',
-                                provider: 'Django',
-                                level: 'Intermediate',
-                                duration: '3 months',
-                                cost: 'Free',
-                                url: 'https://www.djangoproject.com/start/'
-                            }
-                        ],
-                        learningPath: [
-                            'Master Python fundamentals and OOP',
-                            'Learn data structures and algorithms',
-                            'Study web frameworks (Django/Flask)',
-                            'Practice with data science libraries',
-                            'Build full-stack applications',
-                            'Learn Python testing (pytest)',
-                            'Master database integration (SQL, NoSQL)',
-                            'Study Python security best practices',
-                            'Learn Python deployment and DevOps',
-                            'Practice with Python design patterns'
-                        ]
-                    },
-                    'AWS': {
-                        certifications: [
-                            {
-                                name: 'AWS Certified Solutions Architect - Associate',
-                                provider: 'Amazon',
-                                level: 'Intermediate',
-                                duration: '6 months',
-                                cost: '$150',
-                                url: 'https://aws.amazon.com/certification/certified-solutions-architect-associate/'
-                            },
-                            {
-                                name: 'AWS Certified Developer - Associate',
-                                provider: 'Amazon',
-                                level: 'Intermediate',
-                                duration: '4 months',
-                                cost: '$150',
-                                url: 'https://aws.amazon.com/certification/certified-developer-associate/'
-                            },
-                            {
-                                name: 'AWS Certified DevOps Engineer - Professional',
-                                provider: 'Amazon',
-                                level: 'Advanced',
-                                duration: '8 months',
-                                cost: '$300',
-                                url: 'https://aws.amazon.com/certification/certified-devops-engineer-professional/'
-                            },
-                            {
-                                name: 'AWS Certified Security - Specialty',
-                                provider: 'Amazon',
-                                level: 'Advanced',
-                                duration: '6 months',
-                                cost: '$300',
-                                url: 'https://aws.amazon.com/certification/certified-security-specialty/'
-                            }
-                        ],
-                        learningPath: [
-                            'Learn AWS core services (EC2, S3, Lambda)',
-                            'Master cloud architecture principles',
-                            'Study security and compliance',
-                            'Practice with real-world projects',
-                            'Implement CI/CD pipelines',
-                            'Learn AWS networking and VPC',
-                            'Master AWS database services',
-                            'Study AWS monitoring and logging',
-                            'Learn AWS cost optimization',
-                            'Practice with AWS serverless architecture'
-                        ]
-                    },
-                    'Node.js': {
-                        certifications: [
-                            {
-                                name: 'Node.js Application Developer',
-                                provider: 'IBM',
-                                level: 'Intermediate',
-                                duration: '3 months',
-                                cost: '$99',
-                                url: 'https://www.ibm.com/training/badge/node-js-application-developer'
-                            },
-                            {
-                                name: 'Node.js Services Developer',
-                                provider: 'IBM',
-                                level: 'Advanced',
-                                duration: '4 months',
-                                cost: '$99',
-                                url: 'https://www.ibm.com/training/badge/node-js-services-developer'
-                            },
-                            {
-                                name: 'Node.js Developer Certification',
-                                provider: 'OpenJS Foundation',
-                                level: 'Intermediate',
-                                duration: '3 months',
-                                cost: '$200',
-                                url: 'https://openjsf.org/certification/'
-                            },
-                            {
-                                name: 'Advanced Node.js Development',
-                                provider: 'Pluralsight',
-                                level: 'Advanced',
-                                duration: '20 hours',
-                                cost: '$29/month',
-                                url: 'https://www.pluralsight.com/paths/advanced-nodejs'
-                            }
-                        ],
-                        learningPath: [
-                            'Master Node.js fundamentals',
-                            'Learn Express.js framework',
-                            'Study database integration',
-                            'Practice with microservices',
-                            'Build scalable applications',
-                            'Learn Node.js testing (Jest, Mocha)',
-                            'Master Node.js security',
-                            'Study Node.js performance optimization',
-                            'Learn Node.js deployment strategies',
-                            'Practice with Node.js design patterns'
-                        ]
-                    }
-                };
-            }
-
-            async analyzeUserSkills(resume, role) {
-                try {
-                    const jobData = await this.api.fetchJobData(role);
-                    
-                    // Simple skill extraction from resume
-                    const resumeSkills = {
-                        'JavaScript': 3,
-                        'React': 2,
-                        'Python': 1,
-                        'AWS': 0,
-                        'Node.js': 1
-                    };
-
-                    const recommendations = jobData.skills.map(skill => {
-                        const currentLevel = resumeSkills[skill.skill] || 0;
-                        const requiredLevel = Math.ceil(skill.count / 20); // Scale to 1-5
-                        const gap = requiredLevel - currentLevel;
-                        const skillPath = this.certificationPaths[skill.skill];
-                        
-                        return {
-                            skill: skill.skill,
-                            currentLevel,
-                            requiredLevel,
-                            gap,
-                            marketTrend: skill.trend,
-                            priority: gap * (skill.trend === 'increasing' ? 1.5 : 1),
-                            certifications: skillPath.certifications,
-                            learningPath: skillPath.learningPath,
-                            recommendations: this.generateRecommendations(skill.skill, currentLevel, requiredLevel, skillPath)
-                        };
-                    });
-
-                    return { recommendations };
-                } catch (error) {
-                    console.error('Error in analyzeUserSkills:', error);
-                    throw error;
-                }
-            }
-
-            generateRecommendations(skill, currentLevel, requiredLevel, skillPath) {
-                const recommendations = [];
-                
-                if (currentLevel < requiredLevel) {
-                    // Add certification recommendations
-                    skillPath.certifications.forEach(cert => {
-                        recommendations.push({
-                            type: 'certification',
-                            title: cert.name,
-                            provider: cert.provider,
-                            level: cert.level,
-                            duration: cert.duration,
-                            cost: cert.cost,
-                            url: cert.url
-                        });
-                    });
-
-                    // Add learning path recommendations
-                    skillPath.learningPath.forEach(step => {
-                        recommendations.push({
-                            type: 'learning',
-                            title: step
-                        });
-                    });
-
-                    // Add project recommendations
-                    if (requiredLevel - currentLevel > 1) {
-                        recommendations.push({
-                            type: 'project',
-                            title: `Build a real-world project using ${skill}`,
-                            description: `Create a portfolio project that demonstrates your ${skill} skills`
-                        });
-                    }
-
-                    // Add community recommendations
-                    if (requiredLevel - currentLevel > 2) {
-                        recommendations.push({
-                            type: 'community',
-                            title: `Contribute to open-source ${skill} projects`,
-                            description: `Join the ${skill} community and contribute to open-source projects`
-                        });
-                    }
-                }
-                
-                return recommendations;
-            }
-        }
-
         async function analyzeSkills() {
             const button = document.getElementById('analyzeButton');
             const errorDiv = document.getElementById('error');
@@ -534,68 +171,42 @@
                     Looking to enhance skills in cloud technologies.
                 `;
                 
-                const role = document.getElementById('roleInput').value;
-
-                const skillGapService = new SkillGapService();
-                const result = await skillGapService.analyzeUserSkills(resume, role);
-
-                // Display results
-                result.recommendations.forEach(skill => {
-                    const skillCard = document.createElement('div');
-                    skillCard.className = 'skill-card';
-                    
-                    // Create certifications section
-                    const certificationsHtml = skill.certifications.map(cert => `
-                        <div class="certification">
-                            <h4>${cert.name}</h4>
-                            <p><strong>Provider:</strong> ${cert.provider}</p>
-                            <p><strong>Level:</strong> ${cert.level}</p>
-                            <p><strong>Duration:</strong> ${cert.duration}</p>
-                            <p><strong>Cost:</strong> ${cert.cost}</p>
-                            <a href="${cert.url}" target="_blank">Learn More</a>
-                        </div>
-                    `).join('');
-
-                    // Create learning path section
-                    const learningPathHtml = `
-                        <div class="learning-path">
-                            <h4>Learning Path</h4>
-                            <ol>
-                                ${skill.learningPath.map(step => `<li>${step}</li>`).join('')}
-                            </ol>
-                        </div>
-                    `;
-
-                    skillCard.innerHTML = `
-                        <h3>${skill.skill}</h3>
-                        <p><strong>Current Level:</strong> ${skill.currentLevel}/5</p>
-                        <p><strong>Required Level:</strong> ${skill.requiredLevel}/5</p>
-                        <p><strong>Gap:</strong> ${skill.gap}</p>
-                        <p><strong>Market Trend:</strong> ${skill.marketTrend}</p>
-                        <p><strong>Priority:</strong> ${skill.priority.toFixed(1)}</p>
-                        <div class="certifications">
-                            <h4>Recommended Certifications</h4>
-                            ${certificationsHtml}
-                        </div>
-                        ${learningPathHtml}
-                        <div class="recommendations">
-                            <h4>Action Items</h4>
-                            <ul>
-                                ${skill.recommendations.map(rec => {
-                                    if (rec.type === 'project' || rec.type === 'community') {
-                                        return `<li><strong>${rec.title}</strong>: ${rec.description}</li>`;
-                                    }
-                                    return `<li>${rec.title}</li>`;
-                                }).join('')}
-                            </ul>
-                        </div>
-                    `;
-                    resultsDiv.appendChild(skillCard);
+                // Send POST request to backend API
+                const response = await fetch('/api/skillgap/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resume })
                 });
+                if (!response.ok) throw new Error('API error');
+                const result = await response.json();
 
+                // Display results for new response format
+                const skills = result.skills || [];
+                const certifications = result.certifications || {};
+                if (skills.length === 0) {
+                    resultsDiv.innerHTML = '<p>No skills found.</p>';
+                } else {
+                    skills.forEach(skill => {
+                        const skillCard = document.createElement('div');
+                        skillCard.className = 'skill-card';
+                        skillCard.innerHTML = `<h3>${skill}</h3>`;
+                        // Show certification if available
+                        if (certifications[skill]) {
+                            const cert = certifications[skill];
+                            const certDiv = document.createElement('div');
+                            certDiv.className = 'certification';
+                            certDiv.innerHTML = `
+                                <h4>Recommended Certification:</h4>
+                                <p><a href="${cert.link}" target="_blank">${cert.name || 'N/A'}</a></p>
+                                <p>${cert.description || 'N/A'}</p>
+                            `;
+                            skillCard.appendChild(certDiv);
+                        }
+                        resultsDiv.appendChild(skillCard);
+                    });
+                }
             } catch (err) {
-                console.error('Detailed error:', err);
-                errorDiv.textContent = `Failed to analyze skills: ${err.message}`;
+                errorDiv.textContent = 'Failed to analyze skills: ' + (err.message || err);
                 errorDiv.style.display = 'block';
             } finally {
                 button.disabled = false;
