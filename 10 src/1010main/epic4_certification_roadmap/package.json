@@ -1,0 +1,27 @@
+{
+  "name": "skill-gap-analysis-test",
+  "version": "1.0.0",
+  "description": "Test implementation for skill gap analysis",
+  "main": "server.js",
+  "scripts": {
+    "start": "ts-node server.js",
+    "build": "tsc",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cheerio": "^1.0.0-rc.10",
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^16.11.7",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.6",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.9.5"
+  }
+}

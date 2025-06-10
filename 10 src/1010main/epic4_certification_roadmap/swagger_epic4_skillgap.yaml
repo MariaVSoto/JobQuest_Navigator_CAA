@@ -1,0 +1,79 @@
+openapi: 3.0.0
+info:
+  title: Epic 4 - Skill Gap Analysis API
+  version: 1.0.0
+  description: API for analyzing user skills and recommended certifications for Epic 4 Certification Roadmap.
+servers:
+  - url: http://localhost:3001
+paths:
+  /api/skillgap/analyze:
+    post:
+      summary: Analyze user skills and recommend certifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resume:
+                  type: string
+                  description: User's resume text
+                targetRole:
+                  type: string
+                  description: Target job role (optional)
+      responses:
+        '200':
+          description: Skill and certification analysis result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items:
+                      type: string
+                  certifications:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/Certification'
+  /api/skillgap/market-demand:
+    get:
+      summary: Get market demand for skills
+      parameters:
+        - in: query
+          name: skills
+          schema:
+            type: string
+          description: Comma-separated list of skills
+      responses:
+        '200':
+          description: Market demand data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MarketDemand'
+components:
+  schemas:
+    Certification:
+      type: object
+      properties:
+        name:
+          type: string
+        link:
+          type: string
+        description:
+          type: string
+    MarketDemand:
+      type: object
+      properties:
+        skill:
+          type: string
+        demand:
+          type: integer
+        trend:
+          type: string
+          enum: [increasing, decreasing, stable] 

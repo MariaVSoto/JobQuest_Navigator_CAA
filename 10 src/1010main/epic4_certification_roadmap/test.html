@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Gap Analysis Test</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/cheerio/dist/cheerio.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .resume-input {
+            width: 100%;
+            height: 150px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .role-input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .skill-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .loading::after {
+            content: "...";
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60% { content: "..."; }
+            80%, 100% { content: ""; }
+        }
+        .certification {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .certification h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .certification a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .certification a:hover {
+            text-decoration: underline;
+        }
+        .learning-path {
+            margin: 20px 0;
+        }
+        .learning-path ol {
+            padding-left: 20px;
+        }
+        .learning-path li {
+            margin: 5px 0;
+        }
+        .recommendations {
+            margin-top: 20px;
+        }
+        .recommendations ul {
+            padding-left: 20px;
+        }
+        .recommendations li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Skill Gap Analysis Test</h1>
+        
+        <div>
+            <h3>Enter Your Resume:</h3>
+            <textarea 
+                id="resumeInput" 
+                class="resume-input" 
+                placeholder="Paste your resume here..."
+            ></textarea>
+        </div>
+
+        <div>
+            <h3>Target Role:</h3>
+            <input 
+                type="text" 
+                id="roleInput" 
+                class="role-input" 
+                placeholder="e.g., Senior Software Engineer"
+                value="Senior Software Engineer"
+            />
+        </div>
+
+        <button id="analyzeButton" onclick="analyzeSkills()">Analyze Skills</button>
+
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">Analyzing skills</div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script type="text/babel">
+        async function analyzeSkills() {
+            const button = document.getElementById('analyzeButton');
+            const errorDiv = document.getElementById('error');
+            const resultsDiv = document.getElementById('results');
+            const loadingDiv = document.getElementById('loading');
+            
+            try {
+                button.disabled = true;
+                loadingDiv.style.display = 'block';
+                errorDiv.style.display = 'none';
+                resultsDiv.innerHTML = '';
+
+                const resume = document.getElementById('resumeInput').value || `
+                    Software Developer with 2 years of experience in web development.
+                    Proficient in JavaScript and React. Basic knowledge of Python.
+                    Looking to enhance skills in cloud technologies.
+                `;
+                
+                // Send POST request to backend API
+                const response = await fetch('/api/skillgap/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resume })
+                });
+                if (!response.ok) throw new Error('API error');
+                const result = await response.json();
+
+                // Display results for new response format
+                const skills = result.skills || [];
+                const certifications = result.certifications || {};
+                if (skills.length === 0) {
+                    resultsDiv.innerHTML = '<p>No skills found.</p>';
+                } else {
+                    skills.forEach(skill => {
+                        const skillCard = document.createElement('div');
+                        skillCard.className = 'skill-card';
+                        skillCard.innerHTML = `<h3>${skill}</h3>`;
+                        // Show certification if available
+                        if (certifications[skill]) {
+                            const cert = certifications[skill];
+                            const certDiv = document.createElement('div');
+                            certDiv.className = 'certification';
+                            certDiv.innerHTML = `
+                                <h4>Recommended Certification:</h4>
+                                <p><a href="${cert.link}" target="_blank">${cert.name || 'N/A'}</a></p>
+                                <p>${cert.description || 'N/A'}</p>
+                            `;
+                            skillCard.appendChild(certDiv);
+                        }
+                        resultsDiv.appendChild(skillCard);
+                    });
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Failed to analyze skills: ' + (err.message || err);
+                errorDiv.style.display = 'block';
+            } finally {
+                button.disabled = false;
+                loadingDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 
