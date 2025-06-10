@@ -1,0 +1,105 @@
+.application-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+}
+
+.application-box {
+  background: #fff;
+  padding: 2.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.application-title {
+  font-size: 32px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  line-height: 40px;
+  color: #121417;
+  margin-bottom: 1.5rem;
+}
+
+.application-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.application-form label {
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.application-form input[type="text"],
+.application-form input[type="email"],
+.application-form input[type="file"],
+.application-form textarea {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.application-form input:focus,
+.application-form textarea:focus {
+  border: 1.5px solid #3182ce;
+}
+
+.application-btn {
+  background: #3182ce;
+  color: #fff;
+  padding: 0.75rem 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.application-btn:hover,
+.application-btn:focus {
+  background: #2563eb;
+}
+
+.application-success {
+  color: #38a169;
+  font-size: 1.1rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.application-jobinfo {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.2rem;
+  font-size: 1.05rem;
+  color: #2d3748;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+@media (max-width: 480px) {
+  .application-box {
+    padding: 1.5rem 0.5rem;
+    max-width: 95vw;
+  }
+  .application-title {
+    font-size: 1.5rem;
+  }
+} 
