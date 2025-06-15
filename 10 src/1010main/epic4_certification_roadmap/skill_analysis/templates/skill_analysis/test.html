@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certification Roadmap Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+        }
+        .resume-input {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .role-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .certification-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: transform 0.2s;
+        }
+        .certification-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .certification-card h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .certification-card p {
+            color: #666;
+            margin: 10px 0;
+        }
+        .certification-card a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .certification-card a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            color: #e74c3c;
+            background-color: #fde8e8;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        .loading::after {
+            content: "...";
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60% { content: "..."; }
+            80%, 100% { content: ""; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Certification Roadmap Generator</h1>
+        
+        <div class="input-group">
+            <label for="resumeInput">Your Resume:</label>
+            <textarea 
+                id="resumeInput" 
+                class="resume-input" 
+                placeholder="Paste your resume here..."
+            ></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="roleInput">Targeted Role:</label>
+            <input 
+                type="text" 
+                id="roleInput" 
+                class="role-input" 
+                placeholder="e.g., DevOps/SecOps Engineer"
+                value="DevOps/SecOps Engineer"
+            />
+        </div>
+
+        <button id="analyzeButton" onclick="analyzeSkills()">Generate Certification Roadmap</button>
+
+        <div id="error" class="error"></div>
+        <div id="loading" class="loading">Generating your certification roadmap</div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function analyzeSkills() {
+            const button = document.getElementById('analyzeButton');
+            const errorDiv = document.getElementById('error');
+            const resultsDiv = document.getElementById('results');
+            const loadingDiv = document.getElementById('loading');
+            try {
+                button.disabled = true;
+                loadingDiv.style.display = 'block';
+                errorDiv.style.display = 'none';
+                resultsDiv.innerHTML = '';
+
+                const resume = document.getElementById('resumeInput').value;
+                const targetRole = document.getElementById('roleInput').value;
+
+                if (!resume) {
+                    throw new Error('Please enter your resume text');
+                }
+                if (!targetRole) {
+                    throw new Error('Please enter a targeted role');
+                }
+                const response = await fetch('/api/roadmap/for-job', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        resume_text: resume,
+                        target_role: targetRole
+                    })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'API error');
+                }
+                const result = await response.json();
+                if (result.recommended_certifications && result.recommended_certifications.length > 0) {
+                    resultsDiv.innerHTML = `
+                        <h2>Recommended Certifications</h2>
+                        ${result.recommended_certifications.map(cert => `
+                            <div class="certification-card">
+                                <h3>${cert.name}</h3>
+                                <p>${cert.description}</p>
+                                <a href="${cert.url}" target="_blank">Learn More →</a>
+                                <div style="margin-top:8px;font-size:13px;color:#888;">Matched Skills: ${cert.matched_skills.join(', ')}</div>
+                                <div style="font-size:13px;color:#888;">Relevance Score: ${cert.relevance_score}</div>
+                            </div>
+                        `).join('')}
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<p>No specific certifications found for your skill set.</p>';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + (err.message || err);
+                errorDiv.style.display = 'block';
+            } finally {
+                button.disabled = false;
+                loadingDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

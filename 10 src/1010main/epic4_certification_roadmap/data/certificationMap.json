@@ -1,0 +1,378 @@
+{
+  "python": {
+    "name": "PCAP – Certified Associate in Python Programming",
+    "link": "https://pythoninstitute.org/pcap",
+    "description": "Industry-recognized certification for Python programming proficiency.",
+    "relevant_skills": ["python", "programming", "software development", "coding", "scripting", "automation"]
+  },
+  "nmap": {
+    "name": "Practical Network Penetration Tester (PNPT)",
+    "link": "https://tcm-sec.com/collections/courses/products/practical-network-penetration-tester-pnpt",
+    "description": "Covers network scanning and enumeration tools like Nmap.",
+    "relevant_skills": ["nmap", "network security", "penetration testing", "network scanning", "security assessment", "vulnerability assessment"]
+  },
+  "wireshark": {
+    "name": "Wireshark Certified Network Analyst (WCNA)",
+    "link": "https://www.wiresharktraining.com/certification.html",
+    "description": "Certification for network analysis and troubleshooting using Wireshark.",
+    "relevant_skills": ["wireshark", "network analysis", "packet analysis", "network troubleshooting", "protocol analysis", "network monitoring"]
+  },
+  "burp suite": {
+    "name": "Burp Suite Certified Practitioner",
+    "link": "https://portswigger.net/certification",
+    "description": "Official certification for web application security testing with Burp Suite.",
+    "relevant_skills": ["burp suite", "web security", "penetration testing", "web application testing", "security testing", "vulnerability assessment"]
+  },
+  "sqlmap": {
+    "name": "Offensive Security Certified Professional (OSCP)",
+    "link": "https://www.offensive-security.com/pwk-oscp/",
+    "description": "Covers SQL injection and other web security testing tools.",
+    "relevant_skills": ["sqlmap", "sql injection", "penetration testing", "web security", "security testing", "vulnerability assessment"]
+  },
+  "metasploit": {
+    "name": "Metasploit Pro Certified Specialist",
+    "link": "https://www.rapid7.com/services/certification/",
+    "description": "Certification for penetration testing using Metasploit.",
+    "relevant_skills": ["metasploit", "penetration testing", "security testing", "vulnerability assessment", "exploitation", "security research"]
+  },
+  "volatility": {
+    "name": "GIAC Certified Forensic Analyst (GCFA)",
+    "link": "https://www.giac.org/certification/certified-forensic-analyst-gcfa/",
+    "description": "Covers memory forensics and malware analysis with tools like Volatility.",
+    "relevant_skills": ["volatility", "digital forensics", "memory forensics", "malware analysis", "incident response", "security analysis"]
+  },
+  "kali linux": {
+    "name": "Offensive Security Certified Professional (OSCP)",
+    "link": "https://www.offensive-security.com/pwk-oscp/",
+    "description": "Industry-standard certification for penetration testing with Kali Linux.",
+    "relevant_skills": ["kali linux", "penetration testing", "security testing", "ethical hacking", "vulnerability assessment", "security tools"]
+  },
+  "aws": {
+    "name": "AWS Certified Solutions Architect – Associate",
+    "link": "https://aws.amazon.com/certification/certified-solutions-architect-associate/",
+    "description": "Certification for designing and deploying scalable systems on AWS.",
+    "relevant_skills": ["aws", "cloud computing", "cloud architecture", "devops", "infrastructure", "system design", "cloud services"]
+  },
+  "terraform": {
+    "name": "HashiCorp Certified: Terraform Associate",
+    "link": "https://www.hashicorp.com/certification/terraform-associate",
+    "description": "Certification for infrastructure as code using Terraform.",
+    "relevant_skills": ["terraform", "infrastructure as code", "devops", "cloud infrastructure", "automation", "configuration management"]
+  },
+  "ansible": {
+    "name": "Red Hat Certified Specialist in Ansible Automation",
+    "link": "https://www.redhat.com/en/services/certification/rhce",
+    "description": "Certification for IT automation using Ansible.",
+    "relevant_skills": ["ansible", "automation", "configuration management", "devops", "infrastructure automation", "system administration"]
+  },
+  "excel": {
+    "name": "Microsoft Office Specialist: Excel Associate",
+    "link": "https://www.microsoft.com/en-us/learning/certification-exams.aspx",
+    "description": "Certification for proficiency in Microsoft Excel.",
+    "relevant_skills": ["excel", "data analysis", "spreadsheets", "data management", "business analytics", "reporting"]
+  },
+  "tableau": {
+    "name": "Tableau Desktop Specialist",
+    "link": "https://www.tableau.com/learn/certification",
+    "description": "Entry-level certification for Tableau data visualization.",
+    "relevant_skills": ["tableau", "data visualization", "business intelligence", "data analysis", "reporting", "dashboards"]
+  },
+  "power bi": {
+    "name": "Microsoft Certified: Data Analyst Associate (Power BI)",
+    "link": "https://learn.microsoft.com/en-us/certifications/power-bi-data-analyst-associate/",
+    "description": "Certification for data analysis and visualization with Power BI.",
+    "relevant_skills": ["power bi", "data analysis", "business intelligence", "data visualization", "reporting", "dashboards"]
+  },
+  "agile": {
+    "name": "Certified ScrumMaster (CSM)",
+    "link": "https://www.scrumalliance.org/get-certified/scrum-master-track/certified-scrummaster",
+    "description": "Industry-standard certification for Agile and Scrum methodologies.",
+    "relevant_skills": ["agile", "scrum", "project management", "team leadership", "agile methodologies", "sprint planning"]
+  },
+  "scrum": {
+    "name": "Professional Scrum Master (PSM I)",
+    "link": "https://www.scrum.org/professional-scrum-certifications",
+    "description": "Certification for Scrum framework and Agile project management.",
+    "relevant_skills": ["scrum", "agile", "project management", "team leadership", "sprint planning", "agile methodologies"]
+  },
+  "communication": {
+    "name": "Effective Communication Certificate (Coursera)",
+    "link": "https://www.coursera.org/learn/wharton-communication-skills",
+    "description": "Course on professional communication skills.",
+    "relevant_skills": ["communication", "presentation", "interpersonal skills", "professional development", "soft skills"]
+  },
+  "problem-solving": {
+    "name": "Critical Thinking & Problem-Solving (edX)",
+    "link": "https://www.edx.org/learn/critical-thinking",
+    "description": "Course on critical thinking and problem-solving skills.",
+    "relevant_skills": ["problem solving", "critical thinking", "analytical skills", "decision making", "logical reasoning"]
+  },
+  "data analysis": {
+    "name": "Google Data Analytics Professional Certificate",
+    "link": "https://grow.google/certificates/data-analytics/",
+    "description": "Comprehensive certification for data analysis skills.",
+    "relevant_skills": ["data analysis", "statistics", "data visualization", "sql", "spreadsheets", "data cleaning", "data interpretation"]
+  },
+  "data visualization": {
+    "name": "Data Visualization with Tableau (Coursera)",
+    "link": "https://www.coursera.org/specializations/data-visualization-tableau",
+    "description": "Specialization in data visualization using Tableau.",
+    "relevant_skills": ["data visualization", "tableau", "business intelligence", "data analysis", "dashboards", "reporting"]
+  },
+  "sql": {
+    "name": "Oracle Database SQL Certified Associate",
+    "link": "https://education.oracle.com/oracle-database-sql-certified-associate/trackp_457",
+    "description": "Certification for SQL and database management.",
+    "relevant_skills": ["sql", "database management", "data querying", "database design", "data manipulation", "database administration"]
+  },
+  "machine learning": {
+    "name": "AWS Certified Machine Learning – Specialty",
+    "link": "https://aws.amazon.com/certification/certified-machine-learning-specialty/",
+    "description": "Certification for machine learning on AWS.",
+    "relevant_skills": ["machine learning", "aws", "ai", "data science", "cloud computing", "mlops", "model deployment"]
+  },
+  "deep learning": {
+    "name": "Deep Learning Specialization (Coursera)",
+    "link": "https://www.coursera.org/specializations/deep-learning",
+    "description": "Comprehensive specialization in deep learning.",
+    "relevant_skills": ["deep learning", "neural networks", "machine learning", "ai", "computer vision", "natural language processing"]
+  },
+  "statistical analysis": {
+    "name": "SAS Certified Statistical Business Analyst",
+    "link": "https://www.sas.com/en_us/certification/credentials/analytics/statistical-business-analyst.html",
+    "description": "Certification for statistical analysis using SAS.",
+    "relevant_skills": ["statistical analysis", "sas", "data analysis", "statistics", "business analytics", "predictive modeling"]
+  },
+  "predictive analytics": {
+    "name": "Predictive Analytics for Business (Udacity)",
+    "link": "https://www.udacity.com/course/predictive-analytics-for-business-nanodegree--nd008",
+    "description": "Nanodegree for predictive analytics in business.",
+    "relevant_skills": ["predictive analytics", "data analysis", "business intelligence", "statistical modeling", "forecasting", "data science"]
+  },
+  "business intelligence": {
+    "name": "Certified Business Intelligence Professional (CBIP)",
+    "link": "https://tdwi.org/pages/education/cbip-certification/cbip-home.aspx",
+    "description": "Certification for business intelligence professionals.",
+    "relevant_skills": ["business intelligence", "data analysis", "data warehousing", "etl", "reporting", "analytics"]
+  },
+  "patient care": {
+    "name": "Certified Medical-Surgical Registered Nurse (CMSRN)",
+    "link": "https://www.medsurgnurse.org/certification",
+    "description": "Certification for patient care in medical-surgical nursing.",
+    "relevant_skills": ["patient care", "nursing", "medical-surgical", "healthcare", "clinical skills", "patient assessment"]
+  },
+  "medication administration": {
+    "name": "Medication Administration Certificate",
+    "link": "https://www.nurse.com/ce/medication-administration",
+    "description": "Certificate for safe medication administration.",
+    "relevant_skills": ["medication administration", "nursing", "patient safety", "healthcare", "clinical skills", "pharmacology"]
+  },
+  "emr": {
+    "name": "Certified Electronic Health Records Specialist (CEHRS)",
+    "link": "https://www.nhanow.com/certification/cehrs",
+    "description": "Certification for electronic medical records management.",
+    "relevant_skills": ["emr", "electronic health records", "healthcare it", "medical records", "healthcare administration", "health information management"]
+  },
+  "bls": {
+    "name": "Basic Life Support (BLS) Certification",
+    "link": "https://cpr.heart.org/en/cpr-courses-and-kits/healthcare-professional/basic-life-support-bls-training",
+    "description": "Certification for basic life support in healthcare.",
+    "relevant_skills": ["bls", "cpr", "emergency care", "healthcare", "life support", "medical emergency"]
+  },
+  "acls": {
+    "name": "Advanced Cardiovascular Life Support (ACLS) Certification",
+    "link": "https://cpr.heart.org/en/cpr-courses-and-kits/healthcare-professional/advanced-cardiovascular-life-support-acls-training",
+    "description": "Certification for advanced cardiovascular life support.",
+    "relevant_skills": ["acls", "advanced life support", "emergency care", "healthcare", "cardiac care", "medical emergency"]
+  },
+  "adobe creative suite": {
+    "name": "Adobe Certified Professional",
+    "link": "https://learning.adobe.com/certification.html",
+    "description": "Certification for Adobe Creative Cloud tools.",
+    "relevant_skills": ["adobe", "photoshop", "illustrator", "indesign", "graphic design", "visual design", "digital design"]
+  },
+  "figma": {
+    "name": "Figma UI/UX Design Certificate (Coursera)",
+    "link": "https://www.coursera.org/projects/figma-ux-design",
+    "description": "Certificate for UI/UX design using Figma.",
+    "relevant_skills": ["figma", "ui design", "ux design", "user interface", "user experience", "prototyping", "design tools"]
+  },
+  "canva": {
+    "name": "Canva Design School Certificate",
+    "link": "https://www.canva.com/designschool/certifications/",
+    "description": "Certificate for design skills using Canva.",
+    "relevant_skills": ["canva", "graphic design", "visual design", "social media design", "digital design", "design tools"]
+  },
+  "branding": {
+    "name": "Brand Management Certification (Coursera)",
+    "link": "https://www.coursera.org/learn/brand-management",
+    "description": "Certification for brand management and strategy.",
+    "relevant_skills": ["branding", "brand management", "marketing", "brand strategy", "visual identity", "brand development"]
+  },
+  "art direction": {
+    "name": "Art Direction Specialization (Coursera)",
+    "link": "https://www.coursera.org/specializations/art-direction",
+    "description": "Specialization in art direction for creative professionals.",
+    "relevant_skills": ["art direction", "creative direction", "visual design", "branding", "creative leadership", "design management"]
+  },
+  "visual design": {
+    "name": "Google UX Design Certificate",
+    "link": "https://grow.google/certificates/ux-design/",
+    "description": "Certificate for visual and UX design.",
+    "relevant_skills": ["visual design", "ux design", "ui design", "user experience", "user interface", "design thinking", "prototyping"]
+  },
+  "cissp": {
+    "name": "CISSP – Certified Information Systems Security Professional",
+    "link": "https://www.isc2.org/certifications/cissp",
+    "description": "Globally recognized certification for experienced security practitioners, managers, and executives.",
+    "relevant_skills": ["information security", "security management", "risk management", "security architecture", "security operations", "security assessment"]
+  },
+  "cism": {
+    "name": "CISM – Certified Information Security Manager",
+    "link": "https://www.isaca.org/credentialing/cism",
+    "description": "Certification focused on managing and governing enterprise information security programs.",
+    "relevant_skills": ["security management", "information security", "risk management", "security governance", "security strategy", "security operations"]
+  },
+  "cisa": {
+    "name": "CISA – Certified Information Systems Auditor",
+    "link": "https://www.isaca.org/credentialing/cisa",
+    "description": "Standard for those who audit, control, monitor, and assess IT and business systems.",
+    "relevant_skills": ["it auditing", "security auditing", "risk assessment", "compliance", "security controls", "audit management"]
+  },
+  "ceh": {
+    "name": "CEH – Certified Ethical Hacker",
+    "link": "https://www.eccouncil.org/programs/certified-ethical-hacker-ceh/",
+    "description": "Validates skills in ethical hacking and penetration testing.",
+    "relevant_skills": ["ethical hacking", "penetration testing", "security testing", "vulnerability assessment", "security research", "network security"]
+  },
+  "security+": {
+    "name": "CompTIA Security+",
+    "link": "https://www.comptia.org/certifications/security",
+    "description": "Entry-level certification for IT security fundamentals.",
+    "relevant_skills": ["security fundamentals", "network security", "security operations", "security assessment", "security controls", "security management"]
+  },
+  "gsec": {
+    "name": "GIAC Security Essentials (GSEC)",
+    "link": "https://www.giac.org/certification/security-essentials-gsec/",
+    "description": "Demonstrates hands-on security skills for IT systems.",
+    "relevant_skills": ["security essentials", "network security", "security operations", "security assessment", "security controls", "security management"]
+  },
+  "ccsp": {
+    "name": "Certified Cloud Security Professional (CCSP)",
+    "link": "https://www.isc2.org/certifications/ccsp",
+    "description": "Advanced cloud security certification for IT professionals.",
+    "relevant_skills": ["cloud security", "aws", "azure", "gcp", "security architecture", "cloud infrastructure", "security management"]
+  },
+  "google cloud architect": {
+    "name": "Google Professional Cloud Architect",
+    "link": "https://cloud.google.com/certification/cloud-architect",
+    "description": "Validates ability to design and manage secure, scalable solutions on Google Cloud.",
+    "relevant_skills": ["gcp", "cloud architecture", "cloud computing", "system design", "cloud infrastructure", "devops", "cloud services"]
+  },
+  "azure administrator": {
+    "name": "Microsoft Certified: Azure Administrator Associate",
+    "link": "https://learn.microsoft.com/en-us/certifications/azure-administrator/",
+    "description": "Validates skills in managing Azure resources and infrastructure.",
+    "relevant_skills": ["azure", "cloud administration", "cloud computing", "infrastructure management", "devops", "cloud services"]
+  },
+  "aws security specialty": {
+    "name": "AWS Certified Security – Specialty",
+    "link": "https://aws.amazon.com/certification/certified-security-specialty/",
+    "description": "Advanced security skills for AWS cloud environments.",
+    "relevant_skills": ["aws", "cloud security", "security architecture", "security operations", "security assessment", "cloud infrastructure"]
+  },
+  "cloud+": {
+    "name": "CompTIA Cloud+",
+    "link": "https://www.comptia.org/certifications/cloud",
+    "description": "Validates skills in cloud infrastructure services.",
+    "relevant_skills": ["cloud computing", "cloud infrastructure", "cloud services", "devops", "system administration", "cloud architecture"]
+  },
+  "ccna": {
+    "name": "Cisco Certified Network Associate (CCNA)",
+    "link": "https://www.cisco.com/c/en/us/training-events/training-certifications/certifications/associate/ccna.html",
+    "description": "Foundational networking certification for network professionals.",
+    "relevant_skills": ["networking", "cisco", "network administration", "network security", "routing", "switching", "network protocols"]
+  },
+  "pmp": {
+    "name": "PMP – Project Management Professional",
+    "link": "https://www.pmi.org/certifications/project-management-pmp",
+    "description": "Globally recognized project management certification.",
+    "relevant_skills": ["project management", "project planning", "risk management", "team leadership", "stakeholder management", "project execution"]
+  },
+  "csm": {
+    "name": "Certified ScrumMaster (CSM)",
+    "link": "https://www.scrumalliance.org/get-certified/scrum-master-track/certified-scrummaster",
+    "description": "Validates understanding and application of Scrum.",
+    "relevant_skills": ["scrum", "agile", "project management", "team leadership", "sprint planning", "agile methodologies", "scrum master"]
+  },
+  "cais": {
+    "name": "Certified Artificial Intelligence Scientist (CAIS)",
+    "link": "https://www.usaii.org/certifications/certified-artificial-intelligence-scientist",
+    "description": "Advanced AI certification for professionals and leaders.",
+    "relevant_skills": ["artificial intelligence", "machine learning", "deep learning", "ai research", "neural networks", "data science", "ai development"]
+  },
+  "google data engineer": {
+    "name": "Google Data Engineer Professional Certificate",
+    "link": "https://cloud.google.com/certification/data-engineer",
+    "description": "Validates skills in designing and building data processing systems on Google Cloud.",
+    "relevant_skills": ["data engineering", "gcp", "big data", "data pipelines", "etl", "data processing", "cloud computing", "data architecture"]
+  },
+  "comptia a+": {
+    "name": "CompTIA A+",
+    "link": "https://www.comptia.org/certifications/a",
+    "description": "Entry-level certification for IT support and troubleshooting.",
+    "relevant_skills": ["it support", "hardware", "software", "networking", "troubleshooting", "system administration", "technical support", "computer repair"]
+  },
+  "adobe xd": {
+    "name": "Adobe Certified Professional in UX Design",
+    "link": "https://learning.adobe.com/certification.html",
+    "description": "Professional certification for UX design using Adobe XD, covering user research, wireframing, and prototyping.",
+    "relevant_skills": ["adobe xd", "ux design", "user research", "wireframing", "prototyping", "user experience", "design thinking"]
+  },
+  "google ux": {
+    "name": "Google UX Design Professional Certificate",
+    "link": "https://grow.google/certificates/ux-design/",
+    "description": "Comprehensive UX design certification covering user research, wireframing, prototyping, and usability testing.",
+    "relevant_skills": ["ux design", "user research", "wireframing", "prototyping", "usability testing", "design thinking", "user experience"]
+  },
+  "interaction design": {
+    "name": "Interaction Design Foundation Certification",
+    "link": "https://www.interaction-design.org/courses",
+    "description": "Certification in interaction design principles, user psychology, and design thinking methodologies.",
+    "relevant_skills": ["interaction design", "user psychology", "design thinking", "user experience", "ux design", "user interface"]
+  },
+  "material design": {
+    "name": "Material Design Certification",
+    "link": "https://material.io/design",
+    "description": "Certification in Google's Material Design system, covering design principles, components, and implementation.",
+    "relevant_skills": ["material design", "design systems", "ui design", "user interface", "design principles", "design components"]
+  },
+  "user research": {
+    "name": "User Research and Testing Certification",
+    "link": "https://www.nngroup.com/courses/",
+    "description": "Certification in user research methodologies, usability testing, and user-centered design.",
+    "relevant_skills": ["user research", "usability testing", "user testing", "a/b testing", "user experience", "ux research"]
+  },
+  "prototyping": {
+    "name": "Prototyping and Wireframing Certification",
+    "link": "https://www.interaction-design.org/courses",
+    "description": "Certification in prototyping tools and methodologies for UX/UI design.",
+    "relevant_skills": ["prototyping", "wireframing", "invision", "marvel", "user flows", "interaction design"]
+  },
+  "design systems": {
+    "name": "Design Systems Certification",
+    "link": "https://www.designsystems.com/certification",
+    "description": "Certification in creating and maintaining design systems for consistent user interfaces.",
+    "relevant_skills": ["design systems", "material design", "ios human interface", "ui design", "design principles"]
+  },
+  "frontend design": {
+    "name": "Frontend Design Certification",
+    "link": "https://www.frontendmasters.com/courses/",
+    "description": "Certification in frontend development with focus on design implementation.",
+    "relevant_skills": ["html", "css", "javascript", "frontend", "ui design", "responsive design"]
+  }
+}
+
+
+  
+
