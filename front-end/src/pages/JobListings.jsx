@@ -16,7 +16,12 @@ const JobListings = () => {
     }));
   };
 
-  const handleApply = (job) => {
+  const handleJobClick = (job) => {
+    navigate(`/jobs/${job.id || job.__unique_id || job.redirect_url}`);
+  };
+
+  const handleApply = (e, job) => {
+    e.stopPropagation(); // Prevent job click event
     setSelectedJob(job);
     navigate(`/apply/${job.id || job.__unique_id || job.redirect_url}`);
   };
@@ -65,11 +70,15 @@ const JobListings = () => {
               <div className="no-jobs">No jobs found.</div>
             ) : (
               jobs.map(job => (
-                <div className="job-card" key={job.id || job.__unique_id || job.redirect_url}>
+                <div 
+                  className="job-card" 
+                  key={job.id || job.__unique_id || job.redirect_url}
+                  onClick={() => handleJobClick(job)}
+                >
                   <h4>{job.title}</h4>
                   <p>{job.company?.display_name || 'Unknown Company'} &bull; {job.location?.display_name || 'Unknown Location'}</p>
                   <span className="job-type">{job.contract_type ? job.contract_type.charAt(0).toUpperCase() + job.contract_type.slice(1) : 'N/A'}{job.salary_is_predicted === '1' ? ' • Salary Predicted' : ''}</span>
-                  <button className="apply-btn" onClick={() => handleApply(job)}>Apply</button>
+                  <button className="apply-btn" onClick={(e) => handleApply(e, job)}>Apply</button>
                 </div>
               ))
             )}
