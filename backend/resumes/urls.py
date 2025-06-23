@@ -2,46 +2,34 @@
 Resumes app URL configuration for Epic 2: Resume Management & Versioning.
 """
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from . import views
 
 app_name = 'resumes'
 
 urlpatterns = [
-    # Resume Templates
-    path('templates/', views.ResumeTemplateListView.as_view(), name='template-list'),
-    path('templates/<uuid:pk>/', views.ResumeTemplateDetailView.as_view(), name='template-detail'),
+    # Resume management
+    path('', views.ResumeListView.as_view(), name='resume_list'),
+    path('<uuid:pk>/', views.ResumeDetailView.as_view(), name='resume_detail'),
+    path('create/', views.CreateResumeView.as_view(), name='create_resume'),
+    path('<uuid:pk>/update/', views.UpdateResumeView.as_view(), name='update_resume'),
+    path('<uuid:pk>/delete/', views.DeleteResumeView.as_view(), name='delete_resume'),
     
-    # Resume CRUD
-    path('', views.ResumeListView.as_view(), name='resume-list'),
-    path('create/', views.ResumeCreateView.as_view(), name='resume-create'),
-    path('<uuid:pk>/', views.ResumeDetailView.as_view(), name='resume-detail'),
-    path('<uuid:pk>/update/', views.ResumeUpdateView.as_view(), name='resume-update'),
-    path('<uuid:pk>/delete/', views.ResumeDeleteView.as_view(), name='resume-delete'),
+    # Resume versioning
+    path('<uuid:pk>/versions/', views.ResumeVersionListView.as_view(), name='resume_version_list'),
+    path('<uuid:pk>/versions/create/', views.CreateResumeVersionView.as_view(), name='create_resume_version'),
+    path('versions/<uuid:pk>/', views.ResumeVersionDetailView.as_view(), name='resume_version_detail'),
+    path('versions/<uuid:pk>/restore/', views.RestoreResumeVersionView.as_view(), name='restore_resume_version'),
     
-    # Resume Versions
-    path('<uuid:resume_id>/versions/', views.ResumeVersionListView.as_view(), name='version-list'),
-    path('<uuid:resume_id>/versions/<uuid:version_id>/', views.ResumeVersionDetailView.as_view(), name='version-detail'),
-    path('<uuid:resume_id>/versions/<uuid:version_id>/restore/', views.restore_resume_version, name='version-restore'),
+    # Resume export/import
+    path('<uuid:pk>/export/', views.ExportResumeView.as_view(), name='export_resume'),
+    path('import/', views.ImportResumeView.as_view(), name='import_resume'),
     
-    # Resume Sharing
-    path('<uuid:resume_id>/shares/', views.ResumeShareListView.as_view(), name='share-list'),
-    path('<uuid:resume_id>/shares/<uuid:share_id>/', views.ResumeShareDetailView.as_view(), name='share-detail'),
+    # Resume sharing
+    path('<uuid:pk>/share/', views.ShareResumeView.as_view(), name='share_resume'),
+    path('shared/<str:share_token>/', views.SharedResumeView.as_view(), name='shared_resume'),
     
-    # Resume Comments
-    path('<uuid:resume_id>/comments/', views.ResumeCommentListView.as_view(), name='comment-list'),
-    path('<uuid:resume_id>/comments/<uuid:comment_id>/', views.ResumeCommentDetailView.as_view(), name='comment-detail'),
-    
-    # Resume Exports
-    path('<uuid:resume_id>/exports/', views.ResumeExportListView.as_view(), name='export-list'),
-    path('<uuid:resume_id>/exports/<uuid:export_id>/download/', views.download_resume_export, name='export-download'),
-    
-    # Resume Skills
-    path('<uuid:resume_id>/skills/', views.ResumeSkillMatchListView.as_view(), name='skill-match-list'),
-    
-    # Utility Endpoints
-    path('<uuid:resume_id>/clone/', views.clone_resume, name='resume-clone'),
-    path('<uuid:resume_id>/set-default/', views.set_default_resume, name='resume-set-default'),
-    path('analytics/', views.resume_analytics, name='resume-analytics'),
+    # Resume templates
+    path('templates/', views.ResumeTemplateListView.as_view(), name='resume_template_list'),
+    path('templates/<uuid:pk>/', views.ResumeTemplateDetailView.as_view(), name='resume_template_detail'),
 ] 
