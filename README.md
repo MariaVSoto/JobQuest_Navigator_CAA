@@ -1,2 +1,4 @@
-# JobQuest_Navigator_CAA
-Capstone Project CAA 900
+# JobQuest Navigator
+
+## Kevin Branch
+This branch contains ongoing development and synchronization work.
