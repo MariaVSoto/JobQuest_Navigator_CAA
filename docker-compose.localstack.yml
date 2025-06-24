@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # Production-like MySQL database
+  mysql:
+    image: mysql:8.0
+    container_name: jobquest-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: jobquest
+      MYSQL_USER: jobuser
+      MYSQL_PASSWORD: jobpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: jobquest-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # LocalStack for AWS services simulation
+  localstack:
+    image: localstack/localstack:latest
+    container_name: jobquest-localstack
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - DEBUG=1
+      - SERVICES=s3,ses,lambda,dynamodb,sqs,sns
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - HOST_TMP_FOLDER=/tmp/localstack
+    volumes:
+      - "/tmp/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # JobQuest Backend API
+  jobquest-backend:
+    build:
+      context: ./10 src/backend
+      dockerfile: Dockerfile.test
+    container_name: jobquest-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=mysql://jobuser:jobpass@mysql:3306/jobquest
+      - REDIS_URL=redis://redis:6379/0
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - LOCALSTACK_HOSTNAME=localstack
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./10 src/backend:/app
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+  # JobQuest Frontend (React)
+  jobquest-frontend:
+    build:
+      context: ./10 src/front-end
+      dockerfile: Dockerfile.test
+    container_name: jobquest-frontend
+    depends_on:
+      - jobquest-backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api
+      - REACT_APP_ENV=test
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./10 src/front-end:/app
+      - /app/node_modules
+
+volumes:
+  mysql_data:
+  redis_data:

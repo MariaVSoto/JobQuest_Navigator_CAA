@@ -1,13 +1,14 @@
 /**
- * Job Application service for tracking job applications
- * Handles all API calls related to job application management
+ * Enhanced Job Application service for Epic 5: Job Application Tracking with Resume Used
+ * Comprehensive service for application tracking, resume versioning, notifications, and analytics
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 class ApplicationService {
   constructor() {
-    this.baseURL = `${API_BASE_URL}/jobs`;
+    this.baseURL = `${API_BASE_URL}/application-tracking`;
+    this.jobsURL = `${API_BASE_URL}/jobs`;
   }
 
   /**
@@ -22,7 +23,7 @@ class ApplicationService {
    */
   async makeRequest(endpoint, options = {}) {
     const token = this.getAuthToken();
-    const url = `${this.baseURL}${endpoint}`;
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
     
     const config = {
       headers: {
@@ -48,8 +49,18 @@ class ApplicationService {
     }
   }
 
+  // ==================== EPIC 5: Enhanced Application Tracking ====================
+
   /**
-   * Get user's job applications
+   * Get dashboard summary with metrics and recent activity
+   */
+  async getDashboard() {
+    const response = await this.makeRequest('/applications/dashboard/');
+    return await response.json();
+  }
+
+  /**
+   * Get user's tracked applications with advanced filtering
    */
   async getApplications(filters = {}) {
     const queryParams = new URLSearchParams();
@@ -64,7 +75,7 @@ class ApplicationService {
   }
 
   /**
-   * Get a specific job application
+   * Get a specific application tracker with full details
    */
   async getApplication(applicationId) {
     const response = await this.makeRequest(`/applications/${applicationId}/`);
@@ -72,7 +83,7 @@ class ApplicationService {
   }
 
   /**
-   * Create a new job application
+   * Create a new application tracker
    */
   async createApplication(applicationData) {
     const response = await this.makeRequest('/applications/', {
@@ -83,18 +94,52 @@ class ApplicationService {
   }
 
   /**
-   * Update job application status and notes
+   * Update application tracker
    */
   async updateApplication(applicationId, applicationData) {
     const response = await this.makeRequest(`/applications/${applicationId}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(applicationData),
     });
     return await response.json();
   }
 
   /**
-   * Delete a job application
+   * Update application status with automatic history tracking
+   */
+  async updateStatus(applicationId, status, notes = '') {
+    const response = await this.makeRequest(`/applications/${applicationId}/update_status/`, {
+      method: 'POST',
+      body: JSON.stringify({ status, notes }),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Bulk update status for multiple applications
+   */
+  async bulkUpdateStatus(applicationIds, newStatus, notes = '') {
+    const response = await this.makeRequest('/applications/bulk_status_update/', {
+      method: 'POST',
+      body: JSON.stringify({
+        application_ids: applicationIds,
+        new_status: newStatus,
+        notes
+      }),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Get detailed analytics for applications
+   */
+  async getAnalytics() {
+    const response = await this.makeRequest('/applications/analytics/');
+    return await response.json();
+  }
+
+  /**
+   * Delete an application tracker
    */
   async deleteApplication(applicationId) {
     await this.makeRequest(`/applications/${applicationId}/`, {
@@ -103,49 +148,194 @@ class ApplicationService {
     return true;
   }
 
+  // ==================== INTERVIEW MANAGEMENT ====================
+
   /**
-   * Apply to a job (creates application)
+   * Get all interviews for the user
    */
-  async applyToJob(jobId, applicationData = {}) {
-    const response = await this.makeRequest(`/${jobId}/apply/`, {
+  async getInterviews(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = `/interviews/${queryParams.toString() ? `?${queryParams}` : ''}`;
+    const response = await this.makeRequest(endpoint);
+    return await response.json();
+  }
+
+  /**
+   * Get upcoming interviews
+   */
+  async getUpcomingInterviews() {
+    const response = await this.makeRequest('/interviews/upcoming/');
+    return await response.json();
+  }
+
+  /**
+   * Create/schedule a new interview
+   */
+  async createInterview(interviewData) {
+    const response = await this.makeRequest('/interviews/', {
       method: 'POST',
-      body: JSON.stringify(applicationData),
+      body: JSON.stringify(interviewData),
     });
     return await response.json();
   }
 
   /**
-   * Get application statistics
+   * Update interview details
+   */
+  async updateInterview(interviewId, interviewData) {
+    const response = await this.makeRequest(`/interviews/${interviewId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(interviewData),
+    });
+    return await response.json();
+  }
+
+  // ==================== NOTIFICATIONS ====================
+
+  /**
+   * Get user notifications
+   */
+  async getNotifications(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = `/notifications/${queryParams.toString() ? `?${queryParams}` : ''}`;
+    const response = await this.makeRequest(endpoint);
+    return await response.json();
+  }
+
+  /**
+   * Mark notification as read
+   */
+  async markNotificationRead(notificationId) {
+    const response = await this.makeRequest(`/notifications/${notificationId}/mark_read/`, {
+      method: 'POST',
+    });
+    return await response.json();
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  async markAllNotificationsRead() {
+    const response = await this.makeRequest('/notifications/mark_all_read/', {
+      method: 'POST',
+    });
+    return await response.json();
+  }
+
+  /**
+   * Create a new notification/reminder
+   */
+  async createNotification(notificationData) {
+    const response = await this.makeRequest('/notifications/', {
+      method: 'POST',
+      body: JSON.stringify(notificationData),
+    });
+    return await response.json();
+  }
+
+  // ==================== DOCUMENTS ====================
+
+  /**
+   * Get application documents
+   */
+  async getDocuments(applicationId = null) {
+    const filters = applicationId ? { application_tracker: applicationId } : {};
+    const queryParams = new URLSearchParams(filters);
+    const endpoint = `/documents/${queryParams.toString() ? `?${queryParams}` : ''}`;
+    const response = await this.makeRequest(endpoint);
+    return await response.json();
+  }
+
+  /**
+   * Upload application document
+   */
+  async uploadDocument(documentData) {
+    const formData = new FormData();
+    Object.entries(documentData).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    const response = await this.makeRequest('/documents/', {
+      method: 'POST',
+      body: formData,
+      headers: {}, // Let browser set content-type for FormData
+    });
+    return await response.json();
+  }
+
+  // ==================== METRICS & ANALYTICS ====================
+
+  /**
+   * Get application metrics for a specific period
+   */
+  async getMetrics() {
+    const response = await this.makeRequest('/metrics/');
+    return await response.json();
+  }
+
+  /**
+   * Get application status history
+   */
+  async getStatusHistory(applicationId) {
+    const response = await this.makeRequest(`/applications/${applicationId}/history/`);
+    return await response.json();
+  }
+
+  // ==================== LEGACY COMPATIBILITY ====================
+
+  /**
+   * Apply to a job (creates basic application, then enhanced tracker)
+   */
+  async applyToJob(jobId, applicationData = {}) {
+    // First create basic job application
+    const response = await this.makeRequest(`${this.jobsURL}/${jobId}/apply/`, {
+      method: 'POST',
+      body: JSON.stringify(applicationData),
+    });
+    
+    const basicApplication = await response.json();
+    
+    // Then create enhanced application tracker if resume version is provided
+    if (applicationData.resume_version_id) {
+      const trackerData = {
+        job_application: basicApplication.id,
+        resume_version: applicationData.resume_version_id,
+        priority: applicationData.priority || 'medium',
+        application_source: applicationData.application_source || 'direct',
+        cover_letter_used: applicationData.cover_letter || '',
+        salary_expectation: applicationData.salary_expectation,
+        notes: applicationData.notes || '',
+      };
+      
+      await this.createApplication(trackerData);
+    }
+    
+    return basicApplication;
+  }
+
+  /**
+   * Get application statistics (enhanced version)
    */
   async getApplicationStats() {
     try {
-      const applications = await this.getApplications({ limit: 1000 });
-      const allApplications = applications.results || applications;
-      
-      const stats = {
-        total: allApplications.length,
-        applied: 0,
-        screening: 0,
-        interview: 0,
-        offer: 0,
-        rejected: 0,
-        withdrawn: 0
+      const dashboard = await this.getDashboard();
+      return {
+        total: dashboard.total_applications,
+        ...dashboard.applications_by_status,
+        successRate: dashboard.response_rate,
+        responseRate: dashboard.response_rate,
+        averageResponseTime: dashboard.average_time_to_response,
       };
-
-      allApplications.forEach(app => {
-        if (stats.hasOwnProperty(app.status)) {
-          stats[app.status]++;
-        }
-      });
-
-      // Calculate success rate
-      const totalProcessed = stats.screening + stats.interview + stats.offer + stats.rejected;
-      stats.successRate = totalProcessed > 0 ? 
-        Math.round(((stats.screening + stats.interview + stats.offer) / totalProcessed) * 100) : 0;
-
-      return stats;
     } catch (error) {
-      console.error('Error calculating application stats:', error);
+      console.error('Error getting application stats:', error);
       return {
         total: 0,
         applied: 0,
@@ -154,102 +344,79 @@ class ApplicationService {
         offer: 0,
         rejected: 0,
         withdrawn: 0,
-        successRate: 0
+        successRate: 0,
+        responseRate: 0,
+        averageResponseTime: 0,
       };
     }
   }
 
+  // ==================== UTILITY METHODS ====================
+
   /**
-   * Get applications by status
+   * Get enhanced status choices for Epic 5
    */
-  async getApplicationsByStatus(status) {
-    return await this.getApplications({ status });
+  getStatusChoices() {
+    return [
+      { value: 'applied', label: 'Applied', color: '#3498db' },
+      { value: 'screening', label: 'Application Screening', color: '#f39c12' },
+      { value: 'phone_screening', label: 'Phone Screening', color: '#e67e22' },
+      { value: 'technical_interview', label: 'Technical Interview', color: '#9b59b6' },
+      { value: 'behavioral_interview', label: 'Behavioral Interview', color: '#8e44ad' },
+      { value: 'final_interview', label: 'Final Interview', color: '#2c3e50' },
+      { value: 'reference_check', label: 'Reference Check', color: '#16a085' },
+      { value: 'offer_pending', label: 'Offer Pending', color: '#27ae60' },
+      { value: 'offer_received', label: 'Offer Received', color: '#2ecc71' },
+      { value: 'offer_accepted', label: 'Offer Accepted', color: '#27ae60' },
+      { value: 'offer_declined', label: 'Offer Declined', color: '#f39c12' },
+      { value: 'rejected', label: 'Rejected', color: '#e74c3c' },
+      { value: 'withdrawn', label: 'Withdrawn', color: '#95a5a6' },
+      { value: 'on_hold', label: 'On Hold', color: '#34495e' },
+    ];
   }
 
   /**
-   * Get recent applications (last 30 days)
+   * Get priority choices
    */
-  async getRecentApplications(days = 30) {
-    const applications = await this.getApplications();
-    const allApplications = applications.results || applications;
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    return allApplications.filter(app => 
-      new Date(app.applied_date) >= cutoffDate
-    );
+  getPriorityChoices() {
+    return [
+      { value: 'low', label: 'Low', color: '#95a5a6' },
+      { value: 'medium', label: 'Medium', color: '#3498db' },
+      { value: 'high', label: 'High', color: '#f39c12' },
+      { value: 'urgent', label: 'Urgent', color: '#e74c3c' },
+    ];
   }
 
   /**
-   * Search applications by job title or company
-   */
-  async searchApplications(query) {
-    const applications = await this.getApplications();
-    const allApplications = applications.results || applications;
-    
-    const normalizedQuery = query.toLowerCase();
-    return allApplications.filter(app => 
-      app.job.title.toLowerCase().includes(normalizedQuery) ||
-      app.job.company.name.toLowerCase().includes(normalizedQuery)
-    );
-  }
-
-  /**
-   * Get application status display
+   * Get status display with color
    */
   getStatusDisplay(status) {
-    const statusMap = {
-      'applied': 'Applied',
-      'screening': 'Screening',
-      'interview': 'Interview',
-      'offer': 'Offer',
-      'rejected': 'Rejected',
-      'withdrawn': 'Withdrawn'
-    };
-    return statusMap[status] || status;
+    const choice = this.getStatusChoices().find(c => c.value === status);
+    return choice ? { label: choice.label, color: choice.color } : { label: status, color: '#95a5a6' };
   }
 
   /**
-   * Get application status color
+   * Get priority display with color
    */
-  getStatusColor(status) {
-    const colorMap = {
-      'applied': '#3498db',      // Blue
-      'screening': '#f39c12',    // Orange
-      'interview': '#9b59b6',    // Purple
-      'offer': '#27ae60',        // Green
-      'rejected': '#e74c3c',     // Red
-      'withdrawn': '#95a5a6'     // Gray
-    };
-    return colorMap[status] || '#95a5a6';
+  getPriorityDisplay(priority) {
+    const choice = this.getPriorityChoices().find(c => c.value === priority);
+    return choice ? { label: choice.label, color: choice.color } : { label: priority, color: '#95a5a6' };
   }
 
   /**
-   * Get application priority based on status and date
+   * Format relative time (e.g., "2 days ago")
    */
-  getApplicationPriority(application) {
-    const daysSinceApplied = Math.floor(
-      (new Date() - new Date(application.applied_date)) / (1000 * 60 * 60 * 24)
-    );
-
-    if (application.status === 'interview') return { level: 'high', color: '#9b59b6' };
-    if (application.status === 'offer') return { level: 'urgent', color: '#27ae60' };
-    if (application.status === 'screening') return { level: 'medium', color: '#f39c12' };
-    if (application.status === 'applied' && daysSinceApplied > 14) return { level: 'follow-up', color: '#e67e22' };
-    
-    return { level: 'normal', color: '#3498db' };
-  }
-
-  /**
-   * Format application date for display
-   */
-  formatApplicationDate(dateString) {
+  formatRelativeTime(dateString) {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    const diffInMs = now - date;
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-    if (diffInDays === 0) return 'Today';
-    if (diffInDays === 1) return 'Yesterday';
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
     if (diffInDays < 7) return `${diffInDays} days ago`;
     if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
     if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
@@ -258,82 +425,63 @@ class ApplicationService {
   }
 
   /**
-   * Validate application data
-   */
-  validateApplicationData(applicationData) {
-    const errors = [];
-
-    if (!applicationData.job_id) {
-      errors.push('Job ID is required');
-    }
-
-    if (applicationData.status && !['applied', 'screening', 'interview', 'offer', 'rejected', 'withdrawn'].includes(applicationData.status)) {
-      errors.push('Invalid application status');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-
-  /**
-   * Get next steps suggestion based on status
+   * Get next steps suggestion based on enhanced status
    */
   getNextStepsSuggestion(application) {
     const daysSinceApplied = Math.floor(
       (new Date() - new Date(application.applied_date)) / (1000 * 60 * 60 * 24)
     );
 
-    switch (application.status) {
-      case 'applied':
-        if (daysSinceApplied > 14) {
-          return 'Consider following up with the recruiter or hiring manager';
-        }
-        return 'Wait for initial response from the company';
-      
-      case 'screening':
-        return 'Prepare for the next round of interviews';
-      
-      case 'interview':
-        return 'Send a thank you email and wait for feedback';
-      
-      case 'offer':
-        return 'Review the offer details and negotiate if necessary';
-      
-      case 'rejected':
-        return 'Request feedback and consider applying to similar roles';
-      
-      case 'withdrawn':
-        return 'Consider if you want to reapply in the future';
-      
-      default:
-        return 'Keep track of your application progress';
-    }
+    const suggestions = {
+      'applied': daysSinceApplied > 14 
+        ? 'Consider following up with the recruiter or hiring manager'
+        : 'Wait for initial response from the company',
+      'screening': 'Prepare for the next round of interviews',
+      'phone_screening': 'Prepare for technical or behavioral interviews',
+      'technical_interview': 'Review technical concepts and practice coding problems',
+      'behavioral_interview': 'Prepare STAR method responses for common questions',
+      'final_interview': 'Research the team and prepare thoughtful questions',
+      'reference_check': 'Confirm your references are prepared and available',
+      'offer_pending': 'Wait for the official offer and prepare for negotiation',
+      'offer_received': 'Review the offer details and negotiate if necessary',
+      'offer_accepted': 'Prepare for onboarding and your new role',
+      'offer_declined': 'Consider maintaining relationships for future opportunities',
+      'rejected': 'Request feedback and consider applying to similar roles',
+      'withdrawn': 'Consider if you want to reapply in the future',
+      'on_hold': 'Stay in touch and continue applying to other positions',
+    };
+
+    return suggestions[application.status] || 'Keep track of your application progress';
   }
 
   /**
-   * Export applications data for backup/analysis
+   * Validate application data for Epic 5
    */
-  async exportApplications(format = 'json') {
-    const applications = await this.getApplications({ limit: 1000 });
-    const allApplications = applications.results || applications;
+  validateApplicationData(applicationData) {
+    const errors = [];
 
-    if (format === 'csv') {
-      const headers = ['Job Title', 'Company', 'Status', 'Applied Date', 'Last Updated', 'Location'];
-      const csvData = allApplications.map(app => [
-        app.job.title,
-        app.job.company.name,
-        app.status,
-        new Date(app.applied_date).toLocaleDateString(),
-        new Date(app.last_updated).toLocaleDateString(),
-        app.job.location.city
-      ]);
-
-      return [headers, ...csvData];
+    if (!applicationData.job_application) {
+      errors.push('Job application reference is required');
     }
 
-    return allApplications;
+    if (!applicationData.resume_version) {
+      errors.push('Resume version is required');
+    }
+
+    const validStatuses = this.getStatusChoices().map(s => s.value);
+    if (applicationData.status && !validStatuses.includes(applicationData.status)) {
+      errors.push('Invalid application status');
+    }
+
+    const validPriorities = this.getPriorityChoices().map(p => p.value);
+    if (applicationData.priority && !validPriorities.includes(applicationData.priority)) {
+      errors.push('Invalid priority level');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 }
 

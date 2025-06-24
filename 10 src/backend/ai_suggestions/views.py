@@ -716,62 +716,51 @@ class SuggestionFeedbackListView(generics.ListAPIView):
 
 
 # Analytics Views
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def ai_suggestions_analytics(request):
-    """Get analytics for user's AI suggestions."""
-    user_suggestions = AISuggestion.objects.filter(user=request.user)
-    
-    # Basic counts
-    total_suggestions = user_suggestions.count()
-    suggestions_by_type = dict(
-        user_suggestions.values('suggestion_type').annotate(
-            count=Count('id')
-        ).values_list('suggestion_type', 'count')
-    )
-    suggestions_by_status = dict(
-        user_suggestions.values('status').annotate(
-            count=Count('id')
-        ).values_list('status', 'count')
-    )
-    
-    # Average scores
-    avg_confidence = user_suggestions.aggregate(
-        avg=Avg('confidence_score')
-    )['avg'] or 0.0
-    avg_processing_time = user_suggestions.filter(
-        processing_time__isnull=False
-    ).aggregate(avg=Avg('processing_time'))['avg'] or 0.0
-    
-    # Engagement metrics
-    viewed_suggestions = user_suggestions.filter(viewed_at__isnull=False).count()
-    acted_suggestions = user_suggestions.filter(acted_on_at__isnull=False).count()
-    
-    user_engagement_rate = (viewed_suggestions / total_suggestions) if total_suggestions > 0 else 0.0
-    implementation_rate = (acted_suggestions / total_suggestions) if total_suggestions > 0 else 0.0
-    
-    # Recent suggestions
-    recent_suggestions = user_suggestions.order_by('-created_at')[:10]
-    recent_suggestions_data = AISuggestionSerializer(
-        recent_suggestions, many=True, context={'request': request}
-    ).data
-    
-    analytics_data = {
-        'total_suggestions': total_suggestions,
-        'suggestions_by_type': suggestions_by_type,
-        'suggestions_by_status': suggestions_by_status,
-        'average_confidence_score': round(avg_confidence, 2),
-        'average_processing_time': round(avg_processing_time, 2),
-        'user_engagement_rate': round(user_engagement_rate, 2),
-        'implementation_rate': round(implementation_rate, 2),
-        'recent_suggestions': recent_suggestions_data
-    }
-    
-    serializer = AISuggestionAnalyticsSerializer(data=analytics_data)
-    if serializer.is_valid():
-        return Response(serializer.data)
-    else:
-        return Response(analytics_data)
+class AISuggestionsAnalyticsView(APIView):
+    """CBV version of ai_suggestions_analytics (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        user_suggestions = AISuggestion.objects.filter(user=request.user)
+        total_suggestions = user_suggestions.count()
+        suggestions_by_type = dict(
+            user_suggestions.values('suggestion_type').annotate(
+                count=Count('id')
+            ).values_list('suggestion_type', 'count')
+        )
+        suggestions_by_status = dict(
+            user_suggestions.values('status').annotate(
+                count=Count('id')
+            ).values_list('status', 'count')
+        )
+        avg_confidence = user_suggestions.aggregate(
+            avg=Avg('confidence_score')
+        )['avg'] or 0.0
+        avg_processing_time = user_suggestions.filter(
+            processing_time__isnull=False
+        ).aggregate(avg=Avg('processing_time'))['avg'] or 0.0
+        viewed_suggestions = user_suggestions.filter(viewed_at__isnull=False).count()
+        acted_suggestions = user_suggestions.filter(acted_on_at__isnull=False).count()
+        user_engagement_rate = (viewed_suggestions / total_suggestions) if total_suggestions > 0 else 0.0
+        implementation_rate = (acted_suggestions / total_suggestions) if total_suggestions > 0 else 0.0
+        recent_suggestions = user_suggestions.order_by('-created_at')[:10]
+        recent_suggestions_data = AISuggestionSerializer(
+            recent_suggestions, many=True, context={'request': request}
+        ).data
+        analytics_data = {
+            'total_suggestions': total_suggestions,
+            'suggestions_by_type': suggestions_by_type,
+            'suggestions_by_status': suggestions_by_status,
+            'average_confidence_score': round(avg_confidence, 2),
+            'average_processing_time': round(avg_processing_time, 2),
+            'user_engagement_rate': round(user_engagement_rate, 2),
+            'implementation_rate': round(implementation_rate, 2),
+            'recent_suggestions': recent_suggestions_data
+        }
+        serializer = AISuggestionAnalyticsSerializer(data=analytics_data)
+        if serializer.is_valid():
+            return Response(serializer.data)
+        else:
+            return Response(analytics_data)
 
 
 # Batch Processing Views
@@ -795,110 +784,97 @@ class SuggestionBatchDetailView(generics.RetrieveAPIView):
 
 
 # Utility Functions
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def generate_daily_suggestions(request):
-    """Generate daily AI suggestions for the user."""
-    user = request.user
-    
-    # Create batch record
-    batch = SuggestionBatch.objects.create(
-        user=user,
-        batch_type='daily_suggestions',
-        status='processing'
-    )
-    batch.started_at = timezone.now()
-    batch.save()
-    
-    try:
-        suggestions_created = []
-        start_time = time.time()
-        
-        # Generate different types of daily suggestions
-        suggestion_types = [
-            ('resume_improvement', 'Daily Resume Tip'),
-            ('job_match', 'New Job Matches'),
-            ('skill_highlight', 'Skill Enhancement')
-        ]
-        
-        for suggestion_type, title_prefix in suggestion_types:
-            suggestion = AISuggestion.objects.create(
-                user=user,
-                suggestion_type=suggestion_type,
-                title=f'{title_prefix} - {timezone.now().strftime("%Y-%m-%d")}',
-                description=f'Daily {suggestion_type.replace("_", " ")} suggestion',
-                suggestion_content={
-                    'suggestion': f'Daily tip for {suggestion_type.replace("_", " ")}',
-                    'reasoning': 'Generated as part of daily suggestions',
-                    'daily_tip': True
-                },
-                ai_model='gpt-3.5-turbo',
-                confidence_score=0.7,
-                processing_time=time.time() - start_time,
-                priority='low',
-                expires_at=timezone.now() + timedelta(days=7)
+class GenerateDailySuggestionsView(APIView):
+    """CBV version of generate_daily_suggestions (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request):
+        user = request.user
+        batch = SuggestionBatch.objects.create(
+            user=user,
+            batch_type='daily_suggestions',
+            status='processing'
+        )
+        batch.started_at = timezone.now()
+        batch.save()
+        try:
+            suggestions_created = []
+            start_time = time.time()
+            suggestion_types = [
+                ('resume_improvement', 'Daily Resume Tip'),
+                ('job_match', 'New Job Matches'),
+                ('skill_highlight', 'Skill Enhancement')
+            ]
+            for suggestion_type, title_prefix in suggestion_types:
+                suggestion = AISuggestion.objects.create(
+                    user=user,
+                    suggestion_type=suggestion_type,
+                    title=f'{title_prefix} - {timezone.now().strftime("%Y-%m-%d")}',
+                    description=f'Daily {suggestion_type.replace("_", " ")} suggestion',
+                    suggestion_content={
+                        'suggestion': f'Daily tip for {suggestion_type.replace("_", " ")}',
+                        'reasoning': 'Generated as part of daily suggestions',
+                        'daily_tip': True
+                    },
+                    ai_model='gpt-3.5-turbo',
+                    confidence_score=0.7,
+                    processing_time=time.time() - start_time,
+                    priority='low',
+                    expires_at=timezone.now() + timedelta(days=7)
+                )
+                suggestions_created.append(suggestion)
+            batch.status = 'completed'
+            batch.completed_at = timezone.now()
+            batch.total_suggestions = len(suggestions_created)
+            batch.successful_suggestions = len(suggestions_created)
+            batch.processing_time = time.time() - start_time
+            batch.save()
+            return Response({
+                'message': f'{len(suggestions_created)} daily suggestions generated',
+                'batch_id': str(batch.id),
+                'suggestions_count': len(suggestions_created)
+            })
+        except Exception as e:
+            batch.status = 'failed'
+            batch.error_message = str(e)
+            batch.completed_at = timezone.now()
+            batch.save()
+            return Response(
+                {"error": "Failed to generate daily suggestions", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            suggestions_created.append(suggestion)
-        
-        # Update batch
-        batch.status = 'completed'
-        batch.completed_at = timezone.now()
-        batch.total_suggestions = len(suggestions_created)
-        batch.successful_suggestions = len(suggestions_created)
-        batch.processing_time = time.time() - start_time
-        batch.save()
-        
-        return Response({
-            'message': f'{len(suggestions_created)} daily suggestions generated',
-            'batch_id': str(batch.id),
-            'suggestions_count': len(suggestions_created)
-        })
-        
-    except Exception as e:
-        batch.status = 'failed'
-        batch.error_message = str(e)
-        batch.completed_at = timezone.now()
-        batch.save()
-        
-        return Response(
-            {"error": "Failed to generate daily suggestions", "details": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
 
 
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def dismiss_job_recommendation(request, recommendation_id):
-    """Mark a job recommendation as dismissed."""
-    try:
-        recommendation = JobRecommendation.objects.get(
-            id=recommendation_id, user=request.user
-        )
-        recommendation.dismissed = True
-        recommendation.save()
-        
-        return Response({'message': 'Job recommendation dismissed'})
-    except JobRecommendation.DoesNotExist:
-        return Response(
-            {"error": "Job recommendation not found"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+class DismissJobRecommendationView(APIView):
+    """CBV version of dismiss_job_recommendation (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, recommendation_id):
+        try:
+            recommendation = JobRecommendation.objects.get(
+                id=recommendation_id, user=request.user
+            )
+            recommendation.dismissed = True
+            recommendation.save()
+            return Response({'message': 'Job recommendation dismissed'})
+        except JobRecommendation.DoesNotExist:
+            return Response(
+                {"error": "Job recommendation not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def save_job_recommendation(request, recommendation_id):
-    """Mark a job recommendation as saved."""
-    try:
-        recommendation = JobRecommendation.objects.get(
-            id=recommendation_id, user=request.user
-        )
-        recommendation.saved = True
-        recommendation.save()
-        
-        return Response({'message': 'Job recommendation saved'})
-    except JobRecommendation.DoesNotExist:
-        return Response(
-            {"error": "Job recommendation not found"},
-            status=status.HTTP_404_NOT_FOUND
-        )
+class SaveJobRecommendationView(APIView):
+    """CBV version of save_job_recommendation (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, recommendation_id):
+        try:
+            recommendation = JobRecommendation.objects.get(
+                id=recommendation_id, user=request.user
+            )
+            recommendation.saved = True
+            recommendation.save()
+            return Response({'message': 'Job recommendation saved'})
+        except JobRecommendation.DoesNotExist:
+            return Response(
+                {"error": "Job recommendation not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )

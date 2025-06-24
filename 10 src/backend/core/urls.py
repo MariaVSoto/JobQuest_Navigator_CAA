@@ -1,9 +1,12 @@
 """
-Core app URL configuration.
-Handles authentication, user management, and shared endpoints.
+JobQuest Navigator - Main URL Configuration
+Includes all Epic apps and core functionality with API versioning.
 """
 
+from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -11,9 +14,7 @@ from rest_framework_simplejwt.views import (
 )
 from . import views
 
-app_name = 'core'
-
-# Authentication URLs
+# Authentication URLs (moved from previous core-only URLs)
 auth_patterns = [
     path('login/', views.UserLoginView.as_view(), name='login'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -26,7 +27,7 @@ auth_patterns = [
     path('password/reset/confirm/', views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
 ]
 
-# User management URLs
+# User management URLs (moved from previous core-only URLs)
 user_patterns = [
     path('profile/', views.UserProfileView.as_view(), name='user_profile'),
     path('profile/update/', views.UserProfileUpdateView.as_view(), name='update_profile'),
@@ -34,7 +35,7 @@ user_patterns = [
     path('activity/', views.ActivityLogListView.as_view(), name='user_activity'),
 ]
 
-# Location URLs
+# Location URLs (moved from previous core-only URLs)
 location_patterns = [
     path('', views.LocationListView.as_view(), name='location_list'),
     path('<uuid:pk>/', views.LocationDetailView.as_view(), name='location_detail'),
@@ -42,21 +43,47 @@ location_patterns = [
     path('geocode/', views.GeocodeView.as_view(), name='geocode'),
 ]
 
-# Company URLs
+# Company URLs (moved from previous core-only URLs)
 company_patterns = [
     path('', views.CompanyListView.as_view(), name='company_list'),
     path('<uuid:pk>/', views.CompanyDetailView.as_view(), name='company_detail'),
     path('search/', views.CompanySearchView.as_view(), name='company_search'),
 ]
 
+# Main URL patterns including all Epic applications
 urlpatterns = [
-    # Authentication endpoints
-    path('', include(auth_patterns)),
+    # Django Admin
+    path('admin/', admin.site.urls),
     
-    # User management
-    path('user/', include(user_patterns)),
+    # API Documentation and Health Checks
+    path('health/', include('core.health_urls')),
     
-    # Shared resources
-    path('locations/', include(location_patterns)),
-    path('companies/', include(company_patterns)),
-] 
+    # Authentication & Core User Management
+    path('api/auth/', include(auth_patterns)),
+    path('api/user/', include(user_patterns)),
+    path('api/locations/', include(location_patterns)),
+    path('api/companies/', include(company_patterns)),
+    
+    # Epic 1: Geolocation-Based Job Mapping (Jobs)
+    path('api/jobs/', include('jobs.urls')),
+    
+    # Epic 2: Automated Resume Versioning System
+    path('api/resumes/', include('resumes.urls')),
+    
+    # Epic 3: AI-Powered Resume Optimization and Smart Recommendations
+    path('api/ai-suggestions/', include('ai_suggestions.urls')),
+    
+    # Epic 4: Dynamic Certification Roadmap with Market Demand Alerts (unified in skills module)
+    path('api/skills/', include('skills.urls')),
+    
+    # Epic 5: Job Application Tracking with Resume Used
+    path('api/application-tracking/', include('application_tracking.urls')),
+    
+    # Epic 6: AI-Driven Company Research and Interview Prep Module
+    path('api/company-research/', include('company_research.urls')),
+]
+
+# Serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

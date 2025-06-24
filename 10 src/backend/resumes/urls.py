@@ -23,7 +23,7 @@ urlpatterns = [
     # Resume Versions
     path('<uuid:resume_id>/versions/', views.ResumeVersionListView.as_view(), name='version-list'),
     path('<uuid:resume_id>/versions/<uuid:version_id>/', views.ResumeVersionDetailView.as_view(), name='version-detail'),
-    path('<uuid:resume_id>/versions/<uuid:version_id>/restore/', views.restore_resume_version, name='version-restore'),
+    path('<uuid:resume_id>/versions/<uuid:version_id>/restore/', views.ResumeRestoreVersionView.as_view(), name='version-restore'),
     
     # Resume Sharing
     path('<uuid:resume_id>/shares/', views.ResumeShareListView.as_view(), name='share-list'),
@@ -35,13 +35,13 @@ urlpatterns = [
     
     # Resume Exports
     path('<uuid:resume_id>/exports/', views.ResumeExportListView.as_view(), name='export-list'),
-    path('<uuid:resume_id>/exports/<uuid:export_id>/download/', views.download_resume_export, name='export-download'),
+    path('<uuid:resume_id>/exports/<uuid:export_id>/download/', views.ResumeDownloadExportView.as_view(), name='export-download'),
     
     # Resume Skills
     path('<uuid:resume_id>/skills/', views.ResumeSkillMatchListView.as_view(), name='skill-match-list'),
     
     # Utility Endpoints
-    path('<uuid:resume_id>/clone/', views.clone_resume, name='resume-clone'),
-    path('<uuid:resume_id>/set-default/', views.set_default_resume, name='resume-set-default'),
-    path('analytics/', views.resume_analytics, name='resume-analytics'),
+    path('<uuid:resume_id>/clone/', views.ResumeCloneView.as_view(), name='resume-clone'),
+    path('<uuid:resume_id>/set-default/', views.ResumeSetDefaultView.as_view(), name='resume-set-default'),
+    path('analytics/', views.ResumeAnalyticsView.as_view(), name='resume-analytics'),
 ] 

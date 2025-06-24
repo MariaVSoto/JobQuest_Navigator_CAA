@@ -624,97 +624,88 @@ class UserSkillDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 # Function-based views for backward compatibility
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def job_list(request):
-    """Function-based job list view."""
-    view = JobListView.as_view()
-    return view(request)
+# The following FBVs are refactored to CBVs below.
 
+class JobListCBV(APIView):
+    """CBV version of job_list (was FBV)"""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        view = JobListView.as_view()
+        return view(request)
 
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def job_detail(request, pk):
-    """Function-based job detail view."""
-    view = JobDetailView.as_view()
-    return view(request, pk=pk)
+class JobDetailCBV(APIView):
+    """CBV version of job_detail (was FBV)"""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request, pk):
+        view = JobDetailView.as_view()
+        return view(request, pk=pk)
 
+class JobSearchCBV(APIView):
+    """CBV version of job_search (was FBV)"""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        view = JobSearchView.as_view()
+        return view(request)
 
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def job_search(request):
-    """Function-based job search view."""
-    view = JobSearchView.as_view()
-    return view(request)
+class NearbyJobsCBV(APIView):
+    """CBV version of nearby_jobs (was FBV)"""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        view = NearbyJobsView.as_view()
+        return view(request)
 
+class JobMapCBV(APIView):
+    """CBV version of job_map (was FBV)"""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        view = JobMapView.as_view()
+        return view(request)
 
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def nearby_jobs(request):
-    """Function-based nearby jobs view."""
-    view = NearbyJobsView.as_view()
-    return view(request)
+class SavedJobsCBV(APIView):
+    """CBV version of saved_jobs (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        view = SavedJobsView.as_view()
+        return view(request)
 
+class SaveJobCBV(APIView):
+    """CBV version of save_job (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, pk):
+        view = SaveJobView.as_view()
+        return view(request, pk=pk)
 
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def job_map(request):
-    """Function-based job map view."""
-    view = JobMapView.as_view()
-    return view(request)
+class UnsaveJobCBV(APIView):
+    """CBV version of unsave_job (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def delete(self, request, pk):
+        view = UnsaveJobView.as_view()
+        return view(request, pk=pk)
 
+class ApplyJobCBV(APIView):
+    """CBV version of apply_job (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, pk):
+        view = ApplyJobView.as_view()
+        return view(request, pk=pk)
 
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def saved_jobs(request):
-    """Function-based saved jobs view."""
-    view = SavedJobsView.as_view()
-    return view(request)
+class JobApplicationsCBV(APIView):
+    """CBV version of job_applications (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        view = JobApplicationListView.as_view()
+        return view(request)
 
+class SkillsCBV(APIView):
+    """CBV version of skills (was FBV)"""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        view = SkillListView.as_view()
+        return view(request)
 
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def save_job(request, pk):
-    """Function-based save job view."""
-    view = SaveJobView.as_view()
-    return view(request, pk=pk)
-
-
-@api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
-def unsave_job(request, pk):
-    """Function-based unsave job view."""
-    view = UnsaveJobView.as_view()
-    return view(request, pk=pk)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def apply_job(request, pk):
-    """Function-based apply job view."""
-    view = ApplyJobView.as_view()
-    return view(request, pk=pk)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def job_applications(request):
-    """Function-based job applications view."""
-    view = JobApplicationListView.as_view()
-    return view(request)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.AllowAny])
-def skills(request):
-    """Function-based skills view."""
-    view = SkillListView.as_view()
-    return view(request)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def user_skills(request):
-    """Function-based user skills view."""
-    view = UserSkillListView.as_view()
-    return view(request)
+class UserSkillsCBV(APIView):
+    """CBV version of user_skills (was FBV)"""
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        view = UserSkillListView.as_view()
+        return view(request)

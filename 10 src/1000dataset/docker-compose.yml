@@ -19,24 +19,5 @@ services:
       timeout: 5s
       retries: 5
 
-  mongodb:
-    image: mongo:6.0
-    container_name: local-mongodb
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongoadmin
-      MONGO_INITDB_ROOT_PASSWORD: mongopass
-      MONGO_INITDB_DATABASE: jobquest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 volumes:
-  mysql_data:
-  mongo_data: 
+  mysql_data: 

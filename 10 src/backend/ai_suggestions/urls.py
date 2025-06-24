@@ -29,16 +29,16 @@ urlpatterns = [
     # Job recommendations
     path('job-recommendations/', views.JobRecommendationListView.as_view(), name='job_recommendation_list'),
     path('job-recommendations/<uuid:pk>/', views.JobRecommendationDetailView.as_view(), name='job_recommendation_detail'),
-    path('job-recommendations/<uuid:pk>/dismiss/', views.dismiss_job_recommendation, name='dismiss_job_recommendation'),
-    path('job-recommendations/<uuid:pk>/save/', views.save_job_recommendation, name='save_job_recommendation'),
+    path('job-recommendations/<uuid:pk>/dismiss/', views.DismissJobRecommendationView.as_view(), name='dismiss_job_recommendation'),
+    path('job-recommendations/<uuid:pk>/save/', views.SaveJobRecommendationView.as_view(), name='save_job_recommendation'),
     
     # Feedback
     path('<uuid:suggestion_id>/feedback/', views.SuggestionFeedbackCreateView.as_view(), name='suggestion_feedback_create'),
     path('<uuid:suggestion_id>/feedback/list/', views.SuggestionFeedbackListView.as_view(), name='suggestion_feedback_list'),
     
     # Analytics and batch operations
-    path('analytics/', views.ai_suggestions_analytics, name='ai_suggestions_analytics'),
+    path('analytics/', views.AISuggestionsAnalyticsView.as_view(), name='ai_suggestions_analytics'),
     path('batches/', views.SuggestionBatchListView.as_view(), name='suggestion_batch_list'),
     path('batches/<uuid:pk>/', views.SuggestionBatchDetailView.as_view(), name='suggestion_batch_detail'),
-    path('generate-daily/', views.generate_daily_suggestions, name='generate_daily_suggestions'),
+    path('generate-daily/', views.GenerateDailySuggestionsView.as_view(), name='generate_daily_suggestions'),
 ] 
