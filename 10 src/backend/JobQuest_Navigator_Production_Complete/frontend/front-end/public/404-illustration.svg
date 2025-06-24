@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="320" height="240" viewBox="0 0 320 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main Container -->
+  <g transform="translate(10, 10)">
+    <!-- Background Elements -->
+    <circle cx="150" cy="110" r="100" fill="#F3F4F6"/>
+    <circle cx="150" cy="110" r="90" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="2"/>
+    
+    <!-- Decorative Circles -->
+    <circle cx="50" cy="50" r="15" fill="#2563EB" opacity="0.1"/>
+    <circle cx="250" cy="50" r="20" fill="#2563EB" opacity="0.1"/>
+    <circle cx="150" cy="180" r="18" fill="#2563EB" opacity="0.1"/>
+    
+    <!-- Search Icon -->
+    <g transform="translate(150, 110)">
+      <!-- Magnifying Glass -->
+      <circle cx="0" cy="0" r="40" stroke="#2563EB" stroke-width="4" fill="none"/>
+      <path d="M30 30L45 45" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+      
+      <!-- 404 Text -->
+      <text x="0" y="0" font-family="Arial" font-size="36" font-weight="bold" text-anchor="middle" fill="#1A1A1A" dominant-baseline="middle">404</text>
+    </g>
+    
+    <!-- Decorative Lines -->
+    <path d="M20 100H280" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="4 4"/>
+    <path d="M20 120H280" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="4 4"/>
+  </g>
+</svg> 

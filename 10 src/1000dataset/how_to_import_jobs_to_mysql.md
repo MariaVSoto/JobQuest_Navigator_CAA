@@ -1,6 +1,12 @@
 # How to Import Adzuna Job Data into MySQL with Docker
 
-This guide explains how to set up a MySQL database using Docker and import job data from the Adzuna API into MySQL using a Python script. It is suitable for local development and testing.
+This guide explains how to set up a MySQL database using Docker and import job data from the Adzuna Jobs API (Canada region) into MySQL using a Python script. It is suitable for local development and testing.
+
+## API Information
+- **Service**: Adzuna Jobs API
+- **Region**: Canada (ca)
+- **Documentation**: https://developer.adzuna.com/
+- **Rate Limits**: Please refer to Adzuna API documentation for current limits
 
 ---
 
@@ -102,7 +108,7 @@ SELECT * FROM jobs LIMIT 5;
 
 - **Port in use**: If 3306 is occupied, change to `3307:3306` in `docker-compose.yml` and set `MYSQL_PORT=3307` in your script.
 - **Missing dependencies**: Run `pip install pymysql requests`.
-- **API Key issues**: Check your Adzuna `APP_ID` and `APP_KEY`.
+- **API Key issues**: Check your Adzuna `APP_ID` and `APP_KEY`. Register at https://developer.adzuna.com/ to get your credentials.
 - **MySQL connection errors**: Ensure the container is running and credentials match.
 
 ---

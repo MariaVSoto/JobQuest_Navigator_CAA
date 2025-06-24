@@ -1,6 +1,30 @@
-# Microservices Architecture Diagram
+# Microservices Architecture Diagram – JobQuest Navigator
 
-This diagram shows the microservices required to support the business architecture of JobQuest Navigator. Core services are marked with **[Core]**.
+## Overview
+This document describes the microservices architecture for the JobQuest Navigator platform, including service boundaries, deployment, and communication patterns.
+
+## Main Services
+- Job Service
+- Resume Service
+- AI Suggestion Service
+- Certification Service
+- Company Research Service
+- User Service
+
+## Communication Patterns
+- Services communicate via RESTful APIs.
+- JWT authentication is used for secure communication.
+- Asynchronous tasks are handled via Celery and Redis.
+
+## Deployment
+- Each service is deployed independently and can be scaled horizontally.
+- Database schemas are isolated per service where possible.
+
+## Diagram
+*(See attached image for the latest microservices architecture diagram.)*
+
+---
+*This document is maintained in English for clarity and international collaboration.*
 
 ```mermaid
 flowchart TD

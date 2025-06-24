@@ -1,0 +1,29 @@
+# Core Django packages
+Django==4.2.23
+djangorestframework==3.16.0
+django-cors-headers==4.7.0
+django-filter==25.1
+drf-spectacular==0.28.0
+
+# Authentication & Security
+djangorestframework-simplejwt==5.5.0
+
+# GraphQL
+graphene-django==3.2.3
+django-graphql-jwt==0.4.0
+
+# File Storage
+Pillow==11.2.1
+
+# Environment & Configuration
+python-decouple==3.8
+
+# AI Integration
+requests==2.31.0
+
+# Development & Testing
+pytest==7.4.3
+pytest-django==4.7.0
+
+# WSGI Server
+gunicorn==21.2.0 

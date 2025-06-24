@@ -1,0 +1,101 @@
+openapi: 3.0.3
+info:
+  title: AI Suggestion Service API
+  description: API specification for AI-driven resume suggestions, job matches, and feedback collection.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api/v1
+paths:
+  /suggestions/resume:
+    post:
+      summary: Generate resume improvement suggestions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resume_id:
+                  type: string
+              required:
+                - resume_id
+      responses:
+        '200':
+          description: Resume suggestions generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /suggestions/job-match:
+    post:
+      summary: Suggest suitable job matches based on resume
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resume_id:
+                  type: string
+              required:
+                - resume_id
+      responses:
+        '200':
+          description: Job match suggestions generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /suggestions/{suggestion_id}/feedback:
+    post:
+      summary: Submit feedback on a suggestion
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: suggestion_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedback:
+                  type: string
+              required:
+                - feedback
+      responses:
+        '200':
+          description: Feedback received successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
