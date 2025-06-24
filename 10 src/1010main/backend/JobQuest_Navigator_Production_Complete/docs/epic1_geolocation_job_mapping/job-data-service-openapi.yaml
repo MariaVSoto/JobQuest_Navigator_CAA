@@ -1,0 +1,739 @@
+openapi: 3.0.3
+info:
+  title: Job Data Service API
+  description: |-
+    API for managing and querying job listings within the JobQuest Navigator platform.
+    This service is responsible for:
+    - Aggregating job listings from various external sources.
+    - Storing and indexing job data.
+    - Providing search and filtering capabilities for job listings.
+    - Allowing users to save/favorite jobs.
+  version: v1.0.0
+  contact:
+    name: JobQuest Navigator Team
+    url: https://your-project-website.com
+    email: dev-team@your-project-website.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: /api/v1 # This will be prefixed by the API Gateway base URL
+    description: Main API Gateway endpoint for Job Data Service
+
+tags:
+  - name: Jobs
+    description: Operations related to job listings.
+  - name: User Jobs
+    description: Operations related to user-specific saved jobs.
+
+components:
+  schemas:
+    JobSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Internal unique identifier for the job listing.
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        externalJobId:
+          type: string
+          description: ID of the job from the external source API.
+          example: "5223503935"
+        sourceApi:
+          type: string
+          description: The source API from which the job was fetched.
+          example: "Adzuna"
+        title:
+          type: string
+          description: Job title.
+          example: "Software Engineer"
+        companyName:
+          type: string
+          description: Name of the hiring company.
+          example: "Tech Solutions Inc."
+        locationText:
+          type: string
+          description: Raw location string as provided by the source.
+          example: "London, UK"
+        city:
+          type: string
+          nullable: true
+          description: Parsed city name.
+          example: "London"
+        postedAt:
+          type: string
+          format: date-time
+          description: The date and time the job was originally posted.
+          example: "2025-05-30T15:58:28Z"
+        salaryMinAnnualized:
+          type: number
+          format: float
+          nullable: true
+          description: Normalized minimum annual salary.
+          example: 35000
+        salaryMaxAnnualized:
+          type: number
+          format: float
+          nullable: true
+          description: Normalized maximum annual salary.
+          example: 55000
+        salaryCurrency:
+          type: string
+          nullable: true
+          description: Currency of the salary (ISO 4217 code).
+          example: "GBP"
+        employmentType:
+          type: string
+          nullable: true
+          description: Type of employment (e.g., Full-time, Part-time, Contract).
+          example: "Full-time"
+        isRemote:
+          type: boolean
+          default: false
+          description: Indicates if the job is remote.
+        url:
+          type: string
+          format: url
+          description: URL to the original job posting.
+          example: "https://www.example.com/jobs/123"
+
+    JobDetail:
+      allOf:
+        - $ref: '#/components/schemas/JobSummary'
+        - type: object
+          properties:
+            description:
+              type: string
+              description: Detailed job description (can be HTML or plain text).
+              example: "<p>We are looking for a skilled Software Engineer...</p>"
+            region:
+              type: string
+              nullable: true
+              description: Parsed region/county/state.
+              example: "Greater London"
+            countryCode:
+              type: string
+              nullable: true
+              description: Parsed or inferred country code (e.g., 'GBR').
+              example: "GBR"
+            latitude:
+              type: number
+              format: double
+              nullable: true
+              description: Latitude for the job location.
+              example: 51.5074
+            longitude:
+              type: number
+              format: double
+              nullable: true
+              description: Longitude for the job location.
+              example: -0.1278
+            salaryOriginalMin:
+              type: number
+              format: float
+              nullable: true
+              description: Original minimum salary as provided by the API.
+              example: 18
+            salaryOriginalMax:
+              type: number
+              format: float
+              nullable: true
+              description: Original maximum salary as provided by the API.
+              example: 22
+            salaryPeriod:
+              type: string
+              nullable: true
+              description: Period of the original salary (e.g., HOURLY, ANNUAL).
+              example: "HOURLY"
+            skills: # This might come from AI analysis or tags
+              type: array
+              items:
+                type: string
+              description: List of skills associated with the job.
+              example: ["Java", "Spring Boot", "AWS"]
+            rawData:
+              type: object
+              description: Original raw data from the source API (optional, for debugging or advanced use).
+              additionalProperties: true
+
+
+    JobListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobSummary'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        totalItems:
+          type: integer
+          example: 150
+        totalPages:
+          type: integer
+          example: 8
+
+    SavedJob:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user who saved the job.
+          example: "user-a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        jobId:
+          type: string
+          format: uuid
+          description: Internal ID of the saved job.
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        savedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the job was saved.
+          example: "2024-07-29T10:30:00Z"
+        notes:
+          type: string
+          nullable: true
+          description: User's personal notes about the saved job.
+          example: "Follow up next week. Seems like a good fit."
+        jobDetails: # Optionally include job summary when fetching saved jobs
+          $ref: '#/components/schemas/JobSummary'
+
+    SavedJobListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SavedJob'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: An application-specific error code.
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: A human-readable message providing more details about the error.
+          example: "One or more query parameters are invalid."
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: The field that caused the error.
+                example: "latitude"
+              issue:
+                type: string
+                description: The specific issue with the field.
+                example: "must be between -90 and 90"
+          nullable: true
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number for pagination.
+      required: false
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items per page.
+      required: false
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+    JobIdParam:
+      name: jobId
+      in: path
+      required: true
+      description: Internal unique identifier of the job.
+      schema:
+        type: string
+        format: uuid
+    UserIdParam: # Assuming userId will be available from auth token in a real scenario
+      name: userId
+      in: path
+      required: true
+      description: Unique identifier of the user.
+      schema:
+        type: string
+        format: uuid # Or your user ID format
+
+
+  securitySchemes:
+    BearerAuth: # Standard JWT Bearer token
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Authentication token is required or invalid."
+    ForbiddenError:
+      description: Authenticated user does not have permission for the operation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "FORBIDDEN"
+            message: "User does not have permission to perform this action."
+    NotFoundError:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "NOT_FOUND"
+            message: "The requested job was not found."
+    ValidationError:
+      description: The request was invalid due to validation errors.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "VALIDATION_ERROR"
+            message: "Request validation failed."
+            details:
+              - field: "latitude"
+                issue: "must be a number between -90 and 90"
+    InternalServerError:
+      description: An unexpected error occurred on the server.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "INTERNAL_SERVER_ERROR"
+            message: "An unexpected error occurred. Please try again later."
+
+security: # Global security, can be overridden at operation level
+  - BearerAuth: [] # All endpoints require Bearer token by default
+
+paths:
+  /jobs:
+    get:
+      tags:
+        - Jobs
+      summary: List jobs with filtering and pagination.
+      description: |-
+        Retrieves a paginated list of job summaries.
+        Supports filtering by keywords, location (latitude, longitude, radius),
+        salary range, employment type, and source API.
+      operationId: listJobs
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: q
+          in: query
+          description: Search keywords (e.g., job title, company, skills).
+          required: false
+          schema:
+            type: string
+        - name: latitude
+          in: query
+          description: Latitude for location-based search. Requires longitude and radius.
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+        - name: longitude
+          in: query
+          description: Longitude for location-based search. Requires latitude and radius.
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+        - name: radius
+          in: query
+          description: Search radius in kilometers from the provided latitude/longitude.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200 # Max radius example
+        - name: locationText
+          in: query
+          description: Free-text search for location (e.g., "London", "CA").
+          required: false
+          schema:
+            type: string
+        - name: salaryMin
+          in: query
+          description: Minimum annualized salary.
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: salaryMax
+          in: query
+          description: Maximum annualized salary.
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        - name: employmentType
+          in: query
+          description: Filter by employment type (e.g., Full-time, Part-time, Contract).
+          required: false
+          schema:
+            type: string
+        - name: sourceApi
+          in: query
+          description: Filter by the source API (e.g., Adzuna, GoogleForJobs).
+          required: false
+          schema:
+            type: string
+        - name: isRemote
+          in: query
+          description: Filter for remote jobs.
+          required: false
+          schema:
+            type: boolean
+        - name: sortBy
+          in: query
+          description: Field to sort by (e.g., 'postedAt', 'salaryMin'). Default is relevance or postedAt.
+          required: false
+          schema:
+            type: string
+            enum: [postedAt, salaryMin, relevance]
+        - name: sortOrder
+          in: query
+          description: Sort order ('asc' or 'desc'). Default is 'desc' for postedAt.
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: A list of jobs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /jobs/{jobId}:
+    get:
+      tags:
+        - Jobs
+      summary: Get job details by ID.
+      description: Retrieves detailed information for a specific job listing.
+      operationId: getJobById
+      parameters:
+        - $ref: '#/components/parameters/JobIdParam'
+      responses:
+        '200':
+          description: Detailed information about the job.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetail'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /jobs/search: # Could be an alternative to GET /jobs for more complex search bodies
+    post:
+      tags:
+        - Jobs
+      summary: Advanced job search.
+      description: |-
+        Performs an advanced search for jobs using a more complex query body,
+        useful for map views or multi-faceted searches.
+      operationId: searchJobsAdvanced
+      requestBody:
+        description: Advanced search criteria.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                keywords:
+                  type: string
+                  description: Search keywords.
+                location:
+                  type: object
+                  properties:
+                    latitude:
+                      type: number
+                      format: double
+                    longitude:
+                      type: number
+                      format: double
+                    radiusKm:
+                      type: integer
+                    text: # Alternative to lat/lon
+                      type: string
+                filters:
+                  type: object
+                  properties:
+                    salaryMin:
+                      type: integer
+                    salaryMax:
+                      type: integer
+                    employmentTypes:
+                      type: array
+                      items:
+                        type: string
+                    sourceApis:
+                      type: array
+                      items:
+                        type: string
+                    isRemote:
+                      type: boolean
+                pagination:
+                  type: object
+                  properties:
+                    page:
+                      type: integer
+                      default: 1
+                    limit:
+                      type: integer
+                      default: 20
+      responses:
+        '200':
+          description: A list of jobs matching the advanced search criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{userId}/saved-jobs:
+    get:
+      tags:
+        - User Jobs
+      summary: List saved jobs for a user.
+      description: Retrieves a paginated list of jobs saved/favorited by a specific user.
+      operationId: listSavedJobs
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: A list of saved jobs for the user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedJobListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError' # If user tries to access another user's saved jobs
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - User Jobs
+      summary: Save or favorite a job for a user.
+      description: Adds a job to the user's list of saved/favorited jobs.
+      operationId: saveJobForUser
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - jobId
+              properties:
+                jobId:
+                  type: string
+                  format: uuid
+                  description: The internal ID of the job to save.
+                notes:
+                  type: string
+                  nullable: true
+                  description: Optional notes for the saved job.
+      responses:
+        '201':
+          description: Job successfully saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedJob'
+        '400':
+          $ref: '#/components/responses/ValidationError' # e.g., if job ID doesn't exist or already saved
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Job to be saved not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "JOB_NOT_FOUND"
+                message: "The job you are trying to save does not exist."
+        '409': # Conflict - Job already saved
+          description: The job is already saved by the user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "JOB_ALREADY_SAVED"
+                message: "This job is already in your saved list."
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{userId}/saved-jobs/{jobId}:
+    delete:
+      tags:
+        - User Jobs
+      summary: Remove a saved job for a user.
+      description: Removes a job from the user's list of saved/favorited jobs.
+      operationId: unsaveJobForUser
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+        - $ref: '#/components/parameters/JobIdParam' # Here jobId refers to the internal ID of the job
+      responses:
+        '204':
+          description: Job successfully unsaved. No content.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: The saved job entry was not found for this user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "SAVED_JOB_NOT_FOUND"
+                message: "This job was not found in your saved list."
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put: # Or PATCH
+      tags:
+        - User Jobs
+      summary: Update notes for a saved job.
+      description: Allows a user to update their personal notes for a job they have saved.
+      operationId: updateSavedJobNotes
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+        - $ref: '#/components/parameters/JobIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - notes
+              properties:
+                notes:
+                  type: string
+                  description: New notes for the saved job.
+      responses:
+        '200':
+          description: Notes for the saved job updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedJob'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: The saved job entry was not found for this user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "SAVED_JOB_NOT_FOUND"
+                message: "This job was not found in your saved list to update notes."
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /jobs/sources: # An optional endpoint for the frontend
+    get:
+      tags:
+        - Jobs
+      summary: List available job sources.
+      description: Retrieves a list of unique job source APIs available in the system (e.g., Adzuna, GoogleForJobs). This can be used to populate filter options in the UI.
+      operationId: listJobSources
+      responses:
+        '200':
+          description: A list of available job sources.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Adzuna", "GoogleForJobs", "Indeed", "CanadaJobBank"]
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
