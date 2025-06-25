@@ -5,3 +5,12 @@ __pycache__/
 node_modules/
 .env
 *.log
+
+# Ignore Claude related files and folders
+.claude
+claude/
+*.claude
+
+# Ignore virtual environment and Serena config
+.venv/
+.serena/
