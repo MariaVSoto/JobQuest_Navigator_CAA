@@ -296,7 +296,7 @@ class CompanySerializer(serializers.ModelSerializer):
             'industry', 'company_size', 'founded_year', 'headquarters',
             'locations', 'email', 'phone', 'linkedin_url', 'twitter_handle',
             'glassdoor_id', 'glassdoor_rating', 'glassdoor_review_count',
-            'adzuna_company_id', 'last_research_update'
+            'adzuna_company_id'
         ]
 
 

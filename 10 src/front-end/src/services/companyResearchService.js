@@ -3,7 +3,7 @@
  * Handles all API calls related to company research and interview preparation
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 class CompanyResearchService {
   constructor() {
@@ -60,7 +60,7 @@ class CompanyResearchService {
       if (value) queryParams.append(key, value);
     });
 
-    const endpoint = queryParams.toString() ? `/?${queryParams}` : '/';
+    const endpoint = `/company-research/${queryParams.toString() ? `?${queryParams}` : ''}`;
     const response = await this.makeRequest(endpoint);
     return await response.json();
   }
@@ -69,7 +69,18 @@ class CompanyResearchService {
    * Get specific company research by ID
    */
   async getCompanyResearchById(id) {
-    const response = await this.makeRequest(`/${id}/`);
+    const response = await this.makeRequest(`/company-research/${id}/`);
+    return await response.json();
+  }
+
+  /**
+   * Create new company research
+   */
+  async createCompanyResearch(data) {
+    const response = await this.makeRequest('/company-research/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
     return await response.json();
   }
 
@@ -77,7 +88,7 @@ class CompanyResearchService {
    * Generate new company research
    */
   async generateCompanyResearch(companyId) {
-    const response = await this.makeRequest('/generate/', {
+    const response = await this.makeRequest('/company-research/generate/', {
       method: 'POST',
       body: JSON.stringify({ company_id: companyId }),
     });
@@ -88,8 +99,19 @@ class CompanyResearchService {
    * Update company research
    */
   async updateCompanyResearch(id, data) {
-    const response = await this.makeRequest(`/${id}/`, {
+    const response = await this.makeRequest(`/company-research/${id}/`, {
       method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Partially update company research
+   */
+  async patchCompanyResearch(id, data) {
+    const response = await this.makeRequest(`/company-research/${id}/`, {
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
     return await response.json();
@@ -99,9 +121,37 @@ class CompanyResearchService {
    * Delete company research
    */
   async deleteCompanyResearch(id) {
-    await this.makeRequest(`/${id}/`, {
+    await this.makeRequest(`/company-research/${id}/`, {
       method: 'DELETE',
     });
+  }
+
+  /**
+   * Save research item
+   */
+  async saveResearchItem(id, notes = '', tags = []) {
+    const response = await this.makeRequest(`/company-research/${id}/save/`, {
+      method: 'POST',
+      body: JSON.stringify({ notes, tags }),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Unsave research item
+   */
+  async unsaveResearchItem(id) {
+    await this.makeRequest(`/company-research/${id}/unsave/`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Get saved research
+   */
+  async getSavedResearch() {
+    const response = await this.makeRequest('/company-research/saved/');
+    return await response.json();
   }
 
   // Interview Preparation Methods
@@ -116,7 +166,7 @@ class CompanyResearchService {
       if (value) queryParams.append(key, value);
     });
 
-    const endpoint = `/interview-prep/${queryParams.toString() ? `?${queryParams}` : ''}`;
+    const endpoint = `/interview-preparation/${queryParams.toString() ? `?${queryParams}` : ''}`;
     const response = await this.makeRequest(endpoint);
     return await response.json();
   }
@@ -125,7 +175,18 @@ class CompanyResearchService {
    * Get specific interview preparation by ID
    */
   async getInterviewPreparationById(id) {
-    const response = await this.makeRequest(`/interview-prep/${id}/`);
+    const response = await this.makeRequest(`/interview-preparation/${id}/`);
+    return await response.json();
+  }
+
+  /**
+   * Create interview preparation
+   */
+  async createInterviewPreparation(data) {
+    const response = await this.makeRequest('/interview-preparation/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
     return await response.json();
   }
 
@@ -133,7 +194,7 @@ class CompanyResearchService {
    * Generate interview preparation
    */
   async generateInterviewPreparation(researchId, positionTitle = '') {
-    const response = await this.makeRequest('/interview-prep/generate/', {
+    const response = await this.makeRequest('/interview-preparation/generate/', {
       method: 'POST',
       body: JSON.stringify({
         research_id: researchId,
@@ -147,9 +208,39 @@ class CompanyResearchService {
    * Update interview preparation
    */
   async updateInterviewPreparation(id, data) {
-    const response = await this.makeRequest(`/interview-prep/${id}/`, {
+    const response = await this.makeRequest(`/interview-preparation/${id}/`, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Partially update interview preparation
+   */
+  async patchInterviewPreparation(id, data) {
+    const response = await this.makeRequest(`/interview-preparation/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Delete interview preparation
+   */
+  async deleteInterviewPreparation(id) {
+    await this.makeRequest(`/interview-preparation/${id}/`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Mark preparation as reviewed
+   */
+  async markPreparationReviewed(id) {
+    const response = await this.makeRequest(`/interview-preparation/${id}/mark_reviewed/`, {
+      method: 'POST',
     });
     return await response.json();
   }

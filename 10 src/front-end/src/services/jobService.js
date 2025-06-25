@@ -5,7 +5,7 @@
 
 import authService from './authService';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 class JobService {
   constructor() {
@@ -98,7 +98,7 @@ class JobService {
     }
     if (filters.remote) params.append('remote_type', 'remote');
 
-    const url = `${this.baseURL}/jobs/?${params.toString()}`;
+    const url = `${this.baseURL}/jobs/jobs/?${params.toString()}`;
     return await this.makeRequest(url);
   }
 
@@ -111,7 +111,7 @@ class JobService {
       page_size: pageSize.toString(),
     });
 
-    const url = `${this.baseURL}/jobs/?${params.toString()}`;
+    const url = `${this.baseURL}/jobs/jobs/?${params.toString()}`;
     return await this.makeRequest(url);
   }
 
@@ -119,7 +119,7 @@ class JobService {
    * Get job by ID
    */
   async getJobById(jobId) {
-    const url = `${this.baseURL}/jobs/${jobId}/`;
+    const url = `${this.baseURL}/jobs/jobs/${jobId}/`;
     return await this.makeRequest(url);
   }
 
@@ -135,7 +135,7 @@ class JobService {
       }
     });
 
-    const url = `${this.baseURL}/jobs/search/?${params.toString()}`;
+    const url = `${this.baseURL}/jobs/jobs/search/?${params.toString()}`;
     return await this.makeRequest(url);
   }
 
@@ -148,7 +148,7 @@ class JobService {
       radius: radius.toString(),
     });
 
-    const url = `${this.baseURL}/jobs/nearby/?${params.toString()}`;
+    const url = `${this.baseURL}/jobs/jobs/nearby/?${params.toString()}`;
     return await this.makeRequest(url);
   }
 
@@ -156,7 +156,7 @@ class JobService {
    * Get jobs for map view
    */
   async getJobsForMap(bounds = null) {
-    let url = `${this.baseURL}/jobs/map/`;
+    let url = `${this.baseURL}/jobs/jobs/map/`;
     
     if (bounds) {
       const params = new URLSearchParams({
@@ -175,7 +175,7 @@ class JobService {
    * Save a job
    */
   async saveJob(jobId, notes = '') {
-    const url = `${this.baseURL}/jobs/${jobId}/save/`;
+    const url = `${this.baseURL}/jobs/jobs/${jobId}/save/`;
     return await this.makeRequest(url, {
       method: 'POST',
       body: JSON.stringify({ notes }),
@@ -186,7 +186,7 @@ class JobService {
    * Unsave a job
    */
   async unsaveJob(jobId) {
-    const url = `${this.baseURL}/jobs/${jobId}/unsave/`;
+    const url = `${this.baseURL}/jobs/jobs/${jobId}/unsave/`;
     return await this.makeRequest(url, {
       method: 'DELETE',
     });
@@ -201,7 +201,7 @@ class JobService {
       page_size: pageSize.toString(),
     });
 
-    const url = `${this.baseURL}/jobs/saved/?${params.toString()}`;
+    const url = `${this.baseURL}/jobs/saved-jobs/?${params.toString()}`;
     return await this.makeRequest(url);
   }
 
@@ -209,7 +209,7 @@ class JobService {
    * Apply to a job
    */
   async applyToJob(jobId, applicationData) {
-    const url = `${this.baseURL}/jobs/${jobId}/apply/`;
+    const url = `${this.baseURL}/jobs/jobs/${jobId}/apply/`;
     return await this.makeRequest(url, {
       method: 'POST',
       body: JSON.stringify(applicationData),

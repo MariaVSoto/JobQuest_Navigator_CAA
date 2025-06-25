@@ -3,7 +3,7 @@
  * Handles all API calls related to skills management and certification tracking
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 class SkillsService {
   constructor() {
@@ -85,7 +85,7 @@ class SkillsService {
       if (value) queryParams.append(key, value);
     });
 
-    const endpoint = `/${queryParams.toString() ? `?${queryParams}` : ''}`;
+    const endpoint = `/skills/${queryParams.toString() ? `?${queryParams}` : ''}`;
     const response = await this.makeRequest(endpoint);
     return await response.json();
   }
@@ -94,12 +94,12 @@ class SkillsService {
    * Get a specific skill
    */
   async getSkill(skillId) {
-    const response = await this.makeRequest(`/${skillId}/`);
+    const response = await this.makeRequest(`/skills/${skillId}/`);
     return await response.json();
   }
 
   /**
-   * Search skills
+   * Search skills (using DRF's built-in search)
    */
   async searchSkills(query, filters = {}) {
     const queryParams = new URLSearchParams();
@@ -109,7 +109,7 @@ class SkillsService {
       if (value) queryParams.append(key, value);
     });
 
-    const response = await this.makeRequest(`/search/?${queryParams}`);
+    const response = await this.makeRequest(`/skills/?${queryParams}`);
     return await response.json();
   }
 
@@ -117,7 +117,7 @@ class SkillsService {
    * Create a new skill (admin only)
    */
   async createSkill(skillData) {
-    const response = await this.makeRequest('/create/', {
+    const response = await this.makeRequest('/skills/', {
       method: 'POST',
       body: JSON.stringify(skillData),
     });
@@ -136,7 +136,7 @@ class SkillsService {
       if (value) queryParams.append(key, value);
     });
 
-    const endpoint = `/user/${queryParams.toString() ? `?${queryParams}` : ''}`;
+    const endpoint = `/user-skills/${queryParams.toString() ? `?${queryParams}` : ''}`;
     const response = await this.makeRequest(endpoint);
     return await response.json();
   }
@@ -145,7 +145,7 @@ class SkillsService {
    * Add a skill to user's profile
    */
   async addUserSkill(skillData) {
-    const response = await this.makeRequest('/user/', {
+    const response = await this.makeRequest('/user-skills/', {
       method: 'POST',
       body: JSON.stringify(skillData),
     });
@@ -156,7 +156,7 @@ class SkillsService {
    * Update user's skill
    */
   async updateUserSkill(userSkillId, skillData) {
-    const response = await this.makeRequest(`/user/${userSkillId}/`, {
+    const response = await this.makeRequest(`/user-skills/${userSkillId}/`, {
       method: 'PUT',
       body: JSON.stringify(skillData),
     });
@@ -167,7 +167,7 @@ class SkillsService {
    * Remove user's skill
    */
   async removeUserSkill(userSkillId) {
-    await this.makeRequest(`/user/${userSkillId}/`, {
+    await this.makeRequest(`/user-skills/${userSkillId}/`, {
       method: 'DELETE',
     });
     return true;
@@ -302,8 +302,8 @@ class SkillsService {
    * Update learning path progress
    */
   async updateLearningPathProgress(userLearningPathId, progressData) {
-    const response = await this.makeRequest(`/user-learning-paths/${userLearningPathId}/`, {
-      method: 'PUT',
+    const response = await this.makeRequest(`/user-learning-paths/${userLearningPathId}/update_progress/`, {
+      method: 'POST',
       body: JSON.stringify(progressData),
     });
     return await response.json();
@@ -344,7 +344,18 @@ class SkillsService {
   /**
    * Take a skill assessment
    */
-  async takeSkillAssessment(assessmentData) {
+  async takeSkillAssessment(assessmentId, assessmentData) {
+    const response = await this.makeRequest(`/user-assessments/${assessmentId}/take_assessment/`, {
+      method: 'POST',
+      body: JSON.stringify(assessmentData),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Create a user assessment (for tracking purposes)
+   */
+  async createUserAssessment(assessmentData) {
     const response = await this.makeRequest('/user-assessments/', {
       method: 'POST',
       body: JSON.stringify(assessmentData),
@@ -545,6 +556,102 @@ class SkillsService {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  // ViewSets-specific methods for enhanced functionality
+
+  /**
+   * Get trending skills
+   */
+  async getTrendingSkills() {
+    const response = await this.makeRequest('/skills/trending/');
+    return await response.json();
+  }
+
+  /**
+   * Get market demand data for skills
+   */
+  async getSkillMarketDemand() {
+    const response = await this.makeRequest('/skills/market_demand/');
+    return await response.json();
+  }
+
+  /**
+   * Extract skills from text (resume or job description)
+   */
+  async extractSkillsFromText(extractionData) {
+    const response = await this.makeRequest('/skills/extract_from_text/', {
+      method: 'POST',
+      body: JSON.stringify(extractionData),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Get skill gap analysis for a target role
+   */
+  async getSkillGapAnalysis(targetRole) {
+    const response = await this.makeRequest(`/user-skills/gap_analysis/?role=${encodeURIComponent(targetRole)}`);
+    return await response.json();
+  }
+
+  /**
+   * Get personalized skill recommendations
+   */
+  async getSkillRecommendations() {
+    const response = await this.makeRequest('/user-skills/recommendations/');
+    return await response.json();
+  }
+
+  /**
+   * Get user skills analytics
+   */
+  async getUserSkillsAnalytics() {
+    const response = await this.makeRequest('/user-skills/analytics/');
+    return await response.json();
+  }
+
+  /**
+   * Get popular skill categories
+   */
+  async getPopularSkillCategories() {
+    const response = await this.makeRequest('/categories/popular/');
+    return await response.json();
+  }
+
+  /**
+   * Get popular certifications
+   */
+  async getPopularCertifications() {
+    const response = await this.makeRequest('/certifications/popular/');
+    return await response.json();
+  }
+
+  /**
+   * Generate certification plan
+   */
+  async generateCertificationPlan(planData) {
+    const response = await this.makeRequest('/certifications/generate_plan/', {
+      method: 'POST',
+      body: JSON.stringify(planData),
+    });
+    return await response.json();
+  }
+
+  /**
+   * Get user certification progress
+   */
+  async getUserCertificationProgress() {
+    const response = await this.makeRequest('/user-certifications/progress/');
+    return await response.json();
+  }
+
+  /**
+   * Get user assessment analytics
+   */
+  async getUserAssessmentAnalytics() {
+    const response = await this.makeRequest('/user-assessments/analytics/');
+    return await response.json();
   }
 }
 
