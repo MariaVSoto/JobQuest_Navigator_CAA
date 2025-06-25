@@ -1,6 +1,30 @@
-# API Architecture Diagram
+# API Architecture Diagram – JobQuest Navigator
 
-This diagram illustrates the main API endpoints exposed by each microservice in JobQuest Navigator, and their relationships. Core services are highlighted.
+## Overview
+This document describes the API architecture for the JobQuest Navigator platform, including main endpoints, service interactions, and authentication flows.
+
+## Main API Endpoints
+- `/api/v1/jobs/` – Job search, details, application, and bookmarking
+- `/api/v1/resumes/` – Resume management, versioning, export, and sharing
+- `/api/v1/ai-suggestions/` – AI-powered resume suggestions and feedback
+- `/api/v1/certifications/` – Certification roadmap and market demand alerts
+- `/api/v1/company-research/` – Company insights and interview preparation
+- `/api/v1/auth/` – User authentication and profile management
+
+## Service Interactions
+- All endpoints are served via Django REST Framework.
+- AI Suggestion Service is integrated via internal API calls to OpenAI.
+- Job Service integrates with Adzuna API and Google Maps for job data and geolocation.
+
+## Authentication Flows
+- JWT authentication is required for all protected endpoints.
+- User roles and permissions are enforced at the API level.
+
+## Diagram
+*(See attached image for the latest API architecture diagram.)*
+
+---
+*This document is maintained in English for clarity and international collaboration.*
 
 ```mermaid
 flowchart TD

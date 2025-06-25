@@ -10,8 +10,11 @@ MYSQL_DB = os.getenv('MYSQL_DB', 'jobquest')
 MYSQL_PORT = int(os.getenv('MYSQL_PORT', 3306))
 
 # Adzuna API config
-APP_ID = os.getenv('ADZUNA_APP_ID', '3aea9429')
-APP_KEY = os.getenv('ADZUNA_APP_KEY', '47c6c2410fe3c75a1a1e7e90eb21fa95')
+APP_ID = os.getenv('ADZUNA_APP_ID')
+APP_KEY = os.getenv('ADZUNA_APP_KEY')
+
+if not APP_ID or not APP_KEY:
+    raise ValueError("ADZUNA_APP_ID and ADZUNA_APP_KEY environment variables must be set")
 
 # Table schema
 CREATE_TABLE_SQL = '''
@@ -56,7 +59,7 @@ def parse_datetime(val):
 def main():
     # Fetch Adzuna API (Canada, first 3 pages, 50 per page)
     all_jobs = []
-    for page in range(1, 8):
+    for page in range(1, 4):
         API_URL = f"https://api.adzuna.com/v1/api/jobs/ca/search/{page}?app_id={APP_ID}&app_key={APP_KEY}"
         PARAMS = {
             'results_per_page': 50,

@@ -1,6 +1,0 @@
-Django>=4.2
-djangorestframework
-djangorestframework-simplejwt
-boto3
-gunicorn
-zappa

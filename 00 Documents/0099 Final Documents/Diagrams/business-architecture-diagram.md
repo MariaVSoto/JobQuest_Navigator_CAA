@@ -1,6 +1,29 @@
-# Business Architecture Diagram
+# Business Architecture Diagram – JobQuest Navigator
 
-This diagram illustrates the main business modules and their relationships in JobQuest Navigator, based on the user flows for job seekers (Emily and Michael).
+## Overview
+This document describes the business architecture for the JobQuest Navigator platform, including main business modules, user journeys, and service boundaries.
+
+## Main Business Modules
+- Job Search & Mapping
+- Resume Management & Optimization
+- AI Suggestions & Feedback
+- Certification Roadmap
+- Company Research & Interview Preparation
+- User Management & Authentication
+
+## User Journeys
+- Users can search and apply for jobs, manage multiple resumes, receive AI-powered suggestions, plan certifications, and prepare for interviews.
+- All modules are accessible via a unified dashboard.
+
+## Service Boundaries
+- Each business module is supported by a dedicated microservice or app.
+- Data flows between modules are managed via secure APIs.
+
+## Diagram
+*(See attached image for the latest business architecture diagram.)*
+
+---
+*This document is maintained in English for clarity and international collaboration.*
 
 ```mermaid
 flowchart TD
