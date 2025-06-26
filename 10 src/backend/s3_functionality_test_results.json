@@ -1,0 +1,137 @@
+[
+  {
+    "name": "S3 - Bucket Access",
+    "passed": true,
+    "details": "Found buckets: ['jobquest-navigator-frontend-local', 'jobquest-navigator-static-local']"
+  },
+  {
+    "name": "S3 - jobquest-navigator-static-local Access",
+    "passed": true,
+    "details": "Bucket accessible"
+  },
+  {
+    "name": "S3 - jobquest-navigator-frontend-local Access",
+    "passed": true,
+    "details": "Bucket accessible"
+  },
+  {
+    "name": "S3 - Upload test.txt",
+    "passed": true,
+    "details": "Uploaded to jobquest-navigator-static-local/test/test.txt"
+  },
+  {
+    "name": "S3 - Verify test.txt",
+    "passed": true,
+    "details": "File exists, size: 26 bytes"
+  },
+  {
+    "name": "S3 - Download test.txt",
+    "passed": true,
+    "details": "Content matches"
+  },
+  {
+    "name": "S3 - Upload test.json",
+    "passed": true,
+    "details": "Uploaded to jobquest-navigator-static-local/test/test.json"
+  },
+  {
+    "name": "S3 - Verify test.json",
+    "passed": true,
+    "details": "File exists, size: 71 bytes"
+  },
+  {
+    "name": "S3 - Download test.json",
+    "passed": true,
+    "details": "Content matches"
+  },
+  {
+    "name": "S3 - Upload test.css",
+    "passed": true,
+    "details": "Uploaded to jobquest-navigator-static-local/test/test.css"
+  },
+  {
+    "name": "S3 - Verify test.css",
+    "passed": true,
+    "details": "File exists, size: 35 bytes"
+  },
+  {
+    "name": "S3 - Download test.css",
+    "passed": true,
+    "details": "Content matches"
+  },
+  {
+    "name": "Static - Upload css/styles.css",
+    "passed": true,
+    "details": "Uploaded as text/css"
+  },
+  {
+    "name": "Static - URL css/styles.css",
+    "passed": true,
+    "details": "URL: http://localhost:4566/jobquest-navigator-static-local/static/css/styles.css"
+  },
+  {
+    "name": "Static - Upload js/app.js",
+    "passed": true,
+    "details": "Uploaded as application/javascript"
+  },
+  {
+    "name": "Static - URL js/app.js",
+    "passed": true,
+    "details": "URL: http://localhost:4566/jobquest-navigator-static-local/static/js/app.js"
+  },
+  {
+    "name": "Static - Upload images/logo.svg",
+    "passed": true,
+    "details": "Uploaded as image/svg+xml"
+  },
+  {
+    "name": "Static - URL images/logo.svg",
+    "passed": true,
+    "details": "URL: http://localhost:4566/jobquest-navigator-static-local/static/images/logo.svg"
+  },
+  {
+    "name": "Frontend - Upload index.html",
+    "passed": true,
+    "details": "Uploaded as text/html"
+  },
+  {
+    "name": "Frontend - Upload static/js/main.js",
+    "passed": true,
+    "details": "Uploaded as application/javascript"
+  },
+  {
+    "name": "Frontend - Upload static/css/main.css",
+    "passed": true,
+    "details": "Uploaded as text/css"
+  },
+  {
+    "name": "Frontend - Upload manifest.json",
+    "passed": true,
+    "details": "Uploaded as application/json"
+  },
+  {
+    "name": "Frontend - Deployment Complete",
+    "passed": true,
+    "details": "Uploaded 4/4 files"
+  },
+  {
+    "name": "Frontend - Access URL",
+    "passed": true,
+    "details": "URL: http://localhost:4566/jobquest-navigator-frontend-local/index.html"
+  },
+  {
+    "name": "S3 - Public File Upload",
+    "passed": true,
+    "details": "Public file uploaded"
+  },
+  {
+    "name": "S3 - Private File Upload",
+    "passed": true,
+    "details": "Private file uploaded"
+  },
+  {
+    "name": "S3 - Cleanup",
+    "passed": true,
+    "details": "Cleaned 8 test files"
+  }
+]

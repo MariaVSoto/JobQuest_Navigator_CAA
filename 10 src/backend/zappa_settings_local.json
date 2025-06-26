@@ -1,0 +1,50 @@
+{
+    "local": {
+        "app_function": "core.wsgi.application",
+        "aws_region": "us-east-1",
+        "runtime": "python3.9",
+        "timeout_seconds": 300,
+        "memory_size": 256,
+        "keep_warm": false,
+        "environment_variables": {
+            "DJANGO_SETTINGS_MODULE": "core.settings_local",
+            "LAMBDA_DEPLOYMENT": "true",
+            "LOCAL_DB_HOST": "host.docker.internal",
+            "LOCAL_DB_NAME": "jobquest_navigator",
+            "LOCAL_DB_USER": "admin",
+            "LOCAL_DB_PASSWORD": "adminpassword"
+        },
+        "aws_access_key_id": "test",
+        "aws_secret_access_key": "test",
+        "aws_endpoint_url": "http://localhost:4566",
+        "exclude": [
+            "*.pyc",
+            "__pycache__",
+            ".git",
+            ".gitignore",
+            "README.md",
+            "docs/",
+            "tests/",
+            "*.md",
+            ".env*",
+            "node_modules/",
+            "frontend/",
+            "static/",
+            "media/",
+            "logs/"
+        ],
+        "cors": true,
+        "binary_support": false,
+        "cloudwatch_log_level": "DEBUG",
+        "cloudwatch_log_retention": 1,
+        "apigateway_enabled": true,
+        "apigateway_description": "JobQuest Navigator Local API Gateway",
+        "project_name": "jobquest-navigator-local",
+        "s3_bucket": "jobquest-navigator-lambda-local",
+        "tags": {
+            "Environment": "Local",
+            "Project": "JobQuest Navigator",
+            "Type": "Local Development"
+        }
+    }
+}

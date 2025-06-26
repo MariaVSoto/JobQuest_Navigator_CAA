@@ -1,0 +1,90 @@
+{
+    "production": {
+        "app_function": "core.wsgi.application",
+        "aws_region": "us-east-1",
+        "runtime": "python3.9",
+        "timeout_seconds": 300,
+        "memory_size": 512,
+        "keep_warm": false,
+        "keep_warm_expression": "",
+        "environment_variables": {
+            "DJANGO_SETTINGS_MODULE": "core.settings_production",
+            "LAMBDA_DEPLOYMENT": "true"
+        },
+        "exclude": [
+            "*.pyc",
+            "__pycache__",
+            ".git",
+            ".gitignore",
+            "README.md",
+            "docs/",
+            "tests/",
+            "*.md",
+            ".env*",
+            "node_modules/",
+            "frontend/",
+            "static/",
+            "media/"
+        ],
+        "cors": true,
+        "binary_support": false,
+        "cloudwatch_log_level": "INFO",
+        "cloudwatch_log_retention": 7,
+        "apigateway_enabled": true,
+        "apigateway_description": "JobQuest Navigator API Gateway",
+        "route53_enabled": false,
+        "certificate_arn": "",
+        "domain": "",
+        "project_name": "jobquest-navigator",
+        "s3_bucket": "jobquest-navigator-lambda-deployments",
+        "vpc_config": {
+            "SubnetIds": [],
+            "SecurityGroupIds": []
+        },
+        "tags": {
+            "Environment": "Production",
+            "Project": "JobQuest Navigator",
+            "Type": "Graduation Project"
+        }
+    },
+    "staging": {
+        "app_function": "core.wsgi.application",
+        "aws_region": "us-east-1",
+        "runtime": "python3.9",
+        "timeout_seconds": 300,
+        "memory_size": 256,
+        "keep_warm": false,
+        "environment_variables": {
+            "DJANGO_SETTINGS_MODULE": "core.settings_production",
+            "LAMBDA_DEPLOYMENT": "true"
+        },
+        "exclude": [
+            "*.pyc",
+            "__pycache__",
+            ".git",
+            ".gitignore",
+            "README.md",
+            "docs/",
+            "tests/",
+            "*.md",
+            ".env*",
+            "node_modules/",
+            "frontend/",
+            "static/",
+            "media/"
+        ],
+        "cors": true,
+        "binary_support": false,
+        "cloudwatch_log_level": "DEBUG",
+        "cloudwatch_log_retention": 3,
+        "apigateway_enabled": true,
+        "apigateway_description": "JobQuest Navigator Staging API",
+        "project_name": "jobquest-navigator-staging",
+        "s3_bucket": "jobquest-navigator-lambda-staging",
+        "tags": {
+            "Environment": "Staging",
+            "Project": "JobQuest Navigator",
+            "Type": "Graduation Project"
+        }
+    }
+}
