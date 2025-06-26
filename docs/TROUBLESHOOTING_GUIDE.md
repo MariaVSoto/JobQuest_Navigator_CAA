@@ -1,46 +1,46 @@
-# JobQuest Navigator - 故障排除指南
+# JobQuest Navigator - Troubleshooting Guide
 
-## 🔧 概述
+## 🛠️ Overview
 
-本文档提供JobQuest Navigator AWS部署过程中常见问题的诊断和解决方案。
+This document provides diagnosis and solutions for common issues encountered during the JobQuest Navigator AWS deployment process.
 
 ---
 
-## 🚨 部署阶段问题
+## 🚨 Deployment Stage Issues
 
-### 1. CloudFormation部署失败
+### 1. CloudFormation Deployment Failure
 
-#### 问题: 堆栈创建失败
+#### Issue: Stack Creation Failed
 ```
 CREATE_FAILED: The account is not authorized to use this service
 ```
 
-**原因分析**:
-- AWS账户权限不足
-- 服务在当前区域不可用
-- 账户限制或配额问题
+**Root Cause Analysis:**
+- Insufficient AWS account permissions
+- Service not available in the current region
+- Account limits or quota issues
 
-**解决方案**:
+**Solution:**
 ```bash
-# 检查账户权限
+# Check account permissions
 aws sts get-caller-identity
 
-# 检查服务可用性
+# Check service availability
 aws ec2 describe-availability-zones --region us-east-1
 
-# 检查服务限制
+# Check service limits
 aws support describe-service-limits
 ```
 
-#### 问题: 参数验证错误
+#### Issue: Parameter Validation Error
 ```
 ValidationError: Template format error: [/Resources/Database/Properties/MasterUserPassword] 
 'null' values are not allowed in templates
 ```
 
-**解决方案**:
+**Solution:**
 ```bash
-# 确保所有必需参数都提供值
+# Ensure all required parameters have values
 aws cloudformation create-stack \
   --stack-name jobquest-navigator-infra \
   --template-body file://cloudformation-template.yaml \
@@ -48,42 +48,42 @@ aws cloudformation create-stack \
                ParameterKey=AlertEmail,ParameterValue=your-email@domain.com
 ```
 
-### 2. RDS数据库问题
+### 2. RDS Database Issues
 
-#### 问题: 数据库创建失败
+#### Issue: Database Creation Failed
 ```
 DBSubnetGroupDoesNotCoverEnoughAZs: DB Subnet Group doesn't meet availability zone coverage requirement
 ```
 
-**解决方案**:
+**Solution:**
 ```bash
-# 检查可用区
+# Check available zones
 aws ec2 describe-availability-zones --region us-east-1
 
-# 确保子网在不同AZ中
-# 修改CloudFormation模板，确保子网分布在至少两个AZ
+# Ensure subnets are in different AZs
+# Modify CloudFormation template to ensure subnets are distributed across at least two AZs
 ```
 
-#### 问题: 数据库连接超时
+#### Issue: Database Connection Timeout
 ```
 ERROR 2003 (HY000): Can't connect to MySQL server on 'xxx.amazonaws.com' (110)
 ```
 
-**诊断步骤**:
+**Diagnosis Steps:**
 ```bash
-# 1. 检查RDS实例状态
+# 1. Check RDS instance status
 aws rds describe-db-instances --db-instance-identifier jobquest-navigator-db
 
-# 2. 检查安全组配置
+# 2. Check security group configuration
 aws ec2 describe-security-groups --group-ids sg-xxxxxxxx
 
-# 3. 测试网络连通性
+# 3. Test network connectivity
 telnet your-db-endpoint.amazonaws.com 3306
 ```
 
-**解决方案**:
+**Solution:**
 ```bash
-# 修改安全组规则
+# Modify security group rules
 aws ec2 authorize-security-group-ingress \
   --group-id sg-xxxxxxxx \
   --protocol tcp \
@@ -93,17 +93,17 @@ aws ec2 authorize-security-group-ingress \
 
 ---
 
-## 🐍 Lambda部署问题
+## 🐍 Lambda Deployment Issues
 
-### 1. Zappa部署错误
+### 1. Zappa Deployment Error
 
-#### 问题: IAM权限不足
+#### Issue: Insufficient IAM Permissions
 ```
 An error occurred (AccessDenied) when calling the CreateFunction operation: 
 User is not authorized to perform: lambda:CreateFunction
 ```
 
-**所需权限清单**:
+**Required Permissions List:**
 ```json
 {
   "Version": "2012-10-17",
@@ -126,24 +126,24 @@ User is not authorized to perform: lambda:CreateFunction
 }
 ```
 
-#### 问题: 包大小超限
+#### Issue: Package Size Exceeded
 ```
 An error occurred (InvalidParameterValueException): Unzipped size must be smaller than 262144000 bytes
 ```
 
-**解决方案**:
+**Solution:**
 ```bash
-# 1. 排除不必要的文件
+# 1. Exclude unnecessary files
 echo "*.pyc
 __pycache__/
 .git/
 tests/
 *.sqlite3" > .zappaignore
 
-# 2. 使用Slim处理器
+# 2. Use Slim handler
 pip install zappa[all]
 
-# 3. 在zappa_settings.json中配置
+# 3. Configure in zappa_settings.json
 {
   "production": {
     "slim_handler": true,
@@ -152,33 +152,33 @@ pip install zappa[all]
 }
 ```
 
-### 2. Lambda运行时错误
+### 2. Lambda Runtime Errors
 
-#### 问题: 模块导入失败
+#### Issue: Module Import Failure
 ```
 Unable to import module 'core.wsgi': No module named 'django'
 ```
 
-**解决方案**:
+**Solution:**
 ```bash
-# 确保requirements.txt包含所有依赖
+# Ensure requirements.txt includes all dependencies
 pip freeze > requirements.txt
 
-# 检查Zappa虚拟环境
+# Check Zappa virtual environment
 zappa status production
 
-# 重新打包部署
+# Repackage and redeploy
 zappa update production
 ```
 
-#### 问题: 数据库连接池耗尽
+#### Issue: Database Connection Pool Exhausted
 ```
 (1040, 'Too many connections')
 ```
 
-**解决方案**:
+**Solution:**
 ```python
-# 在Django设置中配置连接池
+# Configure connection pool in Django settings
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -186,19 +186,19 @@ DATABASES = {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'charset': 'utf8mb4',
         },
-        'CONN_MAX_AGE': 0,  # 不保持连接
+        'CONN_MAX_AGE': 0,  # Do not persist connections
     }
 }
 ```
 
-### 3. API Gateway问题
+### 3. API Gateway Issues
 
-#### 问题: CORS错误
+#### Issue: CORS Error
 ```
 Access to XMLHttpRequest at 'api-url' from origin 'frontend-url' has been blocked by CORS policy
 ```
 
-**Django CORS配置**:
+**Django CORS Configuration:**
 ```python
 # settings_production.py
 CORS_ALLOWED_ORIGINS = [
@@ -206,12 +206,12 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False  # 生产环境不要设为True
+CORS_ALLOW_ALL_ORIGINS = False  # Do not set to True in production
 ```
 
-**API Gateway CORS配置**:
+**API Gateway CORS Configuration:**
 ```bash
-# 通过Zappa自动配置CORS
+# Configure CORS automatically via Zappa
 {
   "production": {
     "cors": true,
@@ -222,16 +222,16 @@ CORS_ALLOW_ALL_ORIGINS = False  # 生产环境不要设为True
 
 ---
 
-## 🌐 前端部署问题
+## 🌐 Frontend Deployment Issues
 
-### 1. S3部署问题
+### 1. S3 Deployment Issues
 
-#### 问题: 存储桶策略错误
+#### Issue: Bucket Policy Error
 ```
 AccessDenied: Access Denied when putting object
 ```
 
-**解决方案**:
+**Solution:**
 ```json
 {
   "Version": "2012-10-17",
@@ -247,35 +247,35 @@ AccessDenied: Access Denied when putting object
 }
 ```
 
-#### 问题: 单页应用路由404
+#### Issue: SPA Route 404
 ```
 The specified key does not exist when accessing /dashboard
 ```
 
-**解决方案**:
+**Solution:**
 ```bash
-# 设置错误文档为index.html
+# Set error document to index.html
 aws s3 website s3://jobquest-navigator-frontend-production \
   --index-document index.html \
   --error-document index.html
 ```
 
-### 2. 前端配置问题
+### 2. Frontend Configuration Issues
 
-#### 问题: API端点无法访问
+#### Issue: API Endpoint Not Accessible
 ```
 TypeError: Failed to fetch
 ```
 
-**检查步骤**:
+**Check Steps:**
 ```bash
-# 1. 验证API Gateway URL
+# 1. Verify API Gateway URL
 curl -X GET "https://api-gateway-url.amazonaws.com/prod/api/health/"
 
-# 2. 检查前端环境变量
-cat build/static/js/main.*.js | grep -o 'REACT_APP_API_URL[^"]*'
+# 2. Check frontend environment variables
+cat build/static/js/main.*.js | grep -o 'REACT_APP_API_URL[^"']*'
 
-# 3. 验证CORS配置
+# 3. Verify CORS configuration
 curl -H "Origin: https://your-frontend-domain.com" \
      -H "Access-Control-Request-Method: GET" \
      -X OPTIONS \
@@ -284,16 +284,16 @@ curl -H "Origin: https://your-frontend-domain.com" \
 
 ---
 
-## 📊 性能问题
+## 📊 Performance Issues
 
-### 1. Lambda性能优化
+### 1. Lambda Performance Optimization
 
-#### 问题: 冷启动时间过长
+#### Issue: Cold Start Too Long
 ```
 Duration: 10000.00 ms    Billed Duration: 10000 ms    Memory Size: 128 MB
 ```
 
-**优化方案**:
+**Optimization:**
 ```json
 {
   "production": {
@@ -305,30 +305,30 @@ Duration: 10000.00 ms    Billed Duration: 10000 ms    Memory Size: 128 MB
 }
 ```
 
-#### 问题: 内存不足
+#### Issue: Insufficient Memory
 ```
 Runtime.ImportModuleError: Unable to import module 'core.wsgi': No module named 'PIL'
 ```
 
-**解决方案**:
+**Solution:**
 ```bash
-# 增加内存分配
+# Increase memory allocation
 zappa update production
 
-# 使用优化的依赖包
+# Use optimized dependency package
 pip install Pillow-SIMD
 ```
 
-### 2. 数据库性能问题
+### 2. Database Performance Issues
 
-#### 问题: 查询超时
+#### Issue: Query Timeout
 ```
 (2006, 'MySQL server has gone away')
 ```
 
-**诊断和优化**:
+**Diagnosis and Optimization:**
 ```python
-# 1. 启用查询日志
+# 1. Enable query logging
 LOGGING = {
     'version': 1,
     'handlers': {
@@ -344,11 +344,11 @@ LOGGING = {
     },
 }
 
-# 2. 优化数据库查询
-# 使用select_related和prefetch_related
+# 2. Optimize database queries
+# Use select_related and prefetch_related
 queryset = Job.objects.select_related('company').prefetch_related('skills')
 
-# 3. 添加数据库索引
+# 3. Add database indexes
 class Job(models.Model):
     title = models.CharField(max_length=200, db_index=True)
     location = models.CharField(max_length=100, db_index=True)
@@ -356,42 +356,42 @@ class Job(models.Model):
 
 ---
 
-## 🔍 监控和诊断工具
+## 🔍 Monitoring and Diagnostic Tools
 
-### 1. 日志分析
+### 1. Log Analysis
 
-#### CloudWatch日志查询
+#### CloudWatch Log Query
 ```bash
-# 查看Lambda错误日志
+# View Lambda error logs
 aws logs filter-log-events \
   --log-group-name "/aws/lambda/jobquest-navigator-api-production" \
   --filter-pattern "ERROR" \
   --start-time $(date -d "1 hour ago" +%s)000
 
-# 查看数据库连接错误
+# View database connection errors
 aws logs filter-log-events \
   --log-group-name "/aws/lambda/jobquest-navigator-api-production" \
   --filter-pattern "Can't connect to MySQL" \
   --start-time $(date -d "24 hours ago" +%s)000
 ```
 
-#### Zappa日志工具
+#### Zappa Log Tools
 ```bash
-# 实时查看日志
+# View logs in real time
 zappa tail production
 
-# 查看特定级别的日志
+# View logs of specific level
 zappa tail production --http
 
-# 保存日志到文件
+# Save logs to file
 zappa tail production > lambda-logs.txt
 ```
 
-### 2. 性能监控
+### 2. Performance Monitoring
 
-#### CloudWatch指标
+#### CloudWatch Metrics
 ```bash
-# Lambda执行时间
+# Lambda execution time
 aws cloudwatch get-metric-statistics \
   --namespace AWS/Lambda \
   --metric-name Duration \
@@ -401,7 +401,7 @@ aws cloudwatch get-metric-statistics \
   --period 300 \
   --statistics Average,Maximum
 
-# API Gateway错误率
+# API Gateway error rate
 aws cloudwatch get-metric-statistics \
   --namespace AWS/ApiGateway \
   --metric-name 4XXError \
@@ -412,33 +412,33 @@ aws cloudwatch get-metric-statistics \
   --statistics Sum
 ```
 
-### 3. 健康检查脚本
+### 3. Health Check Scripts
 
-#### 自动化诊断脚本
+#### Automated Diagnostic Script
 ```bash
 #!/bin/bash
 # health-check.sh
 
 echo "=== JobQuest Navigator Health Check ==="
 
-# 1. 检查Lambda函数状态
+# 1. Check Lambda function status
 echo "Checking Lambda function..."
 aws lambda get-function --function-name jobquest-navigator-api-production
 
-# 2. 检查RDS实例状态
+# 2. Check RDS instance status
 echo "Checking RDS instance..."
 aws rds describe-db-instances --db-instance-identifier jobquest-navigator-db
 
-# 3. 检查S3存储桶
+# 3. Check S3 buckets
 echo "Checking S3 buckets..."
 aws s3 ls s3://jobquest-navigator-frontend-production
 aws s3 ls s3://jobquest-navigator-static-production
 
-# 4. 测试API端点
+# 4. Test API endpoints
 echo "Testing API endpoints..."
 curl -f "https://api-gateway-url.amazonaws.com/prod/api/health/" || echo "API health check failed"
 
-# 5. 检查前端可访问性
+# 5. Check frontend accessibility
 echo "Testing frontend..."
 curl -f "https://jobquest-navigator-frontend-production.s3-website-us-east-1.amazonaws.com" || echo "Frontend check failed"
 
@@ -447,68 +447,68 @@ echo "=== Health Check Complete ==="
 
 ---
 
-## 🛠️ 常用修复命令
+## 🛠️ Common Fix Commands
 
-### 快速修复脚本
+### Quick Fix Scripts
 
-#### 重新部署所有组件
+#### Redeploy All Components
 ```bash
 #!/bin/bash
 # quick-redeploy.sh
 
 echo "Starting quick redeploy..."
 
-# 1. 更新Lambda
+# 1. Update Lambda
 cd backend
 zappa update production
 
-# 2. 重新构建和部署前端
+# 2. Rebuild and deploy frontend
 cd ../frontend
 npm run build
 aws s3 sync build/ s3://jobquest-navigator-frontend-production --delete
 
-# 3. 清理CloudFront缓存 (如果使用)
+# 3. Clear CloudFront cache (if used)
 aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
 
 echo "Redeploy complete!"
 ```
 
-#### 数据库连接修复
+#### Database Connection Fix
 ```bash
 #!/bin/bash
 # fix-db-connection.sh
 
-# 1. 重启RDS实例
+# 1. Reboot RDS instance
 aws rds reboot-db-instance --db-instance-identifier jobquest-navigator-db
 
-# 2. 等待实例可用
+# 2. Wait for instance to be available
 aws rds wait db-instance-available --db-instance-identifier jobquest-navigator-db
 
-# 3. 测试连接
+# 3. Test connection
 python manage.py check --database default
 
-# 4. 运行迁移
+# 4. Run migration
 python manage.py migrate --settings=core.settings_production
 ```
 
 ---
 
-## 📞 获取帮助
+## 📞 Getting Help
 
-### 支持渠道
-1. **技术文档**: 查看prod/docs/目录
-2. **AWS支持**: 通过AWS Support Center
-3. **社区支持**: Django和Zappa社区论坛
+### Support Channels
+1. **Technical Documentation**: See prod/docs/
+2. **AWS Support**: Via AWS Support Center
+3. **Community Support**: Django and Zappa community forums
 
-### 报告问题时提供的信息
-- 错误消息的完整内容
-- CloudFormation堆栈状态
-- Lambda函数日志
-- 重现步骤
-- 环境配置信息
+### Information to Provide When Reporting Issues
+- Full error message
+- CloudFormation stack status
+- Lambda function logs
+- Steps to reproduce
+- Environment configuration information
 
 ---
 
-**故障排除指南版本**: v1.0  
-**最后更新**: 2024年6月25日  
-**维护团队**: JobQuest Navigator Development Team
+**Troubleshooting Guide Version**: v1.0  
+**Last Updated**: June 25, 2024  
+**Maintenance Team**: JobQuest Navigator Development Team

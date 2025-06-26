@@ -1,23 +1,23 @@
-# JobQuest Navigator - AWS部署架构设计文档
+# JobQuest Navigator - AWS Deployment Architecture Design Document
 
-## 📋 项目概述
+## 📋 Project Overview
 
-**项目名称**: JobQuest Navigator  
-**项目类型**: 毕业设计项目  
-**部署环境**: AWS Staging Environment  
-**设计目标**: 简化部署、成本优化、学术演示
+**Project Name**: JobQuest Navigator  
+**Project Type**: Graduation Design Project  
+**Deployment Environment**: AWS Staging Environment  
+**Design Goals**: Simplified deployment, cost optimization, academic demonstration
 
 ---
 
-## 🏗️ 架构设计概览
+## 🏗️ Architecture Overview
 
-### 设计原则
-- **简化优先**: 专注于功能实现，不考虑高可用性和弹性伸缩
-- **成本优化**: 使用最经济的AWS服务组合
-- **学术导向**: 适合毕业设计演示和测试需求
-- **易于管理**: 最小化运维复杂度
+### Design Principles
+- **Simplicity First**: Focus on functional implementation, not considering high availability and elasticity
+- **Cost Optimization**: Use the most economical AWS service combination
+- **Academic Orientation**: Suitable for graduation design demonstration and testing needs
+- **Ease of Management**: Minimize operational complexity
 
-### 核心组件
+### Core Components
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     AWS Cloud Architecture                  │
@@ -35,23 +35,17 @@
 │                            │     MySQL Database          │   │
 │                            │     (db.t3.micro)          │   │
 │                            └─────────────────────────────┘   │
-│                                      │                      │
-│                                      ▼                      │
-│                            ┌─────────────────────────────┐   │
-│                            │     Amazon S3               │   │
-│                            │     Static/Media Files      │   │
-│                            └─────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔧 详细组件设计
+## 🛠️ Detailed Component Design
 
-### 1. 前端部署 - Amazon S3 Static Website
+### 1. Frontend Deployment - Amazon S3 Static Website
 
-**服务**: Amazon S3 + CloudFormation (简化CDN)
-**配置**:
+**Service**: Amazon S3 + CloudFormation (simplified CDN)
+**Configuration**:
 ```yaml
 Bucket Configuration:
   Name: jobquest-navigator-frontend
@@ -62,16 +56,16 @@ Bucket Configuration:
   Error Document: index.html (SPA routing)
 ```
 
-**部署流程**:
-1. React应用构建: `npm run build`
-2. 构建产物上传到S3
-3. 配置S3 Bucket策略允许公共读取
-4. 启用Static Website Hosting
+**Deployment Process:**
+1. Build React app: `npm run build`
+2. Upload build artifacts to S3
+3. Configure S3 Bucket policy to allow public read
+4. Enable Static Website Hosting
 
-### 2. 后端部署 - AWS Lambda + Zappa
+### 2. Backend Deployment - AWS Lambda + Zappa
 
-**服务**: AWS Lambda + API Gateway
-**配置**:
+**Service**: AWS Lambda + API Gateway
+**Configuration**:
 ```json
 {
   "production": {
@@ -89,27 +83,27 @@ Bucket Configuration:
 }
 ```
 
-**特性**:
-- 按请求付费，成本极低
-- 自动扩展，无需管理服务器
-- API Gateway提供RESTful API端点
-- 适合中低流量的学术项目
+**Features:**
+- Pay-per-request, extremely low cost
+- Automatic scaling, no server management
+- API Gateway provides RESTful API endpoints
+- Suitable for academic projects with medium/low traffic
 
-### 3. 数据库 - Amazon RDS MySQL
+### 3. Database - Amazon RDS MySQL
 
-**实例规格**:
+**Instance Specs:**
 ```yaml
 Engine: MySQL 8.0
 Instance Class: db.t3.micro (1 vCPU, 1GB RAM)
-Storage: 20GB gp2 (通用SSD)
-Multi-AZ: Disabled (成本优化)
+Storage: 20GB gp2 (General Purpose SSD)
+Multi-AZ: Disabled (cost optimization)
 Backup Retention: 7 days
-Publicly Accessible: No (安全考虑)
+Publicly Accessible: No (security consideration)
 VPC: Default VPC
 Security Group: Lambda-RDS-SG
 ```
 
-**连接配置**:
+**Connection Configuration:**
 ```python
 DATABASES = {
     'default': {
@@ -123,9 +117,9 @@ DATABASES = {
 }
 ```
 
-### 4. 文件存储 - Amazon S3
+### 4. File Storage - Amazon S3
 
-**静态文件存储**:
+**Static File Storage:**
 ```yaml
 Bucket: jobquest-navigator-static
 Purpose: Django static files, user uploads
@@ -133,7 +127,7 @@ Access: Private with signed URLs
 Lifecycle: Standard storage class
 ```
 
-**Django配置**:
+**Django Configuration:**
 ```python
 STATIC_URL = 'https://jobquest-navigator-static.s3.amazonaws.com/static/'
 MEDIA_URL = 'https://jobquest-navigator-static.s3.amazonaws.com/media/'
@@ -141,20 +135,20 @@ MEDIA_URL = 'https://jobquest-navigator-static.s3.amazonaws.com/media/'
 
 ---
 
-## 🌐 网络架构
+## 🌐 Network Architecture
 
-### VPC配置
+### VPC Configuration
 ```yaml
-VPC: Default VPC (简化网络管理)
+VPC: Default VPC (simplified network management)
 Subnets: 
   - Public Subnet (us-east-1a)
   - Public Subnet (us-east-1b)
 Security Groups:
-  - Lambda-RDS-SG: Lambda访问RDS
-  - RDS-SG: RDS入站规则 (3306 from Lambda)
+  - Lambda-RDS-SG: Lambda access to RDS
+  - RDS-SG: RDS inbound rule (3306 from Lambda)
 ```
 
-### 安全组规则
+### Security Group Rules
 ```yaml
 Lambda Security Group:
   Outbound: 
@@ -169,42 +163,42 @@ RDS Security Group:
 
 ---
 
-## 🔑 环境变量配置
+## 🔑 Environment Variable Configuration
 
-### AWS Lambda环境变量
+### AWS Lambda Environment Variables
 ```bash
-# Django配置
+# Django configuration
 DJANGO_SETTINGS_MODULE=core.settings_production
 DJANGO_SECRET_KEY=${SECRET_KEY}
 DEBUG=False
 LAMBDA_DEPLOYMENT=True
 
-# 数据库配置
+# Database configuration
 RDS_HOSTNAME=${RDS_ENDPOINT}
 RDS_DB_NAME=jobquest_navigator
 RDS_USERNAME=admin
 RDS_PASSWORD=${RDS_PASSWORD}
 RDS_PORT=3306
 
-# AWS服务配置
+# AWS service configuration
 AWS_STORAGE_BUCKET_NAME=jobquest-navigator-static
 AWS_S3_REGION_NAME=us-east-1
 AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
 AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 
-# 前端CORS配置
+# Frontend CORS configuration
 CORS_ALLOWED_ORIGINS=https://jobquest-navigator-frontend.s3-website-us-east-1.amazonaws.com
 ```
 
 ---
 
-## 📦 部署流程
+## 📦 Deployment Process
 
-### 1. 基础设施准备
+### 1. Infrastructure Preparation
 
-#### RDS数据库创建
+#### RDS Database Creation
 ```bash
-# 1. 创建RDS实例
+# 1. Create RDS instance
 aws rds create-db-instance \
   --db-instance-identifier jobquest-navigator-db \
   --db-instance-class db.t3.micro \
@@ -215,78 +209,79 @@ aws rds create-db-instance \
   --vpc-security-group-ids sg-xxxxx \
   --db-name jobquest_navigator
 
-# 2. 等待实例可用
+# 2. Wait for instance to be available
 aws rds wait db-instance-available \
   --db-instance-identifier jobquest-navigator-db
 ```
 
-#### S3存储桶创建
+#### S3 Bucket Creation
 ```bash
-# 1. 创建前端静态网站存储桶
+# 1. Create frontend static website bucket
 aws s3 mb s3://jobquest-navigator-frontend
 aws s3 website s3://jobquest-navigator-frontend \
   --index-document index.html \
   --error-document index.html
 
-# 2. 创建静态资源存储桶
+# 2. Create static resource bucket
 aws s3 mb s3://jobquest-navigator-static
 
-# 3. 配置CORS和访问策略
+# 3. Configure CORS and access policy
 aws s3api put-bucket-cors --bucket jobquest-navigator-static \
   --cors-configuration file://cors-config.json
 ```
 
-### 2. 后端部署
+### 2. Backend Deployment
 
-#### Django应用准备
+#### Django Application Preparation
 ```bash
-# 1. 安装依赖
+# 1. Install dependencies
 pip install -r requirements_production.txt
 
-# 2. 数据库迁移
+# 2. Database migration
 python manage.py migrate --settings=core.settings_production
 
-# 3. 收集静态文件
+# 3. Collect static files
 python manage.py collectstatic --noinput --settings=core.settings_production
+```
 
-# 4. 创建超级用户 (可选)
+# 4. Create superuser (optional)
 python manage.py createsuperuser --settings=core.settings_production
 ```
 
-#### Zappa部署配置
+#### Zappa Deployment Configuration
 ```bash
-# 1. 初始化Zappa
+# 1. Initialize Zappa
 zappa init
 
-# 2. 部署到Lambda
+# 2. Deploy to Lambda
 zappa deploy production
 
-# 3. 更新部署
+# 3. Update deployment
 zappa update production
 
-# 4. 设置环境变量
+# 4. Set environment variables
 zappa set_env production DJANGO_SECRET_KEY=${SECRET_KEY}
 zappa set_env production RDS_HOSTNAME=${RDS_ENDPOINT}
-# ... 其他环境变量
+# ... other environment variables
 ```
 
-### 3. 前端部署
+### 3. Frontend Deployment
 
-#### React应用构建
+#### React App Build
 ```bash
-# 1. 安装依赖
+# 1. Install dependencies
 npm install
 
-# 2. 配置生产环境变量
+# 2. Configure production environment variables
 echo "REACT_APP_API_URL=${API_GATEWAY_URL}" > .env.production
 
-# 3. 构建生产版本
+# 3. Build production version
 npm run build
 
-# 4. 部署到S3
+# 4. Deploy to S3
 aws s3 sync build/ s3://jobquest-navigator-frontend
 
-# 5. 使缓存失效 (如果使用CloudFront)
+# 5. Invalidate cache (if using CloudFront)
 aws cloudfront create-invalidation \
   --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} \
   --paths "/*"
@@ -294,38 +289,38 @@ aws cloudfront create-invalidation \
 
 ---
 
-## 💰 成本估算
+## 💰 Cost Estimation
 
-### 月度成本估算 (US East 1)
+### Monthly Cost Estimate (US East 1)
 
-| 服务 | 规格 | 月费用 (USD) |
+| Service | Specs | Monthly Cost (USD) |
 |------|------|-------------|
 | **RDS MySQL** | db.t3.micro | ~$15 |
-| **Lambda** | 1M请求/月 | ~$2 |
-| **API Gateway** | 1M请求/月 | ~$3 |
-| **S3 Standard** | 5GB存储 | ~$0.12 |
-| **S3 Requests** | 10K请求 | ~$0.05 |
-| **Data Transfer** | 10GB出站 | ~$0.90 |
-| **CloudWatch Logs** | 1GB日志 | ~$0.50 |
-| **合计** | | **~$21.57/月** |
+| **Lambda** | 1M requests/month | ~$2 |
+| **API Gateway** | 1M requests/month | ~$3 |
+| **S3 Standard** | 5GB storage | ~$0.12 |
+| **S3 Requests** | 10K requests | ~$0.05 |
+| **Data Transfer** | 10GB outbound | ~$0.90 |
+| **CloudWatch Logs** | 1GB logs | ~$0.50 |
+| **Total** | | **~$21.57/month** |
 
-### 年度预算
+### Annual Budget
 ```
-总年费: ~$259
-AWS免费套餐优惠: -$120 (RDS和Lambda)
-实际年费: ~$139
+Total annual fee: ~$259
+AWS Free Tier Discount: -$120 (RDS and Lambda)
+Actual annual fee: ~$139
 ```
 
-**注意**: 成本可通过以下方式进一步优化：
-- 使用AWS免费套餐
-- 设置停机时间表 (开发期间暂停RDS)
-- 使用预留实例 (长期项目)
+**Note**: Costs can be further optimized by:
+- Using AWS Free Tier
+- Setting downtime schedules (pause RDS during development)
+- Using reserved instances (for long-term projects)
 
 ---
 
-## 🔄 CI/CD流水线 (可选)
+## 🔄 CI/CD Pipeline (Optional)
 
-### GitHub Actions工作流程
+### GitHub Actions Workflow
 ```yaml
 name: Deploy to AWS
 
@@ -379,25 +374,25 @@ jobs:
 
 ---
 
-## 🔍 监控和日志
+## 🔍 Monitoring and Logging
 
-### CloudWatch监控
+### CloudWatch Monitoring
 ```yaml
-监控指标:
-  - Lambda执行时间和错误率
-  - API Gateway请求数和延迟
-  - RDS连接数和CPU使用率
-  - S3存储使用量
+Monitoring metrics:
+  - Lambda execution time and error rate
+  - API Gateway request count and latency
+  - RDS connection count and CPU usage
+  - S3 storage usage
 
-告警设置:
-  - Lambda错误率 > 5%
-  - RDS CPU使用率 > 80%
-  - API Gateway 5xx错误 > 10个/5分钟
+Alarm settings:
+  - Lambda error rate > 5%
+  - RDS CPU usage > 80%
+  - API Gateway 5xx errors > 10/5min
 ```
 
-### 日志配置
+### Logging Configuration
 ```python
-# Django日志配置
+# Django logging configuration
 LOGGING = {
     'version': 1,
     'handlers': {
@@ -417,112 +412,112 @@ LOGGING = {
 
 ---
 
-## 🔒 安全配置
+## 🔒 Security Configuration
 
-### 访问控制
+### Access Control
 ```yaml
-IAM角色和策略:
-  Lambda执行角色:
-    - VPC访问权限
-    - RDS连接权限
-    - S3读写权限
-    - CloudWatch日志权限
+IAM roles and policies:
+  Lambda execution role:
+    - VPC access
+    - RDS connection
+    - S3 read/write
+    - CloudWatch logs
 
-S3存储桶策略:
-  - 前端存储桶: 公共读取
-  - 静态资源存储桶: 私有访问
-  - CORS配置允许前端域名
+S3 bucket policy:
+  - Frontend bucket: public read
+  - Static resource bucket: private access
+  - CORS configuration allows frontend domain
 ```
 
-### 网络安全
+### Network Security
 ```yaml
-安全组配置:
-  - RDS仅允许Lambda访问
-  - Lambda出站访问受限
-  - 所有敏感端口关闭
+Security group configuration:
+  - RDS only allows Lambda access
+  - Lambda outbound access restricted
+  - All sensitive ports closed
 
-环境变量加密:
-  - 所有密钥使用AWS KMS加密
-  - 数据库密码通过参数存储
+Environment variable encryption:
+  - All keys encrypted with AWS KMS
+  - Database password stored via Parameter Store
 ```
 
 ---
 
-## 📝 部署检查清单
+## 📝 Deployment Checklist
 
-### 部署前检查
-- [ ] AWS CLI配置完成
-- [ ] 环境变量准备就绪
-- [ ] 数据库迁移文件验证
-- [ ] 静态文件收集测试
-- [ ] CORS配置检查
-- [ ] 域名DNS设置 (如需要)
+### Pre-deployment Check
+- [ ] AWS CLI configured
+- [ ] Environment variables ready
+- [ ] Database migration files verified
+- [ ] Static file collection tested
+- [ ] CORS configuration checked
+- [ ] Domain DNS set (if needed)
 
-### 部署后验证
-- [ ] API端点响应正常
-- [ ] 数据库连接成功
-- [ ] 静态文件加载正常
-- [ ] 前端功能完整测试
-- [ ] 错误日志检查
-- [ ] 性能基准测试
+### Post-deployment Verification
+- [ ] API endpoint responds normally
+- [ ] Database connection successful
+- [ ] Static files load correctly
+- [ ] Frontend fully tested
+- [ ] Error logs checked
+- [ ] Performance benchmarked
 
-### 生产就绪检查
-- [ ] 备份策略配置
-- [ ] 监控告警设置
-- [ ] 安全扫描通过
-- [ ] 成本预算确认
-- [ ] 文档更新完成
-- [ ] 团队访问权限配置
-
----
-
-## 🎓 毕业设计考虑
-
-### 演示准备
-1. **功能演示脚本**: 准备完整的用户旅程演示
-2. **技术架构图**: 可视化AWS架构设计
-3. **性能测试报告**: 基础的负载测试结果
-4. **成本分析**: 详细的部署成本分析
-
-### 文档交付物
-- [x] 架构设计文档 (本文档)
-- [ ] API文档 (Swagger/OpenAPI)
-- [ ] 部署操作手册
-- [ ] 故障排除指南
-- [ ] 用户使用手册
-
-### 技术亮点
-- **现代化架构**: Serverless + 微服务
-- **云原生设计**: 充分利用AWS服务
-- **成本效益**: 适合小规模项目的经济方案
-- **可扩展性**: 架构支持未来功能扩展
+### Production Readiness Check
+- [ ] Backup strategy configured
+- [ ] Monitoring alarms set
+- [ ] Security scan passed
+- [ ] Cost budget confirmed
+- [ ] Documentation updated
+- [ ] Team access configured
 
 ---
 
-## 📞 支持和维护
+## 🎓 Graduation Design Considerations
 
-### 故障排除
+### Demo Preparation
+1. **Feature demo script**: Prepare a complete user journey demo
+2. **Technical architecture diagram**: Visualize AWS architecture design
+3. **Performance test report**: Basic load test results
+4. **Cost analysis**: Detailed deployment cost analysis
+
+### Documentation Deliverables
+- [x] Architecture design document (this document)
+- [ ] API documentation (Swagger/OpenAPI)
+- [ ] Deployment operations manual
+- [ ] Troubleshooting guide
+- [ ] User manual
+
+### Technical Highlights
+- **Modern architecture**: Serverless + microservices
+- **Cloud-native design**: Fully utilizes AWS services
+- **Cost-effective**: Economic solution for small-scale projects
+- **Scalability**: Architecture supports future feature expansion
+
+---
+
+## 📞 Support and Maintenance
+
+### Troubleshooting
 ```bash
-# 常见问题诊断命令
-zappa tail production          # 查看Lambda日志
-aws rds describe-db-instances  # 检查RDS状态
-aws s3 ls s3://bucket-name     # 验证S3内容
+# Common diagnostic commands
+zappa tail production          # View Lambda logs
+aws rds describe-db-instances  # Check RDS status
+aws s3 ls s3://bucket-name     # Verify S3 contents
 ```
 
-### 备份策略
+### Backup Strategy
 ```yaml
-数据库备份:
-  - 自动备份: 7天保留期
-  - 手动快照: 重要节点备份
+Database backup:
+  - Automatic backup: 7-day retention
+  - Manual snapshot: important node backup
 
-代码备份:
-  - Git仓库: GitHub/GitLab
-  - 部署包: S3存储
+Code backup:
+  - Git repository: GitHub/GitLab
+  - Deployment package: S3 storage
 ```
 
 ---
 
-**文档版本**: v1.0  
-**最后更新**: 2024年6月  
-**作者**: JobQuest Navigator开发团队  
-**项目**: 毕业设计项目
+**Document Version**: v1.0  
+**Last Updated**: June 2024  
+**Author**: JobQuest Navigator Development Team  
+**Project**: Graduation Design Project
