@@ -1,0 +1,97 @@
+[
+  {
+    "name": "Authentication Setup",
+    "passed": true,
+    "details": "Token: 23011f4616..."
+  },
+  {
+    "name": "Jobs - List",
+    "passed": true,
+    "details": "Status: 200, Count: 0"
+  },
+  {
+    "name": "Jobs - Search",
+    "passed": false,
+    "details": "Status: 404"
+  },
+  {
+    "name": "Jobs - Filter",
+    "passed": true,
+    "details": "Status: 200"
+  },
+  {
+    "name": "Resumes - List",
+    "passed": true,
+    "details": "Status: 200, Count: 0"
+  },
+  {
+    "name": "Resumes - Templates",
+    "passed": true,
+    "details": "Status: 200"
+  },
+  {
+    "name": "Resumes - Analytics",
+    "passed": true,
+    "details": "Status: 200"
+  },
+  {
+    "name": "Skills - List",
+    "passed": true,
+    "details": "Status: 200, Count: 0"
+  },
+  {
+    "name": "Skills - User Skills",
+    "passed": false,
+    "details": "Status: 500"
+  },
+  {
+    "name": "Skills - Certification Roadmaps",
+    "passed": false,
+    "details": "Status: 404"
+  },
+  {
+    "name": "AI Suggestions - List",
+    "passed": true,
+    "details": "Status: 200, Count: 0"
+  },
+  {
+    "name": "AI Suggestions - Feedback",
+    "passed": false,
+    "details": "Status: 404"
+  },
+  {
+    "name": "Company Research - List",
+    "passed": true,
+    "details": "Status: 200, Count: 0"
+  },
+  {
+    "name": "Company Research - Interview Prep",
+    "passed": true,
+    "details": "Status: 200"
+  },
+  {
+    "name": "User - Profile",
+    "passed": true,
+    "details": "Status: 200, Username: apitester"
+  },
+  {
+    "name": "User - Preferences",
+    "passed": true,
+    "details": "Status: 200"
+  },
+  {
+    "name": "Create - Resume",
+    "passed": true,
+    "details": "Status: 201, ID: None"
+  },
+  {
+    "name": "Update - Resume",
+    "passed": false,
+    "details": "Status: 404"
+  },
+  {
+    "name": "Delete - Resume",
+    "passed": false,
+    "details": "Status: 404"
+  }
+]
