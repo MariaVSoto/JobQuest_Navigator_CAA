@@ -79,9 +79,9 @@ create_directories() {
 setup_env() {
     print_status "Setting up environment variables..."
     
-    if [ ! -f "../.env" ]; then
+    if [ ! -f ".env" ]; then
         print_status "Creating .env file from template..."
-        cat > ../.env << EOF
+        cat > .env << EOF
 # Database Configuration
 DATABASE_URL=postgresql://jobquest_user:jobquest_password@database:5432/jobquest_navigator
 POSTGRES_DB=jobquest_navigator
@@ -147,25 +147,25 @@ start_services() {
     case $mode in
         "dev")
             print_status "Starting development environment with hot reload..."
-            $COMPOSE_COMMAND -f ../docker-compose.yml -f ../docker-compose.dev.yml up --build -d
+            $COMPOSE_COMMAND -f docker-compose.yml -f docker-compose.dev.yml up --build -d
             profiles="devtools"
             ;;
         "prod")
             print_status "Starting production-like environment..."
-            $COMPOSE_COMMAND -f ../docker-compose.yml up --build -d
+            $COMPOSE_COMMAND -f docker-compose.yml up --build -d
             profiles="proxy"
             ;;
         "full")
             print_status "Starting full environment with all services..."
-            $COMPOSE_COMMAND -f ../docker-compose.yml --profile proxy --profile email --profile storage --profile monitoring up --build -d
+            $COMPOSE_COMMAND -f docker-compose.yml --profile proxy --profile email --profile storage --profile monitoring up --build -d
             ;;
         "minimal")
             print_status "Starting minimal environment..."
-            $COMPOSE_COMMAND -f ../docker-compose.yml up database redis backend frontend --build -d
+            $COMPOSE_COMMAND -f docker-compose.yml up database redis backend frontend --build -d
             ;;
         *)
             print_status "Starting default environment..."
-            $COMPOSE_COMMAND -f ../docker-compose.yml up --build -d
+            $COMPOSE_COMMAND -f docker-compose.yml up --build -d
             ;;
     esac
     

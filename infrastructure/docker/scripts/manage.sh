@@ -135,8 +135,8 @@ run_custom_command() {
         "db-backup")
             local backup_file="backup_$(date +%Y%m%d_%H%M%S).sql"
             print_status "Creating database backup: $backup_file"
-            $COMPOSE_COMMAND exec database pg_dump -U jobquest_user jobquest_navigator > "../backups/$backup_file"
-            print_success "Database backup created: ../backups/$backup_file"
+            $COMPOSE_COMMAND exec database pg_dump -U jobquest_user jobquest_navigator > "backups/$backup_file"
+            print_success "Database backup created: backups/$backup_file"
             ;;
         "db-restore")
             if [ -z "$1" ]; then
@@ -144,8 +144,8 @@ run_custom_command() {
                 exit 1
             fi
             local backup_file=$1
-            if [ ! -f "../backups/$backup_file" ]; then
-                print_error "Backup file not found: ../backups/$backup_file"
+            if [ ! -f "backups/$backup_file" ]; then
+                print_error "Backup file not found: backups/$backup_file"
                 exit 1
             fi
             print_warning "This will OVERWRITE ALL DATA in the database!"
@@ -153,7 +153,7 @@ run_custom_command() {
             echo
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 print_status "Restoring database from: $backup_file"
-                $COMPOSE_COMMAND exec -T database psql -U jobquest_user jobquest_navigator < "../backups/$backup_file"
+                $COMPOSE_COMMAND exec -T database psql -U jobquest_user jobquest_navigator < "backups/$backup_file"
                 print_success "Database restored successfully"
             else
                 print_status "Database restore cancelled"
@@ -180,7 +180,7 @@ main() {
     cd "$(dirname "$0")/.."
     
     # Create backups directory if it doesn't exist
-    mkdir -p ../backups
+    mkdir -p backups
     
     local command=$1
     shift

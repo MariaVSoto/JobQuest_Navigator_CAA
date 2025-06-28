@@ -64,7 +64,7 @@ stop_soft() {
     print_status "Stopping services (keeping data)..."
     
     # Stop all running containers
-    $COMPOSE_COMMAND -f ../docker-compose.yml -f ../docker-compose.dev.yml down
+    $COMPOSE_COMMAND -f docker-compose.yml -f docker-compose.dev.yml down
     
     print_success "Services stopped successfully"
     print_status "Data volumes are preserved"
@@ -75,7 +75,7 @@ stop_clean() {
     print_status "Stopping services and cleaning up..."
     
     # Stop and remove containers, networks, and volumes
-    $COMPOSE_COMMAND -f ../docker-compose.yml -f ../docker-compose.dev.yml down -v --remove-orphans
+    $COMPOSE_COMMAND -f docker-compose.yml -f docker-compose.dev.yml down -v --remove-orphans
     
     # Remove unused networks
     docker network prune -f
@@ -97,7 +97,7 @@ stop_reset() {
     print_status "Performing complete reset..."
     
     # Stop and remove everything
-    $COMPOSE_COMMAND -f ../docker-compose.yml -f ../docker-compose.dev.yml down -v --remove-orphans --rmi all
+    $COMPOSE_COMMAND -f docker-compose.yml -f docker-compose.dev.yml down -v --remove-orphans --rmi all
     
     # Remove unused Docker resources
     docker system prune -a -f --volumes
