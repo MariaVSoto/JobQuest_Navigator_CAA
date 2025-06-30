@@ -5,9 +5,13 @@
 JobQuest Navigator is a complete job search navigation and career management platform. This package contains all the necessary files, configurations, and scripts for production deployment on the AWS cloud platform.
 
 **Project Features:**
-- 🚀 Modern Serverless architecture
+- 🚀 Modern Serverless architecture with REST API
 - 💰 Cost-optimized design (monthly cost about $21)
-- 📱 Responsive frontend interface
+- 📱 Responsive frontend interface with real-time job data
+- 🗺️ Interactive job mapping with Google Maps integration
+- 🤖 AI-powered suggestions with comprehensive fallback system
+- 🎓 Skills and certifications management
+- 💼 Interview preparation tools and resources
 - 🔒 Enterprise-grade security configuration
 - 📊 Complete monitoring and logging system
 
@@ -96,11 +100,19 @@ docker-compose exec backend python manage.py setup_minio_test_data --create-buck
 ```
 
 **Local Services:**
-- **Frontend**: React app at `http://localhost:3000`
-- **Backend**: Django API at `http://localhost:8000`
+- **Frontend**: React app at `http://localhost` (Docker) or `http://localhost:3000` (Development)
+- **Backend**: Django REST API at `http://localhost:8000`
 - **Database**: PostgreSQL at `localhost:5432`
-- **Storage**: MinIO at `http://localhost:9001` (minioadmin/minioadmin123)
+- **Storage**: MinIO S3-compatible at `http://localhost:9001` (minioadmin/minioadmin123)
 - **Cache**: Redis at `localhost:6379`
+- **Monitoring**: Grafana at `http://localhost:3001` (optional)
+
+**Current Configuration:**
+- ✅ **Real-time Job Data**: Adzuna API integration for Los Angeles programmer jobs
+- ✅ **Google Maps**: Interactive job location mapping
+- ✅ **Fallback System**: All modules work with comprehensive mock data
+- ✅ **Authentication**: JWT-based with demo access support
+- ✅ **API Architecture**: Migrated from GraphQL to REST for better compatibility
 
 ---
 
@@ -289,11 +301,12 @@ jobquest-resumes/
    - MinIO: `docker-compose exec backend python manage.py setup_minio_test_data --create-bucket`
    - LocalStack: `docker-compose exec backend python manage.py setup_localstack_test_data --create-bucket`
 5. **Access Application**: 
-   - Frontend: http://localhost:3000
+   - Frontend: http://localhost (Docker) or http://localhost:3000 (Development)
    - API: http://localhost:8000/api/
    - Admin: http://localhost:8000/admin/
-   - MinIO: http://localhost:9001
+   - MinIO: http://localhost:9001 (minioadmin/minioadmin123)
    - LocalStack: http://localhost:4566
+   - Monitoring: http://localhost:3001 (Grafana, optional)
 
 ## 📖 Documentation Resources
 
@@ -456,5 +469,31 @@ scripts/deploy-infrastructure.sh
 ```
 
 **Wish you a smooth deployment!** 🎉
+
+## 🎮 Demo Status & Features
+
+### Current Working Features
+- ✅ **Job Search**: Real-time job data from Adzuna API (5 programmer jobs from LA)
+- ✅ **Interactive Map**: Google Maps integration for job location visualization
+- ✅ **User Authentication**: JWT-based authentication with demo access
+- ✅ **AI Suggestions**: Comprehensive AI suggestions with fallback mock data
+- ✅ **Skills Management**: Skills and certifications tracking with sample data
+- ✅ **Interview Prep**: Question banks, practice sessions, tips, and resources
+- ✅ **Learning Paths**: Professional development tracking and progress
+- ✅ **Fallback System**: All modules gracefully degrade to mock data when backend unavailable
+
+### API Integrations
+- **Adzuna API**: Real-time job data for Los Angeles programmer positions
+- **Google Maps API**: Interactive job location mapping and visualization
+- **Comprehensive Mock Data**: Realistic fallback data for all features
+
+### Demo Access
+The application supports demo access without authentication for showcasing purposes. All modules display meaningful content even when backend services are unavailable, making it perfect for demonstrations and development.
+
+### Recent Updates
+- **Architecture**: Migrated from GraphQL to REST API for better compatibility
+- **Error Resolution**: Fixed all "Failed to load" errors across modules
+- **Data Sources**: Integrated real-time job data with comprehensive fallback system
+- **Container Health**: Resolved Docker container networking and health check issues
 
 If you have any questions, please refer to the troubleshooting guide or contact the technical support team.

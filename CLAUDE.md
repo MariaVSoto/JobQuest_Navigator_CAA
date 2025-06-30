@@ -84,13 +84,18 @@ scripts/verify-deployment.sh                 # Verify deployment status
 ### Frontend Architecture
 - **Framework**: React 19 with React Router for routing
 - **State Management**: Context API (AuthContext, JobContext)
-- **GraphQL**: Apollo Client for API communication
+- **API Communication**: REST API (migrated from GraphQL)
+- **External APIs**: 
+  - Adzuna API for real-time job data
+  - Google Maps API for location visualization
 - **Key Components**:
   - Authentication system with protected routes
-  - Job search and mapping functionality
+  - Job search and mapping functionality with real-time data
   - Resume builder interface
-  - AI suggestions dashboard
-  - Company research profiles
+  - AI suggestions dashboard with fallback mock data
+  - Company research and interview preparation modules
+  - Skills and certifications management
+- **Fallback System**: All services include comprehensive mock data for demo functionality
 
 ### Key Models
 - `User`: Extended user model with career info and preferences (core/models.py:31)
@@ -161,17 +166,25 @@ The project uses SQLite for development and AWS RDS MySQL for production. Custom
 - **Minimal Mode**: Core services only (database, backend, frontend)
 
 ### Service URLs
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- Django Admin: http://localhost:8000/admin/
-- Database: localhost:5432
-- Redis: localhost:6379
-- MailHog (email testing): http://localhost:8025
-- MinIO Web UI: http://localhost:9001 (minioadmin/minioadmin123)
-- MinIO API: http://localhost:9000
-- LocalStack (AWS services): http://localhost:4566
-- LocalStack Web UI: http://localhost:4566/_localstack/health
-- Grafana (monitoring): http://localhost:3001
+- **Frontend**: http://localhost (Docker) / http://localhost:3000 (Development)
+- **Backend API**: http://localhost:8000
+- **Django Admin**: http://localhost:8000/admin/
+- **Database**: localhost:5432
+- **Redis**: localhost:6379
+- **MailHog** (email testing): http://localhost:8025
+- **MinIO Web UI**: http://localhost:9001 (minioadmin/minioadmin123)
+- **MinIO API**: http://localhost:9000
+- **LocalStack** (AWS services): http://localhost:4566
+- **LocalStack Web UI**: http://localhost:4566/_localstack/health
+- **Grafana** (monitoring): http://localhost:3001
+
+### Current Configuration
+- **API Keys Configured**:
+  - Adzuna API: Integrated for real-time job data (LA programmer jobs)
+  - Google Maps API: Enabled for job location mapping
+- **Authentication**: JWT-based with fallback demo access
+- **Data Sources**: Real-time job data with comprehensive fallback mock data
+- **Storage**: MinIO S3-compatible storage for local development
 
 ### Storage Configuration
 
@@ -222,11 +235,43 @@ The project can use LocalStack for complete AWS services emulation:
 ## Important Notes
 
 - The project uses UUID primary keys for all models
-- Authentication uses Django's built-in system with custom User model
-- AI features integrate with OpenAI API for job suggestions and company research
-- Frontend uses Apollo Client for GraphQL API communication
-- Production deployment uses AWS Lambda with Zappa for serverless architecture
-- Security scanning runs on every push/PR and weekly schedules
-- Test environments auto-cleanup after 24 hours to save costs
-- Docker environment provides full local development stack with PostgreSQL, Redis, and optional services
-- Use `infrastructure/docker/scripts/` scripts for easy Docker environment management
+- Authentication uses Django's built-in system with custom User model and JWT tokens
+- **API Architecture**: Migrated from GraphQL to REST API for better compatibility
+- **External Integrations**:
+  - Adzuna API for real-time job data (5 programmer jobs from LA)
+  - Google Maps API for job location visualization
+  - OpenAI API for AI suggestions and company research
+- **Demo Functionality**: All services include comprehensive fallback mock data
+  - AI suggestions with job matching and skill recommendations
+  - Skills and certifications management with sample data
+  - Interview preparation with questions, tips, and practice sessions
+  - Learning paths and professional development tracking
+- **Production deployment**: AWS Lambda with Zappa for serverless architecture
+- **Security scanning**: Runs on every push/PR and weekly schedules
+- **Test environments**: Auto-cleanup after 24 hours to save costs
+- **Docker environment**: Full local development stack with PostgreSQL, Redis, and optional services
+- **Management**: Use `infrastructure/docker/scripts/` scripts for easy Docker environment management
+
+## Recent Updates (Current Session)
+
+### Architecture Migration
+- **GraphQL to REST**: Complete migration from Apollo Client GraphQL to REST API
+- **Authentication Fix**: Resolved method compatibility issues (getAccessToken vs getToken)
+- **API Connectivity**: Fixed container networking and health check endpoints
+
+### External API Integration
+- **Adzuna API**: Integrated real-time job data for Los Angeles programmer positions
+- **Google Maps API**: Added location visualization for job mapping functionality
+- **API Key Management**: Configured in both Docker Compose and Django settings
+
+### Fallback Data System
+- **AI Suggestions Service**: Mock data for job matching, skill improvement, and interview prep
+- **Skills Service**: Mock data for user skills, certifications, categories, and learning paths
+- **Interview Prep Service**: Mock data for questions, practice sessions, tips, and resources
+- **Graceful Degradation**: All services fail gracefully to mock data when backend is unavailable
+
+### Error Resolution
+- **Container Health**: Fixed backend health check endpoint
+- **React Rendering**: Resolved object rendering errors in job listings
+- **Authentication**: Fixed missing method errors in auth service
+- **Data Loading**: Resolved "Failed to load" errors across all modules

@@ -74,6 +74,15 @@ infrastructure/docker/
 - Object storage (MinIO)
 - Search engine (Elasticsearch)
 
+### Storage Modes
+```bash
+# Start with MinIO S3-compatible storage
+./scripts/start-local-env.sh --dev --with-storage
+
+# Start with LocalStack AWS services emulation
+./scripts/start-local-env.sh --dev --with-localstack
+```
+
 ### Minimal Mode
 ```bash
 ./scripts/start-local-env.sh --minimal
@@ -85,7 +94,7 @@ infrastructure/docker/
 
 | Service         | Address                      | Description                |
 |-----------------|-----------------------------|----------------------------|
-| Frontend App    | http://localhost:3000        | React application          |
+| Frontend App    | http://localhost (Docker) or http://localhost:3000 (Dev) | React application with real-time job data |
 | Backend API     | http://localhost:8000        | Django REST API            |
 | Django Admin    | http://localhost:8000/admin/ | Django admin interface     |
 | API Docs        | http://localhost:8000/api/docs/ | API documentation      |
@@ -97,11 +106,19 @@ infrastructure/docker/
 | Service        | Address                      | Description                        |
 |----------------|-----------------------------|------------------------------------|
 | MailHog        | http://localhost:8025        | Email testing tool                 |
-| MinIO          | http://localhost:9001        | S3-compatible object storage       |
+| MinIO          | http://localhost:9001        | S3-compatible object storage (minioadmin/minioadmin123) |
+| LocalStack     | http://localhost:4566        | AWS services emulation             |
 | Elasticsearch  | http://localhost:9200        | Search engine                      |
 | Prometheus     | http://localhost:9090        | Monitoring metrics                 |
 | Grafana        | http://localhost:3001        | Monitoring dashboard (admin/admin123) |
 | Nginx Proxy    | http://localhost:8080        | Nginx reverse proxy                |
+
+### Current Demo Configuration
+- ✅ **Real-time Job Data**: Adzuna API integration for Los Angeles programmer jobs
+- ✅ **Google Maps**: Interactive job location mapping
+- ✅ **Fallback System**: All modules work with comprehensive mock data
+- ✅ **Authentication**: JWT-based with demo access support
+- ✅ **API Architecture**: REST API (migrated from GraphQL)
 
 ## 🔧 Management Commands
 
