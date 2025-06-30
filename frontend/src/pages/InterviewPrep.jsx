@@ -9,6 +9,8 @@ const InterviewPrep = () => {
   const [selectedCategory, setSelectedCategory] = useState('general');
   const [interviewQuestions, setInterviewQuestions] = useState([]);
   const [practiceSessions, setPracticeSessions] = useState([]);
+  const [interviewTips, setInterviewTips] = useState([]);
+  const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -17,6 +19,12 @@ const InterviewPrep = () => {
       loadUserData();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user && activeTab === 'tips') {
+      loadInterviewTips();
+    }
+  }, [selectedCategory, user, activeTab]);
 
   const loadUserData = async () => {
     setLoading(true);
@@ -28,11 +36,25 @@ const InterviewPrep = () => {
       // Load practice sessions
       const sessionsResponse = await companyResearchService.getPracticeSessions();
       setPracticeSessions(sessionsResponse.results || []);
+
+      // Load interview resources
+      const resourcesResponse = await companyResearchService.getInterviewResources();
+      setResources(resourcesResponse.results || resourcesResponse || []);
     } catch (err) {
       console.error('Error loading user data:', err);
       setError('Failed to load your interview preparation data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadInterviewTips = async () => {
+    try {
+      const tipsResponse = await companyResearchService.getInterviewTips(selectedCategory);
+      setInterviewTips(tipsResponse.results || tipsResponse || []);
+    } catch (err) {
+      console.error('Error loading interview tips:', err);
+      setError('Failed to load interview tips');
     }
   };
 
@@ -68,122 +90,7 @@ const InterviewPrep = () => {
     }
   };
 
-  const interviewTips = {
-    general: [
-      {
-        title: "Research the Company",
-        content: "Learn about the company's history, mission, values, and recent news. This shows your interest and helps you tailor your responses."
-      },
-      {
-        title: "Practice Common Questions",
-        content: "Prepare answers for common interview questions like 'Tell me about yourself' and 'Why do you want to work here?'"
-      },
-      {
-        title: "Dress Appropriately",
-        content: "Choose professional attire that matches the company culture. When in doubt, it's better to be slightly overdressed."
-      }
-    ],
-    technical: [
-      {
-        title: "Review Technical Concepts",
-        content: "Brush up on key technical concepts and be prepared to explain your thought process during problem-solving."
-      },
-      {
-        title: "Prepare Your Portfolio",
-        content: "Have your projects and code samples ready to discuss. Be prepared to explain your technical decisions."
-      },
-      {
-        title: "Practice Coding",
-        content: "Practice coding problems and system design questions. Focus on explaining your approach clearly."
-      }
-    ],
-    behavioral: [
-      {
-        title: "Use the STAR Method",
-        content: "Structure your answers using Situation, Task, Action, and Result to provide clear, concise responses."
-      },
-      {
-        title: "Prepare Examples",
-        content: "Have specific examples ready that demonstrate your skills, achievements, and how you handle challenges."
-      },
-      {
-        title: "Show Enthusiasm",
-        content: "Express genuine interest in the role and company. Ask thoughtful questions about the position."
-      }
-    ]
-  };
 
-  const commonQuestions = {
-    general: [
-      {
-        question: "Tell me about yourself.",
-        answer: "Focus on your professional background, key achievements, and what makes you a good fit for the role."
-      },
-      {
-        question: "Why do you want to work here?",
-        answer: "Show your research and explain how your skills and values align with the company's mission."
-      },
-      {
-        question: "Where do you see yourself in 5 years?",
-        answer: "Discuss your career goals and how they align with the company's growth opportunities."
-      }
-    ],
-    technical: [
-      {
-        question: "Explain a technical concept to a non-technical person.",
-        answer: "Use analogies and simple language to break down complex concepts."
-      },
-      {
-        question: "How do you handle technical challenges?",
-        answer: "Describe your problem-solving process and how you learn from difficult situations."
-      },
-      {
-        question: "What's your approach to learning new technologies?",
-        answer: "Explain your learning process and how you stay updated with industry trends."
-      }
-    ],
-    behavioral: [
-      {
-        question: "Tell me about a time you faced a challenge at work.",
-        answer: "Use the STAR method to describe the situation, your actions, and the positive outcome."
-      },
-      {
-        question: "How do you handle conflict in the workplace?",
-        answer: "Focus on communication, collaboration, and finding mutually beneficial solutions."
-      },
-      {
-        question: "Describe a successful project you worked on.",
-        answer: "Highlight your role, the challenges overcome, and the impact of the project."
-      }
-    ]
-  };
-
-  const resources = [
-    {
-      title: "Interview Preparation Guide",
-      type: "PDF",
-      description: "Comprehensive guide covering all aspects of interview preparation",
-      link: "#"
-    },
-    {
-      title: "Common Interview Questions",
-      type: "PDF",
-      description: "List of frequently asked questions with sample answers",
-      link: "#"
-    },
-    {
-      title: "Technical Interview Tips",
-      type: "Video",
-      description: "Video series on preparing for technical interviews",
-      link: "#"
-    },
-    {
-      title: "Behavioral Interview Workshop",
-      type: "Video",
-      description: "Workshop on mastering behavioral interview questions",
-      link: "#"
-    }
-  ];
 
   return (
     <div className="interview-prep-container">
@@ -251,12 +158,26 @@ const InterviewPrep = () => {
               </div>
 
               <div className="tips-list">
-                {interviewTips[selectedCategory].map((tip, index) => (
-                  <div key={index} className="tip-card">
-                    <h3>{tip.title}</h3>
-                    <p>{tip.content}</p>
+                {interviewTips.length > 0 ? (
+                  interviewTips
+                    .filter(tip => tip.category === selectedCategory)
+                    .map((tip) => (
+                      <div key={tip.id} className="tip-card">
+                        <h3>{tip.title}</h3>
+                        <p>{tip.content}</p>
+                        {tip.priority && (
+                          <span className={`priority priority-${tip.priority}`}>
+                            {tip.priority} priority
+                          </span>
+                        )}
+                      </div>
+                    ))
+                ) : (
+                  <div className="no-tips">
+                    <p>No interview tips available for {selectedCategory} category yet.</p>
+                    <p>Check back later for personalized tips!</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -297,38 +218,37 @@ const InterviewPrep = () => {
               </div>
 
               <div className="questions-list">
-                {/* Show static questions */}
-                {commonQuestions[selectedCategory].map((item, index) => (
-                  <div key={index} className="question-card static">
-                    <h3>{item.question}</h3>
-                    <p>{item.answer}</p>
-                    <span className="question-type">Static</span>
-                  </div>
-                ))}
-
-                {/* Show generated questions */}
-                {interviewQuestions
-                  .filter(q => q.question_type === selectedCategory)
-                  .map((question) => (
-                    <div key={question.id} className="question-card generated">
-                      <h3>{question.question_text}</h3>
-                      {question.sample_answer && (
-                        <p>{question.sample_answer}</p>
-                      )}
-                      {question.answer_framework && (
-                        <div className="answer-framework">
-                          <strong>Framework:</strong> {question.answer_framework}
-                        </div>
-                      )}
-                      <div className="question-meta">
-                        <span className="question-type">AI Generated</span>
-                        <span className="difficulty">{question.difficulty_display}</span>
-                        {question.times_used > 0 && (
-                          <span className="usage">Used {question.times_used} times</span>
+                {interviewQuestions.length > 0 ? (
+                  interviewQuestions
+                    .filter(q => q.question_type === selectedCategory)
+                    .map((question) => (
+                      <div key={question.id} className="question-card">
+                        <h3>{question.question_text}</h3>
+                        {question.sample_answer && (
+                          <p>{question.sample_answer}</p>
                         )}
+                        {question.answer_framework && (
+                          <div className="answer-framework">
+                            <strong>Framework:</strong> {question.answer_framework}
+                          </div>
+                        )}
+                        <div className="question-meta">
+                          <span className="question-type">
+                            {question.is_generated ? 'AI Generated' : 'Standard'}
+                          </span>
+                          <span className="difficulty">{question.difficulty_display}</span>
+                          {question.times_used > 0 && (
+                            <span className="usage">Used {question.times_used} times</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                ) : (
+                  <div className="no-questions">
+                    <p>No {selectedCategory} questions available yet.</p>
+                    <p>Click "Generate {selectedCategory} Questions" to get personalized questions!</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -403,16 +323,38 @@ const InterviewPrep = () => {
           {activeTab === 'resources' && (
             <div className="resources-section">
               <div className="resources-list">
-                {resources.map((resource, index) => (
-                  <div key={index} className="resource-card">
-                    <div className="resource-type">{resource.type}</div>
-                    <h3>{resource.title}</h3>
-                    <p>{resource.description}</p>
-                    <a href={resource.link} className="resource-link">
-                      View Resource
-                    </a>
+                {resources.length > 0 ? (
+                  resources.map((resource) => (
+                    <div key={resource.id} className="resource-card">
+                      <div className="resource-type">{resource.resource_type}</div>
+                      <h3>{resource.title}</h3>
+                      <p>{resource.description}</p>
+                      {resource.url && (
+                        <a href={resource.url} className="resource-link" target="_blank" rel="noopener noreferrer">
+                          View Resource
+                        </a>
+                      )}
+                      {resource.file_url && (
+                        <a href={resource.file_url} className="resource-link" target="_blank" rel="noopener noreferrer">
+                          Download Resource
+                        </a>
+                      )}
+                      <div className="resource-meta">
+                        {resource.category && (
+                          <span className="resource-category">{resource.category}</span>
+                        )}
+                        {resource.difficulty && (
+                          <span className="resource-difficulty">{resource.difficulty}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-resources">
+                    <h3>No resources available yet</h3>
+                    <p>Interview preparation resources will be added soon!</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}

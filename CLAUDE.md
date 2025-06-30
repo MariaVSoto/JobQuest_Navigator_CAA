@@ -38,12 +38,25 @@ npm run eject                                # Eject from create-react-app
 ```bash
 cd infrastructure/docker/
 ./scripts/start-local-env.sh --dev           # Start development environment
+./scripts/start-local-env.sh --dev --with-storage     # Start with MinIO storage
+./scripts/start-local-env.sh --dev --with-localstack  # Start with LocalStack AWS emulation
 ./scripts/start-local-env.sh --prod          # Start production-like environment
 ./scripts/start-local-env.sh --full          # Start with all services (monitoring, etc.)
 ./scripts/manage.sh migrate                  # Run Django migrations
 ./scripts/manage.sh createsuperuser          # Create superuser
 ./scripts/manage.sh test                     # Run tests
 ./scripts/stop-local-env.sh --clean          # Stop and clean up
+
+# Storage Commands
+# MinIO (S3-compatible storage)
+docker-compose --profile storage up minio   # Start MinIO only
+docker-compose exec backend python manage.py setup_minio_test_data --create-bucket  # Setup test data
+docker-compose exec backend python manage.py test_s3_connection  # Test storage connection
+
+# LocalStack (AWS services emulation)
+docker-compose --profile localstack up localstack  # Start LocalStack only
+docker-compose exec backend python manage.py setup_localstack_test_data --create-bucket  # Setup test data
+docker-compose exec backend python manage.py test_localstack_connection  # Test AWS services connection
 ```
 
 ### Full Deployment
@@ -154,14 +167,49 @@ The project uses SQLite for development and AWS RDS MySQL for production. Custom
 - Database: localhost:5432
 - Redis: localhost:6379
 - MailHog (email testing): http://localhost:8025
-- MinIO (S3 storage): http://localhost:9001
+- MinIO Web UI: http://localhost:9001 (minioadmin/minioadmin123)
+- MinIO API: http://localhost:9000
+- LocalStack (AWS services): http://localhost:4566
+- LocalStack Web UI: http://localhost:4566/_localstack/health
 - Grafana (monitoring): http://localhost:3001
+
+### Storage Configuration
+
+#### MinIO Storage Configuration
+The project uses MinIO as an S3-compatible object storage service for local development:
+
+- **Bucket Name**: `jobquest-resumes`
+- **Endpoint**: `http://minio:9000` (Docker network) / `http://localhost:9000` (host)
+- **Web UI**: `http://localhost:9001`
+- **Credentials**: minioadmin / minioadmin123
+- **File Structure**:
+  ```
+  jobquest-resumes/
+  ├── resumes/samples/     # Sample PDF resume files
+  ├── resumes/data/        # JSON resume data
+  ├── resumes/users/{id}/  # User uploaded files organized by user ID
+  └── resumes/config.json  # Storage metadata
+  ```
+
+#### LocalStack AWS Services Configuration
+The project can use LocalStack for complete AWS services emulation:
+
+- **Endpoint**: `http://localstack:4566` (Docker network) / `http://localhost:4566` (host)
+- **Web UI**: `http://localhost:4566/_localstack/health`
+- **S3 Console**: `http://localhost:4566/_localstack/s3`
+- **Access Key**: `test`
+- **Secret Key**: `test`
+- **Region**: `us-east-1`
+- **Services**: S3, Lambda, API Gateway, RDS, CloudFormation, IAM, STS, CloudWatch
+- **File Structure**: Same as MinIO but using LocalStack S3 service
 
 ## Development Workflow
 
 1. **Local Development**: 
    - **Traditional**: Use SQLite database with Django runserver for backend and npm start for frontend
-   - **Docker**: Use `./scripts/start-local-env.sh --dev` for complete containerized environment
+   - **Docker with MinIO**: Use `./scripts/start-local-env.sh --dev --with-storage` for S3-compatible storage
+   - **Docker with LocalStack**: Use `./scripts/start-local-env.sh --dev --with-localstack` for AWS services emulation
+   - **Docker Basic**: Use `./scripts/start-local-env.sh --dev` for complete containerized environment
 2. **Pull Request Process**: 
    - Create feature branch from develop
    - All PR checks must pass (tests, security, code quality)

@@ -1,4 +1,4 @@
-version: '3.8'
+# Docker Compose configuration for JobQuest Navigator
 
 services:
   # PostgreSQL Database
@@ -55,7 +55,15 @@ services:
       - DEBUG=1
       - SECRET_KEY=django-insecure-local-development-key-change-in-production
       - ALLOWED_HOSTS=localhost,127.0.0.1,backend,0.0.0.0
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:80
+      - CORS_ALLOWED_ORIGINS=http://localhost:3002,http://localhost:80
+      - USE_MINIO=True
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin123
+      - MINIO_BUCKET_NAME=jobquest-resumes
+      - ADZUNA_APP_ID=3aea9429
+      - ADZUNA_APP_KEY=47c6c2410fe3c75a1a1e7e90eb21fa95
+      - GOOGLE_MAPS_API_KEY=AIzaSyBf2N3ZLGCX5NihlPvPsZlHkp13Z_t7cjw
     volumes:
       - ../../backend:/app
       - static_volume:/app/staticfiles
@@ -83,12 +91,13 @@ services:
       context: ../../
       dockerfile: infrastructure/docker/Dockerfile.frontend
       args:
-        REACT_APP_API_URL: http://localhost:8000
+        REACT_APP_API_URL: http://localhost
         REACT_APP_ENVIRONMENT: development
+        REACT_APP_GOOGLE_MAPS_API_KEY: AIzaSyBf2N3ZLGCX5NihlPvPsZlHkp13Z_t7cjw
     container_name: jobquest-frontend
     ports:
       - "80:80"
-      - "3000:80"  # Alternative port for development
+      - "3001:80"  # Alternative port for development
     depends_on:
       - backend
     networks:
@@ -153,6 +162,34 @@ services:
     profiles:
       - storage
 
+  # LocalStack for AWS Services Emulation
+  localstack:
+    image: localstack/localstack:latest
+    container_name: jobquest-localstack
+    environment:
+      - SERVICES=s3,lambda,apigateway,rds,cloudformation,logs,iam,sts
+      - DEBUG=1
+      - DATA_DIR=/var/lib/localstack
+      - LAMBDA_EXECUTOR=docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PERSISTENCE=1
+      - LS_LOG=trace
+    ports:
+      - "4566:4566"            # LocalStack edge port
+      - "4510-4559:4510-4559"  # External service port range
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - localstack_data:/var/lib/localstack
+    networks:
+      - jobquest-network
+    restart: unless-stopped
+    profiles:
+      - localstack
+      - aws-local
+
   # Elasticsearch for Search (Optional)
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
@@ -193,7 +230,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin123
     ports:
-      - "3001:3000"
+      - "3003:3000"
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
@@ -212,6 +249,8 @@ volumes:
   media_volume:
     driver: local
   minio_data:
+    driver: local
+  localstack_data:
     driver: local
   elasticsearch_data:
     driver: local

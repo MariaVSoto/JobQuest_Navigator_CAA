@@ -124,6 +124,30 @@ class JobService {
   }
 
   /**
+   * Get company by ID
+   */
+  async getCompanyById(companyId) {
+    const url = `${this.baseURL}/jobs/companies/${companyId}/`;
+    return await this.makeRequest(url);
+  }
+
+  /**
+   * Get all companies
+   */
+  async getCompanies(filters = {}) {
+    const params = new URLSearchParams();
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    const url = `${this.baseURL}/jobs/companies/${params.toString() ? `?${params}` : ''}`;
+    return await this.makeRequest(url);
+  }
+
+  /**
    * Advanced job search
    */
   async advancedJobSearch(searchParams = {}) {
@@ -390,6 +414,40 @@ class JobService {
       // Single job response
       return this.transformJobData(response);
     }
+  }
+
+  /**
+   * Get saved jobs for current user
+   */
+  async getSavedJobs(filters = {}) {
+    const params = new URLSearchParams();
+    
+    if (filters.limit) params.append('limit', filters.limit);
+    if (filters.offset) params.append('offset', filters.offset);
+    if (filters.ordering) params.append('ordering', filters.ordering);
+    
+    const url = `${this.baseURL}/jobs/saved-jobs/${params.toString() ? `?${params}` : ''}`;
+    return await this.makeRequest(url);
+  }
+
+  /**
+   * Save a job
+   */
+  async saveJob(jobId) {
+    const url = `${this.baseURL}/jobs/jobs/${jobId}/save/`;
+    return await this.makeRequest(url, {
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Unsave a job
+   */
+  async unsaveJob(jobId) {
+    const url = `${this.baseURL}/jobs/jobs/${jobId}/unsave/`;
+    return await this.makeRequest(url, {
+      method: 'DELETE',
+    });
   }
 }
 

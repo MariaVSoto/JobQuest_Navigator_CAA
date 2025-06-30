@@ -27,9 +27,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
     'graphene_django',
+    'storages',  # Added for S3/MinIO support
     # Custom apps
     'core',
     'jobs',
@@ -58,7 +60,11 @@ MIDDLEWARE = [
 ]
 
 if DEBUG:
-    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    try:
+        import debug_toolbar
+        MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    except ImportError:
+        pass
 
 ROOT_URLCONF = 'core.urls'
 
@@ -93,7 +99,7 @@ if DATABASE_URL.startswith('postgresql://'):
             'HOST': DATABASE_URL.split('@')[1].split(':')[0],
             'PORT': DATABASE_URL.split('@')[1].split(':')[1].split('/')[0],
             'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'sslmode': 'prefer',
             },
         }
     }
@@ -145,9 +151,45 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# MinIO S3-compatible storage configuration
+MINIO_ENDPOINT = config('MINIO_ENDPOINT', default='minio:9000')
+MINIO_ACCESS_KEY = config('MINIO_ACCESS_KEY', default='minioadmin')
+MINIO_SECRET_KEY = config('MINIO_SECRET_KEY', default='minioadmin123')
+MINIO_BUCKET_NAME = config('MINIO_BUCKET_NAME', default='jobquest-resumes')
+MINIO_USE_SSL = config('MINIO_USE_SSL', default=False, cast=bool)
+
+# Configure MinIO as S3-compatible storage
+USE_MINIO = config('USE_MINIO', default=True, cast=bool)
+
+if USE_MINIO:
+    # MinIO configuration for S3-compatible storage
+    AWS_ACCESS_KEY_ID = MINIO_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
+    AWS_STORAGE_BUCKET_NAME = MINIO_BUCKET_NAME
+    AWS_S3_REGION_NAME = 'us-east-1'  # MinIO doesn't care about region
+    AWS_S3_ENDPOINT_URL = f'http://{MINIO_ENDPOINT}'
+    AWS_S3_USE_SSL = MINIO_USE_SSL
+    AWS_DEFAULT_ACL = None
+    AWS_S3_VERIFY = False  # Disable SSL verification for local MinIO
+    AWS_S3_ADDRESSING_STYLE = 'path'
+    
+    # Custom domain for MinIO (accessible from Docker network)
+    AWS_S3_CUSTOM_DOMAIN = f'{MINIO_ENDPOINT}'
+    
+    # Storage configuration
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    MEDIA_URL = f'http://{AWS_S3_CUSTOM_DOMAIN}/{MINIO_BUCKET_NAME}/'
+    
+    # Resume files stored in specific path
+    RESUME_STORAGE_PATH = 'resumes/'
+    
+    print(f"✓ MinIO configured: {AWS_S3_ENDPOINT_URL} -> bucket: {MINIO_BUCKET_NAME}")
+    
+else:
+    # Fallback to local file storage
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+    RESUME_STORAGE_PATH = 'resumes/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -158,6 +200,7 @@ AUTH_USER_MODEL = 'core.User'
 # REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
@@ -263,6 +306,10 @@ os.makedirs('/app/logs', exist_ok=True)
 
 # AI Configuration (if using OpenAI)
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
+
+# External API Configuration
+ADZUNA_APP_ID = config('ADZUNA_APP_ID', default='')
+ADZUNA_APP_KEY = config('ADZUNA_APP_KEY', default='')
 
 # Security settings for Docker
 if not DEBUG:

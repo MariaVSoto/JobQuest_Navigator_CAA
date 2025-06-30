@@ -49,9 +49,64 @@ prod/
 
 ## 🚀 Quick Start
 
-### 1. Prerequisites
+### Development vs Production
 
-**Required Tools:**
+**Choose your deployment method:**
+
+#### 🐳 Option A: Local Development with Docker
+Perfect for development, testing, and learning:
+- ✅ No AWS account required
+- ✅ Local MinIO for S3-compatible storage
+- ✅ LocalStack for AWS services emulation
+- ✅ Complete development environment
+- ✅ Zero cost
+
+#### ☁️ Option B: AWS Production Deployment
+For production and demonstration:
+- ✅ Scalable cloud infrastructure
+- ✅ Real AWS S3 storage
+- ✅ Professional deployment
+- ✅ ~$21/month cost
+
+---
+
+### 🐳 Local Development Setup
+
+**Prerequisites:**
+- Docker & Docker Compose
+- Git
+
+**Quick Start:**
+```bash
+# Clone the repository
+git clone <repository-url>
+cd JobQuest_Navigator_CAA
+
+# Start the development environment
+cd infrastructure/docker/
+./scripts/start-local-env.sh --dev --with-storage
+
+# Setup test data
+docker-compose exec backend python manage.py setup_minio_test_data --create-bucket
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# MinIO Web UI: http://localhost:9001
+```
+
+**Local Services:**
+- **Frontend**: React app at `http://localhost:3000`
+- **Backend**: Django API at `http://localhost:8000`
+- **Database**: PostgreSQL at `localhost:5432`
+- **Storage**: MinIO at `http://localhost:9001` (minioadmin/minioadmin123)
+- **Cache**: Redis at `localhost:6379`
+
+---
+
+### ☁️ AWS Production Setup
+
+**Prerequisites:**
 - AWS CLI 2.x (with valid credentials configured)
 - Python 3.9+
 - Node.js 18+
@@ -157,12 +212,96 @@ scripts/verify-deployment.sh
 - ✅ Security configuration
 - ✅ Performance benchmark
 
+## 🐳 Docker Development Environment
+
+### Complete Local Development Stack
+
+The Docker environment provides a complete local development setup with all production-like services:
+
+**Available Services:**
+- **Core Services**: PostgreSQL, Redis, Django Backend, React Frontend
+- **Storage**: MinIO (S3-compatible object storage)
+- **AWS Emulation**: LocalStack (complete AWS services simulation)
+- **Monitoring**: Prometheus, Grafana (optional)
+- **Email Testing**: MailHog (optional)
+- **Search**: Elasticsearch (optional)
+
+### Docker Commands
+
+```bash
+# Start development environment
+./scripts/start-local-env.sh --dev
+
+# Start with storage services (MinIO)
+./scripts/start-local-env.sh --dev --with-storage
+
+# Start with LocalStack AWS services emulation
+./scripts/start-local-env.sh --dev --with-localstack
+
+# Start full environment with monitoring
+./scripts/start-local-env.sh --full
+
+# Management commands
+./scripts/manage.sh migrate              # Run database migrations
+./scripts/manage.sh createsuperuser     # Create admin user
+./scripts/manage.sh collectstatic       # Collect static files
+
+# Stop and cleanup
+./scripts/stop-local-env.sh --clean
+```
+
+### MinIO File Storage Setup
+
+MinIO provides S3-compatible object storage for resume files and media:
+
+```bash
+# Access MinIO Web UI
+open http://localhost:9001
+# Login: minioadmin / minioadmin123
+
+# Setup test data
+docker-compose exec backend python manage.py setup_minio_test_data --create-bucket
+
+# Test storage connection
+docker-compose exec backend python manage.py test_s3_connection
+
+# Test LocalStack connection (if using LocalStack)
+docker-compose exec backend python manage.py test_localstack_connection
+```
+
+**File Storage Structure:**
+```
+jobquest-resumes/
+├── resumes/samples/     # Sample resume PDFs
+├── resumes/data/        # JSON resume data
+├── resumes/users/{id}/  # User uploads organized by ID
+└── resumes/config.json  # Storage metadata
+```
+
+### Development Workflow
+
+1. **Start Services**: 
+   - MinIO: `./scripts/start-local-env.sh --dev --with-storage`
+   - LocalStack: `./scripts/start-local-env.sh --dev --with-localstack`
+2. **Setup Database**: `./scripts/manage.sh migrate`
+3. **Create Admin**: `./scripts/manage.sh createsuperuser`
+4. **Setup Storage**: 
+   - MinIO: `docker-compose exec backend python manage.py setup_minio_test_data --create-bucket`
+   - LocalStack: `docker-compose exec backend python manage.py setup_localstack_test_data --create-bucket`
+5. **Access Application**: 
+   - Frontend: http://localhost:3000
+   - API: http://localhost:8000/api/
+   - Admin: http://localhost:8000/admin/
+   - MinIO: http://localhost:9001
+   - LocalStack: http://localhost:4566
+
 ## 📖 Documentation Resources
 
 | Document | Description |
 |------|------|
 | [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) | Detailed deployment instructions and steps |
 | [Architecture Design](docs/JobQuest_Navigator_AWS_Deployment_Architecture.md) | System architecture and technical design |
+| [Docker MinIO Setup](docs/DOCKER_MINIO_SETUP.md) | Complete MinIO configuration guide |
 | [Troubleshooting](docs/TROUBLESHOOTING_GUIDE.md) | Common issues and solutions |
 
 ## 🛠️ Management Scripts

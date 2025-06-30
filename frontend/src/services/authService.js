@@ -262,6 +262,13 @@ class AuthService {
   }
 
   /**
+   * Get stored access token (alias for compatibility)
+   */
+  getAccessToken() {
+    return this.getToken();
+  }
+
+  /**
    * Get stored refresh token
    */
   getRefreshToken() {

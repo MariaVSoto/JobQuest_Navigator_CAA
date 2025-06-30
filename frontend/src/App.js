@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ApolloProvider } from '@apollo/client';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import JobListings from './pages/JobListings';
@@ -22,17 +21,15 @@ import ResumeBuilder from './pages/ResumeBuilder';
 import AISuggestions from './pages/AISuggestions';
 import SkillsAndCertifications from './pages/SkillsAndCertifications';
 import NotFound from './pages/NotFound';
-import client from './apolloClient';
 import './App.css';
 
 function App() {
   return (
-    <ApolloProvider client={client}>
-      <AuthProvider>
-        <JobProvider>
-          <Router>
-          <NavBar />
-          <Routes>
+    <AuthProvider>
+      <JobProvider>
+        <Router>
+        <NavBar />
+        <Routes>
             {/* Public routes */}
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/login" element={<Login />} />
@@ -116,7 +113,6 @@ function App() {
           </Router>
         </JobProvider>
       </AuthProvider>
-    </ApolloProvider>
   );
 }
 

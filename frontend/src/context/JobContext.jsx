@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { jobService } from '../services/jobService';
+import authService from '../services/authService';
 
 export const JobContext = createContext();
 
@@ -24,6 +25,13 @@ export const JobProvider = ({ children }) => {
       setError(null);
       
       try {
+        // Check if user is authenticated first
+        if (!authService.isAuthenticated()) {
+          // For jobs listing, we can show public jobs or require login
+          // For demo purposes, let's continue without authentication
+          console.log('User not authenticated, but continuing to fetch jobs for demo');
+        }
+
         // Use Django backend instead of external API
         const response = await jobService.searchJobs(filters);
         

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import aiSuggestionService from '../services/aiSuggestionService';
+import resumeService from '../services/resumeService';
 import './AISuggestions.css';
 
 const AISuggestions = () => {
@@ -11,6 +12,8 @@ const AISuggestions = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userResumes, setUserResumes] = useState([]);
+  const [selectedResumeId, setSelectedResumeId] = useState(null);
 
   useEffect(() => {
     if (user) {
@@ -23,15 +26,25 @@ const AISuggestions = () => {
     setError(null);
     
     try {
-      const [suggestionsData, recommendationsData, analyticsData] = await Promise.all([
+      const [suggestionsData, recommendationsData, analyticsData, resumesData] = await Promise.all([
         aiSuggestionService.getSuggestions({ limit: 20 }),
         aiSuggestionService.getJobRecommendations(10),
-        aiSuggestionService.getAnalytics()
+        aiSuggestionService.getAnalytics(),
+        resumeService.getResumes({ limit: 10 })
       ]);
       
       setSuggestions(suggestionsData.suggestions || []);
       setRecommendations(recommendationsData.recommendations || []);
       setAnalytics(analyticsData);
+      
+      const resumes = resumesData.results || resumesData || [];
+      setUserResumes(resumes);
+      
+      // Set default resume if available
+      if (resumes.length > 0 && !selectedResumeId) {
+        const defaultResume = resumes.find(r => r.is_primary) || resumes[0];
+        setSelectedResumeId(defaultResume.id);
+      }
     } catch (err) {
       console.error('Error loading AI suggestions data:', err);
       setError('Failed to load AI suggestions');
@@ -41,11 +54,14 @@ const AISuggestions = () => {
   };
 
   const handleGenerateSuggestions = async () => {
+    if (!selectedResumeId) {
+      setError('Please select a resume first');
+      return;
+    }
+    
     setLoading(true);
     try {
-      // Use a mock resume ID for now
-      const mockResumeId = '550e8400-e29b-41d4-a716-446655440000';
-      const result = await aiSuggestionService.generateResumeSuggestions(mockResumeId);
+      const result = await aiSuggestionService.generateResumeSuggestions(selectedResumeId);
       setSuggestions(prev => [...result.suggestions, ...prev]);
       setError(null);
     } catch (err) {
@@ -151,6 +167,25 @@ const AISuggestions = () => {
       {error && (
         <div className="error-message">
           {error}
+        </div>
+      )}
+
+      {/* Resume Selection */}
+      {userResumes.length > 0 && (
+        <div className="resume-selection">
+          <label htmlFor="resume-select">Select Resume for Analysis:</label>
+          <select 
+            id="resume-select"
+            value={selectedResumeId || ''} 
+            onChange={(e) => setSelectedResumeId(e.target.value)}
+          >
+            <option value="">Choose a resume...</option>
+            {userResumes.map(resume => (
+              <option key={resume.id} value={resume.id}>
+                {resume.title || 'Untitled Resume'} {resume.is_primary ? '(Primary)' : ''}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 

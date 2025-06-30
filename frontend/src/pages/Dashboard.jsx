@@ -1,42 +1,68 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import applicationService from '../services/applicationService';
 import './Dashboard.css';
 // import logo from '../assets/logo.png'; // Uncomment and use if you have a logo
 
-const user = {
-  name: 'Jane Doe',
-  email: 'jane.doe@email.com',
-  avatar: '',
-};
-
-const appliedJobs = [
-  { id: 1, title: 'Frontend Developer', company: 'TechCorp', status: 'Under Review' },
-  { id: 2, title: 'UI/UX Designer', company: 'Designify', status: 'Interview Scheduled' },
-];
-
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        const applications = await applicationService.getApplications({ limit: 5 });
+        setAppliedJobs(applications.results || applications || []);
+      } catch (err) {
+        console.error('Failed to fetch applications:', err);
+        setError('Failed to load recent applications');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, [user]);
+
   return (
     <div className="dashboard-container">
       {/* <img src={logo} alt="JobQuest Logo" className="dashboard-logo" /> */}
       <div className="dashboard-profile">
         <div className="dashboard-avatar">
-          {user.avatar ? <img src={user.avatar} alt="avatar" /> : <div className="avatar-placeholder">{user.name[0]}</div>}
+          {user?.profile_picture ? 
+            <img src={user.profile_picture} alt="avatar" /> : 
+            <div className="avatar-placeholder">{user?.full_name?.[0] || user?.email?.[0] || 'U'}</div>
+          }
         </div>
         <div className="dashboard-info">
-          <h1 className="dashboard-title">{user.name}</h1>
-          <p>{user.email}</p>
+          <h1 className="dashboard-title">{user?.full_name || 'User'}</h1>
+          <p>{user?.email || 'No email'}</p>
         </div>
       </div>
       <div className="dashboard-applied">
-        <h3>Applied Jobs</h3>
-        <ul>
-          {appliedJobs.map(job => (
-            <li key={job.id} className="applied-job">
-              <span className="job-title">{job.title}</span>
-              <span className="job-company">{job.company}</span>
-              <span className="job-status">{job.status}</span>
-            </li>
-          ))}
-        </ul>
+        <h3>Recent Applications</h3>
+        {loading ? (
+          <p>Loading applications...</p>
+        ) : error ? (
+          <p className="error-message">{error}</p>
+        ) : appliedJobs.length > 0 ? (
+          <ul>
+            {appliedJobs.map(application => (
+              <li key={application.id} className="applied-job">
+                <span className="job-title">{application.job_title || 'Unknown Position'}</span>
+                <span className="job-company">{application.company_name || 'Unknown Company'}</span>
+                <span className="job-status">{application.status || 'Not Set'}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="no-applications">No job applications yet. <a href="/jobs">Start applying!</a></p>
+        )}
       </div>
     </div>
   );

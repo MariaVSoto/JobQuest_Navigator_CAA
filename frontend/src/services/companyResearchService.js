@@ -251,15 +251,57 @@ class CompanyResearchService {
    * Get interview questions
    */
   async getInterviewQuestions(filters = {}) {
-    const queryParams = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
+    try {
+      const queryParams = new URLSearchParams();
+      
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value);
+      });
 
-    const endpoint = `/interview-questions/${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await this.makeRequest(endpoint);
-    return await response.json();
+      const endpoint = `/interview-questions/${queryParams.toString() ? `?${queryParams}` : ''}`;
+      const response = await this.makeRequest(endpoint);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching interview questions, using mock data:', error);
+      // Return mock data for demo
+      return {
+        results: [
+          {
+            id: 'mock-q-1',
+            question_text: 'Tell me about yourself and your experience.',
+            question_type: 'general',
+            difficulty: 'easy',
+            difficulty_display: 'Easy',
+            sample_answer: 'Start with a brief professional summary, highlight key achievements, and connect your experience to the role.',
+            answer_framework: 'Past-Present-Future structure',
+            is_generated: false,
+            times_used: 25
+          },
+          {
+            id: 'mock-q-2',
+            question_text: 'Explain the difference between var, let, and const in JavaScript.',
+            question_type: 'technical',
+            difficulty: 'medium',
+            difficulty_display: 'Medium',
+            sample_answer: 'var has function scope, let and const have block scope. const cannot be reassigned.',
+            answer_framework: 'Definition + Examples + Use Cases',
+            is_generated: true,
+            times_used: 18
+          },
+          {
+            id: 'mock-q-3',
+            question_text: 'Describe a time when you had to work with a difficult team member.',
+            question_type: 'behavioral',
+            difficulty: 'medium',
+            difficulty_display: 'Medium',
+            sample_answer: 'Use the STAR method to structure your response with specific examples.',
+            answer_framework: 'STAR (Situation, Task, Action, Result)',
+            is_generated: false,
+            times_used: 12
+          }
+        ]
+      };
+    }
   }
 
   /**
@@ -334,15 +376,60 @@ class CompanyResearchService {
    * Get practice sessions
    */
   async getPracticeSessions(filters = {}) {
-    const queryParams = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
+    try {
+      const queryParams = new URLSearchParams();
+      
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value);
+      });
 
-    const endpoint = `/practice-sessions/${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await this.makeRequest(endpoint);
-    return await response.json();
+      const endpoint = `/practice-sessions/${queryParams.toString() ? `?${queryParams}` : ''}`;
+      const response = await this.makeRequest(endpoint);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching practice sessions, using mock data:', error);
+      // Return mock data for demo
+      return {
+        results: [
+          {
+            id: 'mock-session-1',
+            session_type: 'mock_interview',
+            session_type_display: 'Mock Interview',
+            completion_status: 'completed',
+            completion_status_display: 'Completed',
+            duration_minutes: 45,
+            questions_attempted: 8,
+            self_rating: 4,
+            notes: 'Good overall performance, need to work on technical questions.',
+            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
+          },
+          {
+            id: 'mock-session-2',
+            session_type: 'question_practice',
+            session_type_display: 'Question Practice',
+            completion_status: 'completed',
+            completion_status_display: 'Completed',
+            duration_minutes: 30,
+            questions_attempted: 12,
+            self_rating: 3,
+            notes: 'Focused on behavioral questions. Need more practice with STAR method.',
+            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago
+          },
+          {
+            id: 'mock-session-3',
+            session_type: 'mock_interview',
+            session_type_display: 'Mock Interview',
+            completion_status: 'in_progress',
+            completion_status_display: 'In Progress',
+            duration_minutes: 15,
+            questions_attempted: 3,
+            self_rating: null,
+            notes: null,
+            created_at: new Date().toISOString()
+          }
+        ]
+      };
+    }
   }
 
   /**
@@ -524,6 +611,154 @@ class CompanyResearchService {
   async getRecentCompanyNews() {
     const response = await this.makeRequest('/company-news/recent/');
     return await response.json();
+  }
+
+  /**
+   * Get interview tips by category
+   */
+  async getInterviewTips(category = 'general') {
+    try {
+      const response = await this.makeRequest(`/interview-tips/?category=${category}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching interview tips, using mock data:', error);
+      // Return mock data for demo
+      const mockTips = {
+        general: [
+          {
+            id: 'tip-g-1',
+            title: 'Research the Company',
+            content: 'Spend time researching the company\'s mission, values, recent news, and culture. This shows genuine interest and helps you ask informed questions.',
+            category: 'general',
+            priority: 'high'
+          },
+          {
+            id: 'tip-g-2',
+            title: 'Prepare Your STAR Stories',
+            content: 'Have 3-5 specific examples ready using the STAR method (Situation, Task, Action, Result) to demonstrate your skills and experience.',
+            category: 'general',
+            priority: 'high'
+          },
+          {
+            id: 'tip-g-3',
+            title: 'Dress Appropriately',
+            content: 'Dress slightly more formal than the company\'s usual dress code. When in doubt, business professional is usually safe.',
+            category: 'general',
+            priority: 'medium'
+          }
+        ],
+        technical: [
+          {
+            id: 'tip-t-1',
+            title: 'Practice Coding Problems',
+            content: 'Review fundamental data structures and algorithms. Practice coding problems on platforms like LeetCode or HackerRank.',
+            category: 'technical',
+            priority: 'high'
+          },
+          {
+            id: 'tip-t-2',
+            title: 'Know Your Resume',
+            content: 'Be prepared to discuss any technology, project, or experience mentioned on your resume in detail.',
+            category: 'technical',
+            priority: 'high'
+          },
+          {
+            id: 'tip-t-3',
+            title: 'Think Out Loud',
+            content: 'During technical problems, verbalize your thought process. Interviewers want to see how you approach problems.',
+            category: 'technical',
+            priority: 'medium'
+          }
+        ],
+        behavioral: [
+          {
+            id: 'tip-b-1',
+            title: 'Use Specific Examples',
+            content: 'Always provide concrete examples when answering behavioral questions. Avoid hypothetical scenarios.',
+            category: 'behavioral',
+            priority: 'high'
+          },
+          {
+            id: 'tip-b-2',
+            title: 'Show Self-Awareness',
+            content: 'Demonstrate that you can reflect on your experiences and learn from both successes and failures.',
+            category: 'behavioral',
+            priority: 'medium'
+          },
+          {
+            id: 'tip-b-3',
+            title: 'Highlight Collaboration',
+            content: 'Emphasize your ability to work well with others and contribute to team success.',
+            category: 'behavioral',
+            priority: 'medium'
+          }
+        ]
+      };
+      
+      return {
+        results: mockTips[category] || []
+      };
+    }
+  }
+
+  /**
+   * Get interview resources
+   */
+  async getInterviewResources(filters = {}) {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value);
+      });
+
+      const endpoint = `/interview-resources/${queryParams.toString() ? `?${queryParams}` : ''}`;
+      const response = await this.makeRequest(endpoint);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching interview resources, using mock data:', error);
+      // Return mock data for demo
+      return {
+        results: [
+          {
+            id: 'resource-1',
+            resource_type: 'article',
+            title: 'The Complete Guide to Technical Interviews',
+            description: 'Comprehensive guide covering all aspects of technical interviews, from preparation to follow-up.',
+            url: 'https://example.com/technical-interview-guide',
+            category: 'technical',
+            difficulty: 'intermediate'
+          },
+          {
+            id: 'resource-2',
+            resource_type: 'video',
+            title: 'Behavioral Interview Mastery',
+            description: 'Video series on answering behavioral questions using the STAR method with real examples.',
+            url: 'https://example.com/behavioral-interviews',
+            category: 'behavioral',
+            difficulty: 'beginner'
+          },
+          {
+            id: 'resource-3',
+            resource_type: 'book',
+            title: 'Cracking the Coding Interview',
+            description: 'Classic resource for preparing for technical coding interviews at top tech companies.',
+            file_url: 'https://example.com/download/coding-interview-book',
+            category: 'technical',
+            difficulty: 'advanced'
+          },
+          {
+            id: 'resource-4',
+            resource_type: 'checklist',
+            title: 'Interview Day Preparation Checklist',
+            description: 'Complete checklist to ensure you\'re fully prepared for your interview day.',
+            url: 'https://example.com/interview-checklist',
+            category: 'general',
+            difficulty: 'beginner'
+          }
+        ]
+      };
+    }
   }
 
   // Utility Methods

@@ -1,0 +1,25 @@
+# LocalStack override for docker-compose.yml
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.localstack.yml up
+
+services:
+  # Backend with LocalStack configuration
+  backend:
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings_localstack
+      - USE_LOCALSTACK=True
+      - USE_MINIO=False
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_S3_ENDPOINT_URL=http://localstack:4566
+      - AWS_STORAGE_BUCKET_NAME=jobquest-resumes
+      - AWS_LAMBDA_ENDPOINT_URL=http://localstack:4566
+      - AWS_APIGATEWAY_ENDPOINT_URL=http://localstack:4566
+      - AWS_RDS_ENDPOINT_URL=http://localstack:4566
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy

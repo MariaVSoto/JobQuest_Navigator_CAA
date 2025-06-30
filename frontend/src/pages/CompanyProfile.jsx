@@ -58,21 +58,8 @@ const CompanyProfile = () => {
 
       } catch (err) {
         console.error('Error fetching company data:', err);
-        setError('Failed to load company information');
-        
-        // Fallback to mock data if API fails
-        const mockCompany = {
-          id: companyId,
-          name: "TechCorp Solutions",
-          logo_url: "https://via.placeholder.com/150",
-          industry: "Technology",
-          size: "500-1000 employees",
-          founded_year: "2010",
-          location: "San Francisco, CA",
-          website: "https://techcorp.com",
-          description: "TechCorp Solutions is a leading technology company specializing in innovative software solutions...",
-        };
-        setCompany(mockCompany);
+        setError('Failed to load company information. Please try again later.');
+        setCompany(null);
       } finally {
         setIsLoading(false);
       }
@@ -106,7 +93,7 @@ const CompanyProfile = () => {
     if (!companyResearch) return;
 
     try {
-      await companyResearchService.saveResearch(companyResearch.id);
+      await companyResearchService.saveResearchItem(companyResearch.id);
       setCompanyResearch(prev => ({ ...prev, is_saved: true }));
     } catch (err) {
       console.error('Error saving research:', err);
@@ -118,8 +105,18 @@ const CompanyProfile = () => {
     return <div className="loading">Loading company information...</div>;
   }
 
-  if (!company) {
-    return <div className="error">Company not found</div>;
+  if (error && !company) {
+    return (
+      <div className="company-profile-container">
+        <div className="error-container">
+          <h2>Company Not Found</h2>
+          <p>{error}</p>
+          <button onClick={() => window.history.back()} className="back-button">
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -107,6 +107,13 @@ REACT_APP_ENVIRONMENT=development
 # Email Configuration (using MailHog)
 USE_MAILHOG=1
 
+# MinIO Configuration (S3-compatible storage)
+USE_MINIO=1
+MINIO_ENDPOINT=minio:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin123
+MINIO_BUCKET_NAME=jobquest-resumes
+
 # AI Configuration (optional)
 OPENAI_API_KEY=your-openai-api-key-here
 EOF
@@ -118,20 +125,31 @@ EOF
 
 # Show usage information
 show_usage() {
-    echo "Usage: $0 [OPTION]"
+    echo "Usage: $0 [OPTION] [--with-storage] [--with-email] [--with-monitoring]"
     echo ""
     echo "Options:"
     echo "  --dev, -d        Start development environment with hot reload"
     echo "  --prod, -p       Start production-like environment"
     echo "  --full, -f       Start full environment with all services"
     echo "  --minimal, -m    Start minimal environment (database, backend, frontend only)"
+    echo "  --with-storage   Add MinIO S3-compatible storage service"
+    echo "  --with-localstack Add LocalStack AWS services emulation"
+    echo "  --with-email     Add MailHog email testing service"
+    echo "  --with-monitoring Add Prometheus and Grafana monitoring"
     echo "  --help, -h       Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 --dev --with-storage      Start dev environment with MinIO"
+    echo "  $0 --dev --with-localstack   Start dev environment with LocalStack AWS"
+    echo "  $0 --prod --with-email       Start prod environment with email testing"
+    echo "  $0 --full                    Start all services"
     echo ""
     echo "Available profiles:"
     echo "  default          Core services (database, redis, backend, frontend)"
     echo "  proxy            Add nginx proxy"
     echo "  email            Add mailhog for email testing"
     echo "  storage          Add MinIO for S3-compatible storage"
+    echo "  localstack       Add LocalStack for AWS services emulation"
     echo "  search           Add Elasticsearch for search functionality"
     echo "  monitoring       Add Prometheus and Grafana for monitoring"
     echo "  devtools         Add development tools container"
@@ -140,24 +158,50 @@ show_usage() {
 # Start services based on mode
 start_services() {
     local mode=$1
-    local profiles=""
+    shift  # Remove first argument (mode)
+    local extra_profiles=""
+    
+    # Parse additional flags
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --with-storage)
+                extra_profiles="$extra_profiles --profile storage"
+                print_status "Including MinIO storage service"
+                ;;
+            --with-localstack)
+                extra_profiles="$extra_profiles --profile localstack"
+                print_status "Including LocalStack AWS services emulation"
+                ;;
+            --with-email)
+                extra_profiles="$extra_profiles --profile email"
+                print_status "Including MailHog email service"
+                ;;
+            --with-monitoring)
+                extra_profiles="$extra_profiles --profile monitoring"
+                print_status "Including monitoring services"
+                ;;
+        esac
+        shift
+    done
     
     print_status "Starting JobQuest Navigator in $mode mode..."
     
     case $mode in
         "dev")
             print_status "Starting development environment with hot reload..."
-            $COMPOSE_COMMAND -f docker-compose.yml -f docker-compose.dev.yml up --build -d
-            profiles="devtools"
+            if [ -f docker-compose.dev.yml ]; then
+                $COMPOSE_COMMAND -f docker-compose.yml -f docker-compose.dev.yml $extra_profiles up --build -d
+            else
+                $COMPOSE_COMMAND -f docker-compose.yml $extra_profiles up --build -d
+            fi
             ;;
         "prod")
             print_status "Starting production-like environment..."
-            $COMPOSE_COMMAND -f docker-compose.yml up --build -d
-            profiles="proxy"
+            $COMPOSE_COMMAND -f docker-compose.yml --profile proxy $extra_profiles up --build -d
             ;;
         "full")
             print_status "Starting full environment with all services..."
-            $COMPOSE_COMMAND -f docker-compose.yml --profile proxy --profile email --profile storage --profile monitoring up --build -d
+            $COMPOSE_COMMAND -f docker-compose.yml --profile proxy --profile email --profile storage --profile localstack --profile monitoring up --build -d
             ;;
         "minimal")
             print_status "Starting minimal environment..."
@@ -165,7 +209,7 @@ start_services() {
             ;;
         *)
             print_status "Starting default environment..."
-            $COMPOSE_COMMAND -f docker-compose.yml up --build -d
+            $COMPOSE_COMMAND -f docker-compose.yml $extra_profiles up --build -d
             ;;
     esac
     
@@ -219,6 +263,7 @@ show_services() {
     echo "Optional Services (if enabled):"
     echo "📧 MailHog:            http://localhost:8025"
     echo "🗃️  MinIO:             http://localhost:9001"
+    echo "☁️  LocalStack:        http://localhost:4566 (AWS services)"
     echo "🔍 Elasticsearch:      http://localhost:9200"
     echo "📈 Prometheus:         http://localhost:9090"
     echo "📊 Grafana:            http://localhost:3001 (admin/admin123)"
@@ -252,32 +297,40 @@ main() {
     
     # Parse command line arguments
     MODE="default"
-    case $1 in
-        --dev|-d)
-            MODE="dev"
-            ;;
-        --prod|-p)
-            MODE="prod"
-            ;;
-        --full|-f)
-            MODE="full"
-            ;;
-        --minimal|-m)
-            MODE="minimal"
-            ;;
-        --help|-h)
-            show_usage
-            exit 0
-            ;;
-        "")
-            MODE="default"
-            ;;
-        *)
-            print_error "Unknown option: $1"
-            show_usage
-            exit 1
-            ;;
-    esac
+    EXTRA_ARGS=()
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --dev|-d)
+                MODE="dev"
+                ;;
+            --prod|-p)
+                MODE="prod"
+                ;;
+            --full|-f)
+                MODE="full"
+                ;;
+            --minimal|-m)
+                MODE="minimal"
+                ;;
+            --with-storage|--with-localstack|--with-email|--with-monitoring)
+                EXTRA_ARGS+=("$1")
+                ;;
+            --help|-h)
+                show_usage
+                exit 0
+                ;;
+            "")
+                MODE="default"
+                ;;
+            *)
+                print_error "Unknown option: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+        shift
+    done
     
     # Pre-flight checks
     check_docker
@@ -289,7 +342,7 @@ main() {
     cd "$(dirname "$0")/.."
     
     # Start services
-    start_services $MODE
+    start_services $MODE "${EXTRA_ARGS[@]}"
     
     # Post-startup tasks
     show_services
@@ -306,6 +359,33 @@ main() {
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             create_superuser
+        fi
+        
+        # If storage is enabled, offer to setup MinIO test data
+        if [[ " ${EXTRA_ARGS[@]} " =~ " --with-storage " ]] || [[ "$MODE" == "full" ]]; then
+            echo ""
+            read -p "Do you want to setup MinIO test data? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                print_status "Setting up MinIO test data..."
+                $COMPOSE_COMMAND exec backend python manage.py setup_minio_test_data --create-bucket
+                print_success "MinIO test data setup completed"
+                print_status "MinIO Web UI: http://localhost:9001 (minioadmin/minioadmin123)"
+            fi
+        fi
+        
+        # If LocalStack is enabled, offer to setup LocalStack test data
+        if [[ " ${EXTRA_ARGS[@]} " =~ " --with-localstack " ]] || [[ "$MODE" == "full" ]]; then
+            echo ""
+            read -p "Do you want to setup LocalStack AWS test data? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                print_status "Setting up LocalStack test data..."
+                $COMPOSE_COMMAND exec backend python manage.py setup_localstack_test_data --create-bucket
+                print_success "LocalStack test data setup completed"
+                print_status "LocalStack Web UI: http://localhost:4566/_localstack/health"
+                print_status "S3 Console: http://localhost:4566/_localstack/s3"
+            fi
         fi
     fi
     

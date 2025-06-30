@@ -1,87 +1,26 @@
-import React, { useState } from 'react';
+import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@apollo/client';
-import { GET_JOBS } from '../graphql/queries';
-import { SAVE_JOB, UNSAVE_JOB, APPLY_TO_JOB } from '../graphql/mutations';
+import { JobContext } from '../context/JobContext';
 import './JobListings.css';
-
-const JOBS_PER_PAGE = 20;
 
 const JobListings = () => {
   const navigate = useNavigate();
   
-  // Local state for filters
-  const [filters, setFilters] = useState({
-    search: '',
-    location: '',
-    company: '',
-    type: '',
-    experience_level: '',
-    remote_type: '',
-    salary_min: '',
-    sort: ''
-  });
+  // Use Job Context instead of GraphQL
+  const { 
+    jobs, 
+    loading, 
+    error, 
+    filters, 
+    setFilters, 
+    loadMoreJobs, 
+    refreshJobs, 
+    saveJob: contextSaveJob, 
+    unsaveJob: contextUnsaveJob,
+    totalJobs
+  } = useContext(JobContext);
 
-  // GraphQL query with filters
-  const { loading, error, data, fetchMore, refetch } = useQuery(GET_JOBS, {
-    variables: {
-      limit: JOBS_PER_PAGE,
-      offset: 0,
-      search: filters.search || undefined,
-      location: filters.location || undefined,
-      company: filters.company || undefined,
-      jobType: filters.type || undefined,
-      experienceLevel: filters.experience_level || undefined,
-      remoteType: filters.remote_type || undefined,
-    },
-    notifyOnNetworkStatusChange: true,
-  });
-
-  // Job mutations
-  const [saveJob] = useMutation(SAVE_JOB, {
-    update(cache, { data: { saveJob } }) {
-      if (!saveJob.success) return;
-      
-      // Update the job's isSaved field in cache
-      const jobId = saveJob.savedJob.job.id;
-      cache.modify({
-        id: cache.identify({ __typename: 'JobType', id: jobId }),
-        fields: {
-          isSaved: () => true,
-        },
-      });
-    }
-  });
-
-  const [unsaveJob] = useMutation(UNSAVE_JOB, {
-    update(cache, { data: { unsaveJob } }) {
-      if (!unsaveJob.success) return;
-      
-      cache.modify({
-        id: cache.identify({ __typename: 'JobType', id: unsaveJob.jobId }),
-        fields: {
-          isSaved: () => false,
-        },
-      });
-    }
-  });
-
-  const [applyToJob] = useMutation(APPLY_TO_JOB, {
-    update(cache, { data: { applyToJob } }) {
-      if (!applyToJob.success) return;
-      
-      const jobId = applyToJob.application.job.id;
-      cache.modify({
-        id: cache.identify({ __typename: 'JobType', id: jobId }),
-        fields: {
-          isApplied: () => true,
-        },
-      });
-    }
-  });
-
-  const jobs = data?.jobs || [];
-  const hasMore = jobs.length % JOBS_PER_PAGE === 0 && jobs.length > 0;
+  const hasMore = jobs.length < totalJobs;
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -100,64 +39,26 @@ const JobListings = () => {
     navigate(`/apply/${job.id}`);
   };
 
-  const handleSaveJob = (e, job) => {
+  const handleSaveJob = async (e, job) => {
     e.stopPropagation();
-    if (job.isSaved) {
-      unsaveJob({ 
-        variables: { jobId: job.id },
-        optimisticResponse: {
-          unsaveJob: {
-            __typename: 'UnsaveJobMutation',
-            success: true,
-            jobId: job.id,
-            errors: []
-          }
-        }
-      });
+    if (job.is_saved) {
+      const result = await contextUnsaveJob(job.id);
+      if (result.success) {
+        // Optionally refresh jobs or update local state
+        refreshJobs();
+      }
     } else {
-      saveJob({ 
-        variables: { jobId: job.id },
-        optimisticResponse: {
-          saveJob: {
-            __typename: 'SaveJobMutation',
-            success: true,
-            errors: [],
-            savedJob: {
-              __typename: 'SavedJobType',
-              id: -1,
-              job: {
-                __typename: 'JobType',
-                id: job.id,
-                isSaved: true
-              }
-            }
-          }
-        }
-      });
+      const result = await contextSaveJob(job.id);
+      if (result.success) {
+        // Optionally refresh jobs or update local state
+        refreshJobs();
+      }
     }
   };
 
   const handleLoadMore = () => {
     if (!hasMore || loading) return;
-
-    fetchMore({
-      variables: {
-        offset: jobs.length,
-      },
-      updateQuery: (prevResult, { fetchMoreResult }) => {
-        if (!fetchMoreResult || fetchMoreResult.jobs.length === 0) {
-          return prevResult;
-        }
-        
-        return {
-          jobs: [...prevResult.jobs, ...fetchMoreResult.jobs],
-        };
-      },
-    });
-  };
-
-  const refreshJobs = () => {
-    refetch();
+    loadMoreJobs();
   };
 
   return (
@@ -301,7 +202,7 @@ const JobListings = () => {
           </div>
         ) : error ? (
           <div className="error-state">
-            <p>{error}</p>
+            <p>{typeof error === 'string' ? error : 'Failed to load jobs'}</p>
             <button onClick={refreshJobs} className="retry-btn">Try Again</button>
           </div>
         ) : (
@@ -325,24 +226,24 @@ const JobListings = () => {
                         <p className="company-location">
                           <span className="company">{job.company?.name || 'Unknown Company'}</span>
                           <span className="separator">&bull;</span>
-                          <span className="location">{job.location?.name || job.location?.city || 'Unknown Location'}</span>
+                          <span className="location">{job.location?.full_address || job.location?.city || 'Unknown Location'}</span>
                         </p>
                       </div>
                       <div className="job-actions">
                         <button 
-                          className={`save-btn ${job.isSaved ? 'saved' : ''}`}
+                          className={`save-btn ${job.is_saved ? 'saved' : ''}`}
                           onClick={(e) => handleSaveJob(e, job)}
-                          title={job.isSaved ? "Remove from saved jobs" : "Save this job"}
+                          title={job.is_saved ? "Remove from saved jobs" : "Save this job"}
                         >
-                          {job.isSaved ? '♥' : '♡'}
+                          {job.is_saved ? '♥' : '♡'}
                         </button>
                         <button 
-                          className={`apply-btn ${job.isApplied ? 'applied' : ''}`}
+                          className={`apply-btn ${job.is_applied ? 'applied' : ''}`}
                           onClick={(e) => handleApply(e, job)}
-                          title={job.isApplied ? "Already applied" : "Apply to this job"}
-                          disabled={job.isApplied}
+                          title={job.is_applied ? "Already applied" : "Apply to this job"}
+                          disabled={job.is_applied}
                         >
-                          {job.isApplied ? 'Applied' : 'Apply'}
+                          {job.is_applied ? 'Applied' : 'Apply'}
                         </button>
                       </div>
                     </div>
@@ -374,18 +275,18 @@ const JobListings = () => {
                         )}
                       </div>
                       <div className="job-salary-date">
-                        {(job.salaryMin || job.salaryMax) && (
+                        {(job.salary_min || job.salary_max) && (
                           <span className="salary">
-                            {job.salaryMin && job.salaryMax 
-                              ? `$${parseInt(job.salaryMin).toLocaleString()} - $${parseInt(job.salaryMax).toLocaleString()}`
-                              : job.salaryMin 
-                              ? `From $${parseInt(job.salaryMin).toLocaleString()}`
-                              : `Up to $${parseInt(job.salaryMax).toLocaleString()}`}
-                            {job.salaryCurrency && job.salaryCurrency !== 'USD' && ` ${job.salaryCurrency}`}
+                            {job.salary_min && job.salary_max 
+                              ? `$${parseInt(job.salary_min).toLocaleString()} - $${parseInt(job.salary_max).toLocaleString()}`
+                              : job.salary_min 
+                              ? `From $${parseInt(job.salary_min).toLocaleString()}`
+                              : `Up to $${parseInt(job.salary_max).toLocaleString()}`}
+                            {job.salary_currency && job.salary_currency !== 'USD' && ` ${job.salary_currency}`}
                           </span>
                         )}
                         <span className="posted-date">
-                          {new Date(job.postedDate || job.createdAt).toLocaleDateString()}
+                          {new Date(job.posted_date || job.created_at).toLocaleDateString()}
                         </span>
                       </div>
                     </div>

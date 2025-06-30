@@ -1,55 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { JobContext } from '../context/JobContext';
+import { useAuth } from '../context/AuthContext';
+import jobService from '../services/jobService';
 import './SavedJobs.css';
 
 const SavedJobs = () => {
   const navigate = useNavigate();
-  const { jobs } = React.useContext(JobContext);
+  const { user } = useAuth();
   const [savedJobs, setSavedJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('date');
+  const [sortBy, setSortBy] = useState('saved_date');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, this would be an API call to fetch saved jobs
     const fetchSavedJobs = async () => {
+      if (!user) return;
+      
       setIsLoading(true);
+      setError(null);
       try {
-        // Simulating API call - in reality, this would fetch from backend
-        const mockSavedJobs = jobs.slice(0, 5).map(job => ({
-          ...job,
-          savedDate: new Date(Date.now() - Math.random() * 10000000000),
-          status: ['applied', 'interviewing', 'offered', 'rejected'][Math.floor(Math.random() * 4)]
-        }));
-        setSavedJobs(mockSavedJobs);
-      } catch (error) {
-        console.error('Error fetching saved jobs:', error);
+        const response = await jobService.getSavedJobs({ 
+          ordering: `-${sortBy}`,
+          limit: 50 
+        });
+        setSavedJobs(response.results || response || []);
+      } catch (err) {
+        console.error('Error fetching saved jobs:', err);
+        setError('Failed to load saved jobs');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSavedJobs();
-  }, [jobs]);
+  }, [user, sortBy]);
 
   const handleJobClick = (job) => {
     navigate(`/jobs/${job.id || job.__unique_id || job.redirect_url}`);
   };
 
-  const handleRemoveJob = (e, jobId) => {
+  const handleRemoveJob = async (e, jobId) => {
     e.stopPropagation();
-    setSavedJobs(prev => prev.filter(job => job.id !== jobId));
-    // Here we would typically make an API call to remove the job from saved jobs
+    try {
+      await jobService.unsaveJob(jobId);
+      setSavedJobs(prev => prev.filter(job => job.job?.id !== jobId));
+    } catch (err) {
+      console.error('Error removing saved job:', err);
+      setError('Failed to remove job from saved list');
+    }
   };
 
-  const handleStatusChange = (e, jobId) => {
+  const handleStatusChange = async (e, savedJobId, newStatus) => {
     e.stopPropagation();
-    const newStatus = e.target.value;
-    setSavedJobs(prev => prev.map(job => 
-      job.id === jobId ? { ...job, status: newStatus } : job
-    ));
-    // Here we would typically make an API call to update the job status
+    try {
+      // Update local state immediately for better UX
+      setSavedJobs(prev => prev.map(savedJob => 
+        savedJob.id === savedJobId ? { ...savedJob, status: newStatus } : savedJob
+      ));
+      
+      // TODO: Add API call to update saved job status when backend supports it
+      // await jobService.updateSavedJobStatus(savedJobId, newStatus);
+    } catch (err) {
+      console.error('Error updating job status:', err);
+      setError('Failed to update job status');
+    }
   };
 
   const handleSortChange = (e) => {
@@ -60,27 +75,17 @@ const SavedJobs = () => {
     setFilterStatus(e.target.value);
   };
 
-  const sortJobs = (jobs) => {
-    return [...jobs].sort((a, b) => {
-      switch (sortBy) {
-        case 'date':
-          return b.savedDate - a.savedDate;
-        case 'title':
-          return a.title.localeCompare(b.title);
-        case 'company':
-          return (a.company?.display_name || '').localeCompare(b.company?.display_name || '');
-        default:
-          return 0;
-      }
-    });
-  };
 
-  const filterJobs = (jobs) => {
-    if (filterStatus === 'all') return jobs;
-    return jobs.filter(job => job.status === filterStatus);
-  };
-
-  const filteredAndSortedJobs = sortJobs(filterJobs(savedJobs));
+  if (!user) {
+    return (
+      <div className="saved-jobs-container">
+        <div className="auth-required">
+          <h2>Login Required</h2>
+          <p>Please log in to view your saved jobs.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -90,6 +95,10 @@ const SavedJobs = () => {
     );
   }
 
+  const filteredJobs = filterStatus === 'all' 
+    ? savedJobs 
+    : savedJobs.filter(savedJob => savedJob.status === filterStatus);
+
   return (
     <div className="saved-jobs-container">
       <div className="saved-jobs-header">
@@ -98,14 +107,14 @@ const SavedJobs = () => {
           <div className="control-group">
             <label>Sort by:</label>
             <select value={sortBy} onChange={handleSortChange}>
-              <option value="date">Date Saved</option>
-              <option value="title">Job Title</option>
-              <option value="company">Company</option>
+              <option value="saved_date">Date Saved</option>
+              <option value="job__title">Job Title</option>
+              <option value="job__company__name">Company</option>
             </select>
           </div>
           <div className="control-group">
             <label>Filter by status:</label>
-            <select value={filterStatus} onChange={handleFilterChange}>
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="all">All Statuses</option>
               <option value="applied">Applied</option>
               <option value="interviewing">Interviewing</option>
@@ -116,38 +125,45 @@ const SavedJobs = () => {
         </div>
       </div>
 
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
+
       <div className="saved-jobs-list">
-        {filteredAndSortedJobs.length === 0 ? (
+        {filteredJobs.length === 0 ? (
           <div className="no-jobs">
             {filterStatus === 'all' 
-              ? "You haven't saved any jobs yet."
+              ? "You haven't saved any jobs yet. Start exploring jobs and save the ones you're interested in!"
               : `No jobs with status "${filterStatus}" found.`}
           </div>
         ) : (
-          filteredAndSortedJobs.map(job => (
+          filteredJobs.map(savedJob => (
             <div 
-              key={job.id || job.__unique_id || job.redirect_url}
+              key={savedJob.id}
               className="saved-job-card"
-              onClick={() => handleJobClick(job)}
+              onClick={() => handleJobClick(savedJob.job)}
             >
               <div className="job-main-info">
-                <h3>{job.title}</h3>
-                <p className="company">{job.company?.display_name || 'Unknown Company'}</p>
-                <p className="location">{job.location?.display_name || 'Unknown Location'}</p>
+                <h3>{savedJob.job?.title || 'Unknown Position'}</h3>
+                <p className="company">{savedJob.job?.company?.name || 'Unknown Company'}</p>
+                <p className="location">{savedJob.job?.location?.city || 'Unknown Location'}</p>
                 <div className="job-meta">
-                  <span className="job-type">{job.contract_type || 'Full-time'}</span>
+                  <span className="job-type">{savedJob.job?.job_type?.replace('_', '-') || 'Full-time'}</span>
                   <span className="saved-date">
-                    Saved on {job.savedDate.toLocaleDateString()}
+                    Saved on {new Date(savedJob.saved_date).toLocaleDateString()}
                   </span>
                 </div>
               </div>
               <div className="job-actions">
                 <select 
-                  value={job.status}
-                  onChange={(e) => handleStatusChange(e, job.id)}
+                  value={savedJob.status || 'saved'}
+                  onChange={(e) => handleStatusChange(e, savedJob.id, e.target.value)}
                   onClick={(e) => e.stopPropagation()}
-                  className={`status-select ${job.status}`}
+                  className={`status-select ${savedJob.status || 'saved'}`}
                 >
+                  <option value="saved">Saved</option>
                   <option value="applied">Applied</option>
                   <option value="interviewing">Interviewing</option>
                   <option value="offered">Offered</option>
@@ -155,7 +171,7 @@ const SavedJobs = () => {
                 </select>
                 <button 
                   className="remove-btn"
-                  onClick={(e) => handleRemoveJob(e, job.id)}
+                  onClick={(e) => handleRemoveJob(e, savedJob.job?.id)}
                 >
                   Remove
                 </button>
