@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService from '../services/authService';
+import graphqlAuthService from '../services/graphqlAuthService';
 
 const AuthContext = createContext();
 
@@ -21,27 +21,72 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Development bypass: Auto-login with test user
+  const enableDevBypass = process.env.NODE_ENV === 'development' && process.env.REACT_APP_DEV_AUTH_BYPASS === 'true';
+
   // Initialize authentication state
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        if (authService.isAuthenticated() && !authService.isTokenExpired()) {
-          const userData = authService.getUser();
+        // Development bypass: automatically set authenticated user
+        if (enableDevBypass) {
+          console.log('🔧 Development bypass: Auto-authenticating with test user');
+          const devUser = {
+            id: '77e71138-e2f1-4d49-a83d-2264746f20ce',
+            username: 'testuser',
+            email: 'test@example.com',
+            fullName: 'Test User',
+            bio: 'Development test user',
+            currentJobTitle: 'Software Developer',
+            yearsOfExperience: 5,
+            industry: 'Technology',
+            careerLevel: 'mid',
+            jobSearchStatus: 'actively_looking',
+            preferredWorkType: 'hybrid'
+          };
+          
+          setUser(devUser);
+          setIsAuthenticated(true);
+          setLoading(false);
+          
+          // Store mock user data
+          localStorage.setItem('jobquest_user', JSON.stringify(devUser));
+          localStorage.setItem('jobquest_access_token', 'dev-bypass-token');
+          
+          console.log('✅ Development bypass authentication complete');
+          return;
+        }
+
+        if (graphqlAuthService.isAuthenticated() && !graphqlAuthService.isTokenExpired()) {
+          console.log('Token exists and not expired, checking user data...');
+          const userData = graphqlAuthService.getUser();
           if (userData) {
+            console.log('User data found in localStorage:', userData);
             setUser(userData);
             setIsAuthenticated(true);
           } else {
+            console.log('No user data in localStorage, fetching from server...');
             // Fetch fresh user data if not in localStorage
-            const currentUser = await authService.getCurrentUser();
+            const currentUser = await graphqlAuthService.getCurrentUser();
             if (currentUser) {
+              console.log('User data fetched from server:', currentUser);
               setUser(currentUser);
               setIsAuthenticated(true);
+            } else {
+              console.log('Failed to fetch user data from server');
+              // Clear auth data if we can't get user info
+              graphqlAuthService.clearAuthData();
+              setIsAuthenticated(false);
             }
           }
+        } else {
+          console.log('No valid token found');
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        authService.clearAuthData();
+        graphqlAuthService.clearAuthData();
+        setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }
@@ -56,16 +101,19 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      const result = await authService.login(credentials);
+      const result = await graphqlAuthService.login(credentials);
       
       if (result.success) {
-        setUser(result.data.user);
+        console.log('Login successful, setting user state:', result.user);
+        setUser(result.user);
         setIsAuthenticated(true);
         return { success: true };
       } else {
-        return { success: false, error: result.error };
+        console.log('Login failed:', result.message);
+        return { success: false, error: { message: result.message } };
       }
     } catch (error) {
+      console.error('Login error:', error);
       return { success: false, error: { message: 'Login failed' } };
     } finally {
       setLoading(false);
@@ -78,17 +126,20 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
-      const result = await authService.register(userData);
+      const result = await graphqlAuthService.register(userData);
       
       if (result.success) {
-        setUser(result.data.user);
+        console.log('Registration successful, setting user state:', result.user);
+        setUser(result.user);
         setIsAuthenticated(true);
         return { success: true };
       } else {
-        return { success: false, error: result.error };
+        console.log('Registration failed:', result.errors);
+        return { success: false, errors: result.errors };
       }
     } catch (error) {
-      return { success: false, error: { message: 'Registration failed' } };
+      console.error('Registration error:', error);
+      return { success: false, errors: ['Registration failed'] };
     } finally {
       setLoading(false);
     }
@@ -100,7 +151,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setLoading(true);
-      await authService.logout();
+      graphqlAuthService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -111,33 +162,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Update user profile
+   * Update user profile - TODO: Implement with GraphQL
    */
   const updateProfile = async (profileData) => {
-    try {
-      const result = await authService.updateProfile(profileData);
-      
-      if (result.success) {
-        setUser(result.data);
-        return { success: true };
-      } else {
-        return { success: false, error: result.error };
-      }
-    } catch (error) {
-      return { success: false, error: { message: 'Profile update failed' } };
-    }
+    // TODO: Implement GraphQL profile update
+    return { success: false, error: { message: 'Profile update not implemented with GraphQL yet' } };
   };
 
   /**
-   * Change password
+   * Change password - TODO: Implement with GraphQL
    */
   const changePassword = async (passwordData) => {
-    try {
-      const result = await authService.changePassword(passwordData);
-      return result;
-    } catch (error) {
-      return { success: false, error: { message: 'Password change failed' } };
-    }
+    // TODO: Implement GraphQL password change
+    return { success: false, error: { message: 'Password change not implemented with GraphQL yet' } };
   };
 
   /**
@@ -145,7 +182,7 @@ export const AuthProvider = ({ children }) => {
    */
   const refreshUser = async () => {
     try {
-      const userData = await authService.getCurrentUser();
+      const userData = await graphqlAuthService.getCurrentUser();
       if (userData) {
         setUser(userData);
         return userData;

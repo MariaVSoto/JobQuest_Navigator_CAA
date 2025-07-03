@@ -28,7 +28,7 @@ zappa undeploy production                     # Remove Lambda deployment
 ### Frontend (React)
 ```bash
 cd frontend/
-npm start                                     # Start development server
+npm start                                     # Start development server (runs on http://localhost:3002 in Docker)
 npm run build                                # Build for production
 npm test                                     # Run tests
 npm run eject                                # Eject from create-react-app
@@ -70,10 +70,11 @@ scripts/verify-deployment.sh                 # Verify deployment status
 ## Architecture Overview
 
 ### Backend Architecture
-- **Framework**: Django 4.2 with Django REST Framework
-- **Database**: Uses custom User model in core.models extending AbstractUser
+- **Framework**: Django 4.2 with Django REST Framework and GraphQL (Graphene-Django)
+- **Database**: PostgreSQL (Docker) / SQLite (development), custom User model in core.models extending AbstractUser
+- **GraphQL Schema**: Comprehensive GraphQL schema with JWT authentication middleware
 - **Apps Structure**:
-  - `core/`: Base models (User, Company, Location), settings, AI services
+  - `core/`: Base models (User, Company, Location), settings, AI services, GraphQL authentication
   - `jobs/`: Job listings, applications, saved jobs, skills
   - `ai_suggestions/`: AI-powered job recommendations
   - `application_tracking/`: Application status tracking
@@ -84,12 +85,12 @@ scripts/verify-deployment.sh                 # Verify deployment status
 ### Frontend Architecture
 - **Framework**: React 19 with React Router for routing
 - **State Management**: Context API (AuthContext, JobContext)
-- **API Communication**: REST API (migrated from GraphQL)
+- **API Communication**: GraphQL with Apollo Client (fully upgraded and operational)
 - **External APIs**: 
   - Adzuna API for real-time job data
   - Google Maps API for location visualization
 - **Key Components**:
-  - Authentication system with protected routes
+  - Authentication system with protected routes and GraphQL integration
   - Job search and mapping functionality with real-time data
   - Resume builder interface
   - AI suggestions dashboard with fallback mock data
@@ -112,7 +113,7 @@ scripts/verify-deployment.sh                 # Verify deployment status
 - `backend/zappa_settings.json`: Lambda deployment configuration
 
 ### Database Setup
-The project uses SQLite for development and AWS RDS MySQL for production. Custom User model is defined in `core.models.User`.
+The project uses PostgreSQL for Docker development, SQLite for local development, and AWS RDS MySQL for production. Custom User model is defined in `core.models.User`.
 
 ## CI/CD Pipeline
 
@@ -166,8 +167,9 @@ The project uses SQLite for development and AWS RDS MySQL for production. Custom
 - **Minimal Mode**: Core services only (database, backend, frontend)
 
 ### Service URLs
-- **Frontend**: http://localhost (Docker) / http://localhost:3000 (Development)
+- **Frontend**: http://localhost (Docker) / http://localhost:3002 (Development)
 - **Backend API**: http://localhost:8000
+- **GraphQL Endpoint**: http://localhost:8000/graphql/
 - **Django Admin**: http://localhost:8000/admin/
 - **Database**: localhost:5432
 - **Redis**: localhost:6379
@@ -176,13 +178,13 @@ The project uses SQLite for development and AWS RDS MySQL for production. Custom
 - **MinIO API**: http://localhost:9000
 - **LocalStack** (AWS services): http://localhost:4566
 - **LocalStack Web UI**: http://localhost:4566/_localstack/health
-- **Grafana** (monitoring): http://localhost:3001
+- **Grafana** (monitoring): http://localhost:3003
 
 ### Current Configuration
 - **API Keys Configured**:
   - Adzuna API: Integrated for real-time job data (LA programmer jobs)
   - Google Maps API: Enabled for job location mapping
-- **Authentication**: JWT-based with fallback demo access
+- **Authentication**: GraphQL-based JWT authentication with full user management
 - **Data Sources**: Real-time job data with comprehensive fallback mock data
 - **Storage**: MinIO S3-compatible storage for local development
 
@@ -219,10 +221,10 @@ The project can use LocalStack for complete AWS services emulation:
 ## Development Workflow
 
 1. **Local Development**: 
-   - **Traditional**: Use SQLite database with Django runserver for backend and npm start for frontend
+   - **Traditional**: Use SQLite database with Django runserver for backend and npm start for frontend (frontend on http://localhost:3000)
+   - **Docker Development**: Use `./scripts/start-local-env.sh --dev` for complete containerized environment (frontend on http://localhost:3002)
    - **Docker with MinIO**: Use `./scripts/start-local-env.sh --dev --with-storage` for S3-compatible storage
    - **Docker with LocalStack**: Use `./scripts/start-local-env.sh --dev --with-localstack` for AWS services emulation
-   - **Docker Basic**: Use `./scripts/start-local-env.sh --dev` for complete containerized environment
 2. **Pull Request Process**: 
    - Create feature branch from develop
    - All PR checks must pass (tests, security, code quality)
@@ -236,7 +238,7 @@ The project can use LocalStack for complete AWS services emulation:
 
 - The project uses UUID primary keys for all models
 - Authentication uses Django's built-in system with custom User model and JWT tokens
-- **API Architecture**: Migrated from GraphQL to REST API for better compatibility
+- **API Architecture**: GraphQL architecture with Apollo Client fully operational
 - **External Integrations**:
   - Adzuna API for real-time job data (5 programmer jobs from LA)
   - Google Maps API for job location visualization
@@ -254,24 +256,38 @@ The project can use LocalStack for complete AWS services emulation:
 
 ## Recent Updates (Current Session)
 
-### Architecture Migration
-- **GraphQL to REST**: Complete migration from Apollo Client GraphQL to REST API
-- **Authentication Fix**: Resolved method compatibility issues (getAccessToken vs getToken)
-- **API Connectivity**: Fixed container networking and health check endpoints
+### GraphQL Architecture Upgrade
+- **GraphQL Implementation**: Complete GraphQL upgrade with Django Graphene backend
+- **Apollo Client Integration**: Full Apollo Client integration with proper authentication
+- **Schema Definition**: Comprehensive GraphQL schema for all app models and operations
+- **Authentication System**: GraphQL-based JWT authentication with token management
+
+### Backend GraphQL Features
+- **User Management**: Complete user registration, login, profile management via GraphQL
+- **Job Management**: GraphQL queries and mutations for job listings, applications, saved jobs
+- **AI Suggestions**: GraphQL endpoints for AI-powered job recommendations
+- **Company Research**: GraphQL integration for company data and research
+- **Skills Tracking**: GraphQL support for skills assessment and certification management
+
+### Frontend GraphQL Integration
+- **Apollo Client Setup**: Configured with authentication headers and caching
+- **GraphQL Mutations**: User registration, login, profile updates
+- **GraphQL Queries**: Data fetching for all modules (jobs, skills, companies)
+- **Error Handling**: Comprehensive GraphQL error handling and fallback strategies
+- **Real-time Updates**: Apollo Client cache management for real-time UI updates
+
+### Authentication & State Management
+- **GraphQL Auth Service**: Complete authentication service using GraphQL mutations
+- **Token Management**: JWT token storage, refresh, and validation
+- **User Context**: AuthContext integration with GraphQL user data
+- **Protected Routes**: Route protection based on GraphQL authentication state
 
 ### External API Integration
 - **Adzuna API**: Integrated real-time job data for Los Angeles programmer positions
 - **Google Maps API**: Added location visualization for job mapping functionality
 - **API Key Management**: Configured in both Docker Compose and Django settings
 
-### Fallback Data System
-- **AI Suggestions Service**: Mock data for job matching, skill improvement, and interview prep
-- **Skills Service**: Mock data for user skills, certifications, categories, and learning paths
-- **Interview Prep Service**: Mock data for questions, practice sessions, tips, and resources
-- **Graceful Degradation**: All services fail gracefully to mock data when backend is unavailable
-
-### Error Resolution
-- **Container Health**: Fixed backend health check endpoint
-- **React Rendering**: Resolved object rendering errors in job listings
-- **Authentication**: Fixed missing method errors in auth service
-- **Data Loading**: Resolved "Failed to load" errors across all modules
+### Data & Fallback Systems
+- **GraphQL Mock Data**: Comprehensive mock data for all GraphQL operations
+- **Fallback Strategies**: Graceful degradation when GraphQL services are unavailable
+- **Demo Functionality**: Full demo mode with realistic data for all features

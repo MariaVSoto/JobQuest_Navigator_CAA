@@ -4,6 +4,7 @@
  */
 
 import authService from './authService';
+import FallbackService from './fallbackService';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
@@ -79,6 +80,29 @@ class JobService {
    * Search jobs with filters
    */
   async searchJobs(filters = {}) {
+    // Development bypass: return filtered mock data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 JobService: Using mock search data (dev bypass)');
+      let mockJobs = FallbackService.getMockJobs();
+      
+      // Apply basic filters to mock data
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        mockJobs = mockJobs.filter(job => 
+          job.title.toLowerCase().includes(searchTerm) ||
+          job.company.display_name.toLowerCase().includes(searchTerm) ||
+          job.description.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      return {
+        count: mockJobs.length,
+        next: null,
+        previous: null,
+        results: mockJobs
+      };
+    }
+
     const params = new URLSearchParams();
     
     // Map frontend filters to backend parameters
@@ -106,6 +130,18 @@ class JobService {
    * Get all jobs with pagination
    */
   async getJobs(page = 1, pageSize = 20) {
+    // Development bypass: return mock data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 JobService: Using mock data (dev bypass)');
+      const mockJobs = FallbackService.getMockJobs();
+      return {
+        count: mockJobs.length,
+        next: null,
+        previous: null,
+        results: mockJobs
+      };
+    }
+
     const params = new URLSearchParams({
       page: page.toString(),
       page_size: pageSize.toString(),

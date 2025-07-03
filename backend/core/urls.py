@@ -12,6 +12,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
+from graphene_django.views import GraphQLView
+from django.views.decorators.csrf import csrf_exempt
 from . import views
 
 # Authentication URLs (moved from previous core-only URLs)
@@ -54,6 +56,9 @@ company_patterns = [
 urlpatterns = [
     # Django Admin
     path('admin/', admin.site.urls),
+    
+    # GraphQL API
+    path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True))),
     
     # API Documentation and Health Checks
     path('health/', include('core.health_urls')),

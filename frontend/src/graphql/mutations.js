@@ -12,26 +12,9 @@ import { gql } from '@apollo/client';
 // ============================================================================
 
 export const TOKEN_AUTH = gql`
-  mutation TokenAuth($email: String!, $password: String!) {
-    tokenAuth(email: $email, password: $password) {
+  mutation TokenAuth($username: String!, $password: String!) {
+    tokenAuth(username: $username, password: $password) {
       token
-      payload
-      refreshExpiresIn
-      user {
-        id
-        email
-        username
-        firstName
-        lastName
-        fullName
-        bio
-        currentJobTitle
-        yearsOfExperience
-        industry
-        careerLevel
-        jobSearchStatus
-        preferredWorkType
-      }
     }
   }
 `;
@@ -50,6 +33,21 @@ export const REFRESH_TOKEN = gql`
       token
       payload
       refreshExpiresIn
+    }
+  }
+`;
+
+export const REGISTER_USER = gql`
+  mutation RegisterUser($email: String!, $username: String!, $password: String!, $firstName: String, $lastName: String) {
+    registerUser(email: $email, username: $username, password: $password, firstName: $firstName, lastName: $lastName) {
+      success
+      errors
+      user {
+        id
+        email
+        username
+        fullName
+      }
     }
   }
 `;

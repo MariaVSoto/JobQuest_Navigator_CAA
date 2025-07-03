@@ -181,7 +181,73 @@ class UpdateUserProfileMutation(graphene.Mutation):
             )
 
 
+class RegisterUserMutation(graphene.Mutation):
+    """Mutation to register a new user."""
+    
+    class Arguments:
+        email = graphene.String(required=True)
+        username = graphene.String(required=True)
+        password = graphene.String(required=True)
+        first_name = graphene.String()
+        last_name = graphene.String()
+
+    user = graphene.Field(UserType)
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+
+    def mutate(self, info, email, username, password, first_name=None, last_name=None):
+        from django.contrib.auth import get_user_model
+        from django.core.exceptions import ValidationError
+        from django.contrib.auth.password_validation import validate_password
+        
+        User = get_user_model()
+        
+        # Check if user already exists
+        if User.objects.filter(email=email).exists():
+            return RegisterUserMutation(
+                success=False, 
+                errors=['User with this email already exists.']
+            )
+        
+        if User.objects.filter(username=username).exists():
+            return RegisterUserMutation(
+                success=False, 
+                errors=['User with this username already exists.']
+            )
+        
+        try:
+            # Validate password
+            validate_password(password)
+            
+            # Create user
+            user = User.objects.create_user(
+                email=email,
+                username=username,
+                password=password,
+                first_name=first_name or '',
+                last_name=last_name or ''
+            )
+            
+            return RegisterUserMutation(
+                user=user,
+                success=True,
+                errors=[]
+            )
+            
+        except ValidationError as e:
+            # Convert Django's validation error to a list of strings
+            errors = [str(error) for error in e.messages] if hasattr(e, 'messages') else [str(e)]
+            return RegisterUserMutation(success=False, errors=errors)
+        except Exception as e:
+            # Log unexpected exceptions for debugging
+            return RegisterUserMutation(
+                success=False,
+                errors=['Registration failed. Please try again.']
+            )
+
+
 class UserMutation(graphene.ObjectType):
     """User-related mutations."""
     
     update_profile = UpdateUserProfileMutation.Field()
+    register_user = RegisterUserMutation.Field()

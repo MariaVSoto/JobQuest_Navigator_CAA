@@ -56,13 +56,13 @@ const Signup = () => {
     setError('');
 
     try {
-      // Prepare data for backend
+      // Prepare data for GraphQL backend
       const registrationData = {
-        username: formData.email, // Use email as username
+        username: formData.email.split('@')[0], // Generate username from email
         email: formData.email,
-        full_name: `${formData.first_name} ${formData.last_name}`,
-        password: formData.password,
-        password_confirm: formData.confirmPassword
+        firstName: formData.first_name,
+        lastName: formData.last_name,
+        password: formData.password
       };
 
       const result = await register(registrationData);
@@ -70,19 +70,9 @@ const Signup = () => {
       if (result.success) {
         navigate('/dashboard', { replace: true });
       } else {
-        // Handle different types of errors
-        if (result.error?.email) {
-          setError(result.error.email[0]);
-        } else if (result.error?.password) {
-          setError(result.error.password[0]);
-        } else if (result.error?.first_name) {
-          setError(result.error.first_name[0]);
-        } else if (result.error?.last_name) {
-          setError(result.error.last_name[0]);
-        } else if (result.error?.non_field_errors) {
-          setError(result.error.non_field_errors[0]);
-        } else if (result.error?.message) {
-          setError(result.error.message);
+        // Handle GraphQL errors (array of error messages)
+        if (result.errors && result.errors.length > 0) {
+          setError(result.errors[0]); // Show first error
         } else {
           setError('Registration failed. Please try again.');
         }

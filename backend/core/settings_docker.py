@@ -221,15 +221,30 @@ REST_FRAMEWORK = {
 }
 
 # CORS configuration
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://localhost:80').split(',')
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3002,http://localhost:3000,http://localhost:80').split(',')
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only for development
 
 # GraphQL configuration
 GRAPHENE = {
-    'SCHEMA': 'core.schema.schema',
+    'SCHEMA': 'schema.schema',
     'MIDDLEWARE': [
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
+    ],
+}
+
+# GraphQL JWT configuration
+import datetime
+
+GRAPHQL_JWT = {
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=24),
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+    'JWT_ALLOW_ANY_CLASSES': [
+        'graphql_jwt.mutations.ObtainJSONWebToken',
+        'graphql_jwt.mutations.Verify',
+        'graphql_jwt.mutations.Refresh',
     ],
 }
 

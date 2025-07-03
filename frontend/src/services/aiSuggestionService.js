@@ -3,6 +3,8 @@
  * Updated to work with ViewSets architecture for comprehensive AI suggestions management
  */
 
+import FallbackService from './fallbackService';
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 class AISuggestionService {
@@ -95,6 +97,41 @@ class AISuggestionService {
    * Get user's AI suggestions with comprehensive filtering
    */
   async getSuggestions(filters = {}) {
+    // Development bypass: return mock suggestions data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 AISuggestionService: Using mock suggestions data (dev bypass)');
+      const mockData = FallbackService.getMockAISuggestions();
+      return {
+        count: mockData.jobMatches.length + mockData.skillImprovements.length,
+        next: null,
+        previous: null,
+        results: [
+          ...mockData.jobMatches.map(match => ({
+            id: `job-match-${match.job.id}`,
+            suggestion_type: 'job_match',
+            title: `Perfect Match: ${match.job.title}`,
+            description: `Match score: ${match.job.matchScore}%. Reasons: ${match.reasons.join(', ')}`,
+            confidence_score: match.job.matchScore / 100,
+            priority: match.job.matchScore > 90 ? 'high' : 'medium',
+            status: 'pending',
+            action_url: `/jobs/${match.job.id}`,
+            created_at: new Date().toISOString()
+          })),
+          ...mockData.skillImprovements.map((skill, index) => ({
+            id: `skill-improvement-${index}`,
+            suggestion_type: 'skill_improvement',
+            title: `Learn ${skill.skill}`,
+            description: `${skill.reason}. Priority: ${skill.priority}`,
+            confidence_score: skill.priority === 'high' ? 0.9 : 0.7,
+            priority: skill.priority,
+            status: 'pending',
+            action_url: '/skills',
+            created_at: new Date().toISOString()
+          }))
+        ]
+      };
+    }
+
     try {
       const queryParams = new URLSearchParams();
       
@@ -276,6 +313,28 @@ class AISuggestionService {
    * Get user's job recommendations
    */
   async getJobRecommendations(filters = {}) {
+    // Development bypass: return mock job recommendations
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 AISuggestionService: Using mock job recommendations (dev bypass)');
+      const mockJobs = FallbackService.getMockJobs();
+      return {
+        count: mockJobs.length,
+        next: null,
+        previous: null,
+        results: mockJobs.map((job, index) => ({
+          id: `rec-${job.id}`,
+          job: job,
+          match_score: 0.85 - (index * 0.05),
+          relevance_score: 0.9 - (index * 0.03),
+          reasons: ['Skills match', 'Location preference', 'Salary range'],
+          created_at: new Date().toISOString(),
+          viewed_at: null,
+          saved: false,
+          dismissed: false
+        }))
+      };
+    }
+
     const queryParams = new URLSearchParams();
     
     Object.entries(filters).forEach(([key, value]) => {

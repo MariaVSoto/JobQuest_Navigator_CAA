@@ -1,9 +1,6 @@
 -- Initialize JobQuest Navigator Development Database
 
--- Create development database
-CREATE DATABASE IF NOT EXISTS jobquest_navigator_dev;
-
--- Create development user
+-- Create development user first
 DO
 $do$
 BEGIN
@@ -15,6 +12,9 @@ BEGIN
    END IF;
 END
 $do$;
+
+-- Create development database
+CREATE DATABASE jobquest_navigator_dev;
 
 -- Grant privileges
 GRANT ALL PRIVILEGES ON DATABASE jobquest_navigator_dev TO dev_user;

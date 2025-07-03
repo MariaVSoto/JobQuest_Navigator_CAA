@@ -137,8 +137,8 @@ class User(AbstractUser):
         verbose_name='user permissions',
     )
     
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     class Meta:
         db_table = 'users'

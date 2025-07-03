@@ -3,6 +3,8 @@
  * Comprehensive service for application tracking, resume versioning, notifications, and analytics
  */
 
+import FallbackService from './fallbackService';
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 class ApplicationService {
@@ -55,6 +57,31 @@ class ApplicationService {
    * Get dashboard summary with metrics and recent activity
    */
   async getDashboard() {
+    // Development bypass: return mock dashboard data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 ApplicationService: Using mock dashboard data (dev bypass)');
+      return {
+        total_applications: 3,
+        applications_by_status: {
+          applied: 1,
+          screening: 1,
+          interview: 1,
+          rejected: 0,
+          offer: 0
+        },
+        response_rate: 75,
+        average_time_to_response: 5,
+        recent_activity: [
+          {
+            id: '1',
+            type: 'status_change',
+            message: 'Application status updated to Interview',
+            timestamp: '2025-07-03T10:00:00Z'
+          }
+        ]
+      };
+    }
+
     const response = await this.makeRequest('/applications/dashboard/');
     return await response.json();
   }
@@ -63,6 +90,18 @@ class ApplicationService {
    * Get user's tracked applications with advanced filtering
    */
   async getApplications(filters = {}) {
+    // Development bypass: return mock applications data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 ApplicationService: Using mock applications data (dev bypass)');
+      const mockApplications = FallbackService.getMockApplications();
+      return {
+        count: mockApplications.length,
+        next: null,
+        previous: null,
+        results: mockApplications
+      };
+    }
+
     const queryParams = new URLSearchParams();
     
     Object.entries(filters).forEach(([key, value]) => {
@@ -154,6 +193,18 @@ class ApplicationService {
    * Get all interviews for the user
    */
   async getInterviews(filters = {}) {
+    // Development bypass: return mock interviews data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 ApplicationService: Using mock interviews data (dev bypass)');
+      const mockInterviews = FallbackService.getMockInterviewData();
+      return {
+        count: mockInterviews.upcomingInterviews.length,
+        next: null,
+        previous: null,
+        results: mockInterviews.upcomingInterviews
+      };
+    }
+
     const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value) queryParams.append(key, value);
@@ -200,6 +251,34 @@ class ApplicationService {
    * Get user notifications
    */
   async getNotifications(filters = {}) {
+    // Development bypass: return mock notifications data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 ApplicationService: Using mock notifications data (dev bypass)');
+      return {
+        count: 2,
+        next: null,
+        previous: null,
+        results: [
+          {
+            id: '1',
+            type: 'application_update',
+            title: 'Application Status Updated',
+            message: 'Your application for Frontend Developer has been updated to Interview stage',
+            timestamp: '2025-07-03T10:00:00Z',
+            is_read: false
+          },
+          {
+            id: '2',
+            type: 'new_job_match',
+            title: 'New Job Match',
+            message: 'A new job matching your profile has been posted',
+            timestamp: '2025-07-02T15:30:00Z',
+            is_read: true
+          }
+        ]
+      };
+    }
+
     const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value) queryParams.append(key, value);

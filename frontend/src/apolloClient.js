@@ -17,14 +17,14 @@ const httpLink = createHttpLink({
 
 // 2. Create authentication Link to inject JWT token
 const authLink = setContext((_, { headers }) => {
-  // Get authentication token from localStorage
-  const token = localStorage.getItem('jwt_token');
+  // Get authentication token from localStorage (using the same key as REST API)
+  const token = localStorage.getItem('jobquest_access_token');
   
-  // Return headers with Authorization header
+  // Return headers with Authorization header (capital A for Django compatibility)
   return {
     headers: {
       ...headers,
-      authorization: token ? `Bearer ${token}` : "",
+      Authorization: token ? `Bearer ${token}` : "",
     }
   }
 });

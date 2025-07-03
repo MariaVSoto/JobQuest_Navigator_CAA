@@ -3,6 +3,8 @@
  * Handles all API calls related to skills management and certification tracking
  */
 
+import FallbackService from './fallbackService';
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 class SkillsService {
@@ -54,6 +56,53 @@ class SkillsService {
    * Get skill categories
    */
   async getSkillCategories(filters = {}) {
+    // Development bypass: return mock skill categories data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 SkillsService: Using mock skill categories data (dev bypass)');
+      return {
+        count: 5,
+        next: null,
+        previous: null,
+        results: [
+          {
+            id: 1,
+            name: 'Programming Languages',
+            description: 'Programming and scripting languages',
+            icon: '💻',
+            skill_count: 25
+          },
+          {
+            id: 2,
+            name: 'Frontend Frameworks',
+            description: 'Frontend development frameworks and libraries',
+            icon: '🎨',
+            skill_count: 15
+          },
+          {
+            id: 3,
+            name: 'Backend Frameworks',
+            description: 'Backend development frameworks and tools',
+            icon: '⚙️',
+            skill_count: 18
+          },
+          {
+            id: 4,
+            name: 'Databases',
+            description: 'Database technologies and tools',
+            icon: '💾',
+            skill_count: 12
+          },
+          {
+            id: 5,
+            name: 'Cloud Computing',
+            description: 'Cloud platforms and services',
+            icon: '☁️',
+            skill_count: 20
+          }
+        ]
+      };
+    }
+
     try {
       const queryParams = new URLSearchParams();
       
@@ -243,6 +292,29 @@ class SkillsService {
    * Get user's skills
    */
   async getUserSkills(filters = {}) {
+    // Development bypass: return mock user skills data
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 SkillsService: Using mock user skills data (dev bypass)');
+      const mockSkills = FallbackService.getMockSkills();
+      return {
+        count: mockSkills.userSkills.length,
+        next: null,
+        previous: null,
+        results: mockSkills.userSkills.map((skill, index) => ({
+          id: `user-skill-${index + 1}`,
+          skill: {
+            id: index + 1,
+            name: skill.name,
+            category: skill.name === 'React' ? 'Frontend Frameworks' : 'Programming Languages'
+          },
+          proficiency_level: skill.level,
+          years_experience: skill.years,
+          verified: index < 2, // First two skills are verified
+          last_updated: new Date().toISOString()
+        }))
+      };
+    }
+
     try {
       const queryParams = new URLSearchParams();
       
@@ -945,6 +1017,30 @@ class SkillsService {
    * Get personalized skill recommendations
    */
   async getSkillRecommendations() {
+    // Development bypass: return mock skill recommendations
+    if (FallbackService.isDevBypass()) {
+      console.log('🔧 SkillsService: Using mock skill recommendations (dev bypass)');
+      const mockSkills = FallbackService.getMockSkills();
+      return {
+        count: mockSkills.recommendedSkills.length,
+        next: null,
+        previous: null,
+        results: mockSkills.recommendedSkills.map((skill, index) => ({
+          id: `rec-skill-${index + 1}`,
+          skill: {
+            id: index + 10,
+            name: skill.name,
+            category: skill.name === 'AWS' ? 'Cloud Computing' : 'Programming Languages'
+          },
+          market_demand: skill.demand,
+          average_salary_increase: skill.avgSalaryIncrease,
+          match_score: 0.85 - (index * 0.05),
+          priority: skill.demand === 'high' ? 'high' : 'medium',
+          reasons: [`High market demand for ${skill.name}`, `Potential salary increase of $${skill.avgSalaryIncrease.toLocaleString()}`]
+        }))
+      };
+    }
+
     const response = await this.makeRequest('/user-skills/recommendations/');
     return await response.json();
   }

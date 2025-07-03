@@ -13,7 +13,10 @@ BEGIN
 END
 $do$;
 
--- Note: Database is created by environment variable POSTGRES_DB
+-- Create database if it doesn't exist
+SELECT 'CREATE DATABASE jobquest_navigator'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'jobquest_navigator')\gexec
+
 -- Grant privileges on the created database
 GRANT ALL PRIVILEGES ON DATABASE jobquest_navigator TO jobquest_user;
 
