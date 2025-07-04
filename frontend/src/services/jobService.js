@@ -105,22 +105,44 @@ class JobService {
 
     const params = new URLSearchParams();
     
-    // Map frontend filters to backend parameters
+    // Map frontend filters to backend parameters correctly
     if (filters.search) params.append('search', filters.search);
     if (filters.location) params.append('location', filters.location);
     if (filters.company) params.append('company', filters.company);
+    
+    // Job type mapping
     if (filters.type) {
-      // Map frontend types to backend types
-      const typeMap = {
-        'Full-time': 'full_time',
-        'Part-time': 'part_time',
-        'Contract': 'contract',
-        'Freelance': 'freelance',
-        'Internship': 'internship'
-      };
-      params.append('job_type', typeMap[filters.type] || filters.type.toLowerCase());
+      params.append('job_type', filters.type);
     }
-    if (filters.remote) params.append('remote_type', 'remote');
+    
+    // Experience level
+    if (filters.experience_level) {
+      params.append('experience_level', filters.experience_level);
+    }
+    
+    // Remote type
+    if (filters.remote_type) {
+      params.append('remote_type', filters.remote_type);
+    }
+    
+    // Salary filters
+    if (filters.salary_min) {
+      params.append('salary_min', filters.salary_min);
+    }
+    
+    // Sort parameter
+    if (filters.sort) {
+      params.append('ordering', filters.sort);
+    }
+    
+    // Page and page size for pagination
+    if (filters.page) {
+      params.append('page', filters.page);
+    }
+    
+    if (filters.page_size) {
+      params.append('page_size', filters.page_size);
+    }
 
     const url = `${this.baseURL}/jobs/jobs/?${params.toString()}`;
     return await this.makeRequest(url);
@@ -409,6 +431,9 @@ class JobService {
         display_name: backendJob.location ? 
           `${backendJob.location.city}, ${backendJob.location.state || backendJob.location.country}` : 
           'Unknown Location',
+        full_address: backendJob.location ? 
+          `${backendJob.location.city}, ${backendJob.location.state || backendJob.location.country}` : 
+          'Unknown Location',
         city: backendJob.location?.city,
         state: backendJob.location?.state,
         country: backendJob.location?.country
@@ -419,7 +444,8 @@ class JobService {
       description: backendJob.description,
       requirements: backendJob.requirements,
       benefits: backendJob.benefits,
-      contract_type: backendJob.job_type?.replace('_', '-'), // Transform backend format
+      job_type: backendJob.job_type, // Keep original format
+      contract_type: backendJob.job_type?.replace('_', '-'), // Transform backend format for compatibility
       salary_min: backendJob.salary_min,
       salary_max: backendJob.salary_max,
       salary_currency: backendJob.salary_currency,
@@ -427,8 +453,12 @@ class JobService {
       remote_type: backendJob.remote_type,
       experience_level: backendJob.experience_level,
       posted_date: backendJob.posted_date,
+      created_at: backendJob.created_at,
       external_url: backendJob.external_url,
       required_skills: backendJob.required_skills || [],
+      // Add save/apply status fields from backend
+      is_saved: backendJob.is_saved || false,
+      is_applied: backendJob.is_applied || false,
       salary_is_predicted: '0' // Backend doesn't have this field
     };
   }
@@ -453,37 +483,17 @@ class JobService {
   }
 
   /**
-   * Get saved jobs for current user
+   * Get saved jobs for current user (updated method - replaces line 280 version)
    */
-  async getSavedJobs(filters = {}) {
+  async getSavedJobsWithFilters(filters = {}) {
     const params = new URLSearchParams();
     
-    if (filters.limit) params.append('limit', filters.limit);
-    if (filters.offset) params.append('offset', filters.offset);
+    if (filters.page) params.append('page', filters.page);
+    if (filters.page_size) params.append('page_size', filters.page_size);
     if (filters.ordering) params.append('ordering', filters.ordering);
     
     const url = `${this.baseURL}/jobs/saved-jobs/${params.toString() ? `?${params}` : ''}`;
     return await this.makeRequest(url);
-  }
-
-  /**
-   * Save a job
-   */
-  async saveJob(jobId) {
-    const url = `${this.baseURL}/jobs/jobs/${jobId}/save/`;
-    return await this.makeRequest(url, {
-      method: 'POST',
-    });
-  }
-
-  /**
-   * Unsave a job
-   */
-  async unsaveJob(jobId) {
-    const url = `${this.baseURL}/jobs/jobs/${jobId}/unsave/`;
-    return await this.makeRequest(url, {
-      method: 'DELETE',
-    });
   }
 }
 

@@ -1,5 +1,5 @@
 """
-Django management command to import 30 Toronto job listings into the database.
+Django management command to import 50 Toronto job listings into the database.
 This command creates realistic job data for the Toronto area with proper companies and locations.
 
 Usage:
@@ -17,7 +17,7 @@ import random
 
 
 class Command(BaseCommand):
-    help = 'Import 30 realistic Toronto job listings into the database'
+    help = 'Import 50 realistic Toronto job listings into the database'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -81,20 +81,29 @@ class Command(BaseCommand):
             ('Sales', 'sales-jobs'),
             ('Finance', 'accounting-finance-jobs'),
             ('Design', 'creative-design-jobs'),
-            ('Data Science', 'it-jobs'),
+            ('Data Science', 'data-science-jobs'),
             ('Product Management', 'management-jobs'),
             ('Customer Success', 'customer-services-jobs'),
+            ('Management', 'management-executive-jobs'),
         ]
         
         categories = {}
         for name, adzuna_tag in category_data:
-            category, created = Category.objects.get_or_create(
-                name=name,
-                defaults={'adzuna_tag': adzuna_tag}
-            )
-            categories[name] = category
-            if created:
-                self.stdout.write(f'Created category: {name}')
+            try:
+                category, created = Category.objects.get_or_create(
+                    name=name,
+                    defaults={'adzuna_tag': adzuna_tag}
+                )
+                categories[name] = category
+                if created:
+                    self.stdout.write(f'Created category: {name}')
+                else:
+                    self.stdout.write(f'Using existing category: {name}')
+            except Exception as e:
+                # If there's a duplicate adzuna_tag, get the category by name only
+                category, created = Category.objects.get_or_create(name=name)
+                categories[name] = category
+                self.stdout.write(f'Using existing category (resolved conflict): {name}')
         
         return categories
 
@@ -126,6 +135,55 @@ class Command(BaseCommand):
             # Business Skills
             ('Project Management', 'management'), ('Agile', 'management'),
             ('Scrum', 'management'), ('Communication', 'communication'),
+            
+            # Additional Skills for comprehensive job coverage
+            ('System Design', 'programming'), ('Microservices', 'framework'),
+            ('Leadership', 'management'), ('Database Optimization', 'database'),
+            ('Backup & Recovery', 'database'), ('Technical Writing', 'communication'),
+            ('Documentation', 'communication'), ('API Documentation', 'communication'),
+            ('User Guides', 'communication'), ('Azure', 'cloud'),
+            ('Cloud Architecture', 'cloud'), ('Terraform', 'devops'),
+            ('Consulting', 'communication'), ('Team Leadership', 'management'),
+            ('Tableau', 'other'), ('Statistics', 'other'),
+            ('Networking', 'other'), ('Cisco', 'other'),
+            ('Network Security', 'other'), ('Troubleshooting', 'other'),
+            ('Legal', 'other'), ('Technology Law', 'other'),
+            ('Compliance', 'management'), ('Contract Negotiation', 'communication'),
+            ('HR Management', 'management'), ('Employee Relations', 'management'),
+            ('Performance Management', 'management'), ('Coaching', 'management'),
+            ('Brand Design', 'design'), ('Adobe Creative Suite', 'design'),
+            ('Typography', 'design'), ('Visual Identity', 'design'),
+            ('CI/CD', 'devops'), ('Infrastructure as Code', 'devops'),
+            ('Technical Sales', 'communication'), ('Solution Architecture', 'programming'),
+            ('Presentation', 'communication'), ('Customer Relations', 'communication'),
+            ('PPC', 'other'), ('Facebook Ads', 'other'),
+            ('Google Ads', 'other'), ('Analytics', 'other'),
+            ('ROI Optimization', 'other'), ('Risk Management', 'management'),
+            ('Financial Regulations', 'other'), ('Audit', 'other'),
+            ('Machine Learning', 'programming'), ('Deep Learning', 'programming'),
+            ('Research', 'other'), ('Publications', 'other'),
+            ('Engineering Leadership', 'management'), ('Technical Strategy', 'management'),
+            ('Mentoring', 'management'), ('Power BI', 'other'),
+            ('ETL', 'programming'), ('Data Warehousing', 'database'),
+            ('Technical Support', 'other'), ('API Integration', 'programming'),
+            ('Problem Solving', 'other'), ('Financial Analysis', 'other'),
+            ('Cash Management', 'other'), ('Risk Assessment', 'other'),
+            ('Excel', 'other'), ('User Research', 'other'),
+            ('Usability Testing', 'other'), ('Survey Design', 'other'),
+            ('Swift', 'programming'), ('iOS', 'programming'),
+            ('Objective-C', 'programming'), ('Kotlin', 'programming'),
+            ('Android', 'programming'), ('Test Automation', 'programming'),
+            ('Selenium', 'framework'), ('API Testing', 'programming'),
+            ('Monitoring', 'devops'), ('TensorFlow', 'framework'),
+            ('Content Writing', 'communication'), ('Social Media', 'other'),
+            ('Business Analysis', 'other'), ('Process Mapping', 'other'),
+            ('Security', 'other'), ('Penetration Testing', 'other'),
+            ('Cryptography', 'other'), ('Operations Management', 'management'),
+            ('Process Improvement', 'management'), ('Partnership Development', 'communication'),
+            ('Negotiation', 'communication'), ('CRM', 'other'),
+            ('Lead Generation', 'other'), ('Financial Modeling', 'other'),
+            ('Customer Success', 'communication'), ('Customer Service', 'communication'),
+            ('Technical Troubleshooting', 'other'),
         ]
         
         skills = {}
@@ -280,7 +338,7 @@ class Command(BaseCommand):
         return companies
 
     def create_toronto_jobs(self, companies, toronto_location, categories, skills):
-        """Create 30 diverse job listings in Toronto."""
+        """Create 50 diverse job listings in Toronto."""
         job_data = [
             # Senior Software Engineer roles
             {
@@ -678,10 +736,271 @@ class Command(BaseCommand):
                 'description': 'Develop and manage partnerships with restaurants and corporate clients. Drive business development initiatives.',
                 'requirements': '3+ years of partnership or business development experience. Experience in food tech or marketplace businesses preferred.',
             },
+            # Additional 20 jobs to reach 50 total
+            {
+                'title': 'Senior Software Architect',
+                'company': 'Shopify',
+                'category': 'Software Development',
+                'experience_level': 'senior',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 140000,
+                'salary_max': 180000,
+                'required_skills': ['System Design', 'Microservices', 'AWS', 'Kubernetes', 'Leadership'],
+                'description': 'Lead architectural decisions for our platform serving millions of merchants. Design scalable, resilient systems.',
+                'requirements': '8+ years of software architecture experience. Strong background in distributed systems and microservices.',
+            },
+            {
+                'title': 'Database Administrator',
+                'company': 'Royal Bank of Canada',
+                'category': 'Software Development',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'on_site',
+                'salary_min': 85000,
+                'salary_max': 110000,
+                'required_skills': ['PostgreSQL', 'MySQL', 'Database Optimization', 'Backup & Recovery'],
+                'description': 'Manage and optimize database systems supporting our banking applications. Ensure high availability and performance.',
+                'requirements': '4+ years of database administration experience. Experience with high-volume financial systems.',
+            },
+            {
+                'title': 'Technical Writer',
+                'company': 'Top Hat',
+                'category': 'Design',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'remote',
+                'salary_min': 65000,
+                'salary_max': 80000,
+                'required_skills': ['Technical Writing', 'Documentation', 'API Documentation', 'User Guides'],
+                'description': 'Create comprehensive documentation for our educational platform. Write API docs, user guides, and developer resources.',
+                'requirements': '3+ years of technical writing experience. Experience with educational technology preferred.',
+            },
+            {
+                'title': 'Cloud Solutions Architect',
+                'company': 'Accenture Toronto',
+                'category': 'Software Development',
+                'experience_level': 'senior',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 120000,
+                'salary_max': 150000,
+                'required_skills': ['AWS', 'Azure', 'Cloud Architecture', 'Terraform', 'Consulting'],
+                'description': 'Design cloud solutions for enterprise clients. Lead cloud migration and transformation projects.',
+                'requirements': '6+ years of cloud architecture experience. AWS/Azure certifications required. Consulting experience preferred.',
+            },
+            {
+                'title': 'Scrum Master',
+                'company': 'Wealthsimple',
+                'category': 'Product Management',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 85000,
+                'salary_max': 105000,
+                'required_skills': ['Scrum', 'Agile', 'Project Management', 'Team Leadership'],
+                'description': 'Facilitate agile development processes for our engineering teams. Coach teams on agile best practices.',
+                'requirements': '3+ years of Scrum Master experience. Certified Scrum Master (CSM) preferred. FinTech experience a plus.',
+            },
+            {
+                'title': 'Data Analyst',
+                'company': 'TouchBistro',
+                'category': 'Data Science',
+                'experience_level': 'entry',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 55000,
+                'salary_max': 70000,
+                'required_skills': ['SQL', 'Excel', 'Tableau', 'Python', 'Statistics'],
+                'description': 'Analyze restaurant operations data to provide insights for product development and customer success.',
+                'requirements': '1-2 years of data analysis experience. Strong SQL and visualization skills. Restaurant industry knowledge helpful.',
+            },
+            {
+                'title': 'Network Engineer',
+                'company': 'Rogers Communications',
+                'category': 'Software Development',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'on_site',
+                'salary_min': 80000,
+                'salary_max': 100000,
+                'required_skills': ['Networking', 'Cisco', 'Network Security', 'Troubleshooting'],
+                'description': 'Design and maintain network infrastructure supporting our telecommunications services.',
+                'requirements': '4+ years of network engineering experience. Cisco certifications preferred. Telecom experience required.',
+            },
+            {
+                'title': 'Legal Counsel - Technology',
+                'company': 'Coinsquare',
+                'category': 'Management',
+                'experience_level': 'senior',
+                'job_type': 'full_time',
+                'remote_type': 'on_site',
+                'salary_min': 130000,
+                'salary_max': 160000,
+                'required_skills': ['Legal', 'Technology Law', 'Compliance', 'Contract Negotiation'],
+                'description': 'Provide legal guidance on cryptocurrency regulations and technology compliance matters.',
+                'requirements': 'Law degree and 5+ years of technology law experience. Cryptocurrency/blockchain knowledge required.',
+            },
+            {
+                'title': 'HR Business Partner',
+                'company': 'Freshbooks',
+                'category': 'Management',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'remote',
+                'salary_min': 75000,
+                'salary_max': 95000,
+                'required_skills': ['HR Management', 'Employee Relations', 'Performance Management', 'Coaching'],
+                'description': 'Partner with leadership teams to drive HR strategy and support employee development.',
+                'requirements': '4+ years of HR business partner experience. Experience in fast-growing SaaS companies preferred.',
+            },
+            {
+                'title': 'Brand Designer',
+                'company': 'Ritual',
+                'category': 'Design',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 70000,
+                'salary_max': 90000,
+                'required_skills': ['Brand Design', 'Adobe Creative Suite', 'Typography', 'Visual Identity'],
+                'description': 'Develop and maintain brand identity across all touchpoints. Create marketing materials and brand guidelines.',
+                'requirements': '3+ years of brand design experience. Strong portfolio showcasing brand identity work.',
+            },
+            {
+                'title': 'Platform Engineer',
+                'company': 'Symend',
+                'category': 'Software Development',
+                'experience_level': 'senior',
+                'job_type': 'full_time',
+                'remote_type': 'remote',
+                'salary_min': 115000,
+                'salary_max': 145000,
+                'required_skills': ['Kubernetes', 'Docker', 'AWS', 'CI/CD', 'Infrastructure as Code'],
+                'description': 'Build and maintain platform infrastructure that enables rapid application development and deployment.',
+                'requirements': '5+ years of platform engineering experience. Strong background in container orchestration and cloud platforms.',
+            },
+            {
+                'title': 'Sales Engineer',
+                'company': 'Deloitte Digital',
+                'category': 'Sales',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 90000,
+                'salary_max': 115000,
+                'required_skills': ['Technical Sales', 'Solution Architecture', 'Presentation', 'Customer Relations'],
+                'description': 'Support sales process by providing technical expertise and solution design for enterprise clients.',
+                'requirements': '3+ years of technical sales or solution architecture experience. Strong presentation and communication skills.',
+            },
+            {
+                'title': 'Performance Marketing Manager',
+                'company': 'Paymi',
+                'category': 'Marketing',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'remote',
+                'salary_min': 80000,
+                'salary_max': 100000,
+                'required_skills': ['PPC', 'Facebook Ads', 'Google Ads', 'Analytics', 'ROI Optimization'],
+                'description': 'Manage paid advertising campaigns across digital channels. Optimize for customer acquisition and ROI.',
+                'requirements': '4+ years of performance marketing experience. Strong analytical skills and experience with FinTech products.',
+            },
+            {
+                'title': 'Compliance Officer',
+                'company': 'Wave Financial',
+                'category': 'Finance',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 80000,
+                'salary_max': 100000,
+                'required_skills': ['Compliance', 'Risk Management', 'Financial Regulations', 'Audit'],
+                'description': 'Ensure compliance with financial regulations and maintain risk management frameworks.',
+                'requirements': '4+ years of compliance experience in financial services. Knowledge of Canadian financial regulations required.',
+            },
+            {
+                'title': 'Research Scientist - AI',
+                'company': 'Royal Bank of Canada',
+                'category': 'Data Science',
+                'experience_level': 'senior',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 130000,
+                'salary_max': 170000,
+                'required_skills': ['Machine Learning', 'Deep Learning', 'Python', 'Research', 'Publications'],
+                'description': 'Conduct cutting-edge AI research for financial applications. Publish research and implement production systems.',
+                'requirements': 'PhD in Computer Science, AI, or related field. 3+ years of AI research experience. Published papers preferred.',
+            },
+            {
+                'title': 'Engineering Manager',
+                'company': 'Shopify',
+                'category': 'Management',
+                'experience_level': 'senior',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 150000,
+                'salary_max': 190000,
+                'required_skills': ['Engineering Leadership', 'Team Management', 'Technical Strategy', 'Mentoring'],
+                'description': 'Lead a team of senior engineers building core platform capabilities. Drive technical strategy and team growth.',
+                'requirements': '6+ years of engineering experience with 3+ years in leadership roles. Experience scaling engineering teams.',
+            },
+            {
+                'title': 'Business Intelligence Developer',
+                'company': 'Scotiabank',
+                'category': 'Data Science',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 85000,
+                'salary_max': 105000,
+                'required_skills': ['SQL', 'Tableau', 'Power BI', 'ETL', 'Data Warehousing'],
+                'description': 'Develop business intelligence solutions and dashboards for banking operations and customer analytics.',
+                'requirements': '3+ years of BI development experience. Strong SQL skills and experience with enterprise BI tools.',
+            },
+            {
+                'title': 'Customer Success Engineer',
+                'company': 'Top Hat',
+                'category': 'Customer Success',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'remote',
+                'salary_min': 75000,
+                'salary_max': 95000,
+                'required_skills': ['Technical Support', 'API Integration', 'Customer Success', 'Problem Solving'],
+                'description': 'Help educational institutions integrate and optimize their use of our platform. Provide technical guidance.',
+                'requirements': '3+ years of technical customer success experience. Background in education technology preferred.',
+            },
+            {
+                'title': 'Treasury Analyst',
+                'company': 'Wealthsimple',
+                'category': 'Finance',
+                'experience_level': 'entry',
+                'job_type': 'full_time',
+                'remote_type': 'on_site',
+                'salary_min': 65000,
+                'salary_max': 80000,
+                'required_skills': ['Financial Analysis', 'Cash Management', 'Risk Assessment', 'Excel'],
+                'description': 'Support treasury operations including cash management, liquidity planning, and financial risk assessment.',
+                'requirements': 'Bachelor\'s degree in Finance or related field. 1-2 years of treasury or financial analysis experience.',
+            },
+            {
+                'title': 'UX Researcher',
+                'company': 'TouchBistro',
+                'category': 'Design',
+                'experience_level': 'mid',
+                'job_type': 'full_time',
+                'remote_type': 'hybrid',
+                'salary_min': 80000,
+                'salary_max': 100000,
+                'required_skills': ['User Research', 'Usability Testing', 'Data Analysis', 'Survey Design'],
+                'description': 'Conduct user research to inform product decisions for our restaurant POS system. Plan and execute usability studies.',
+                'requirements': '3+ years of UX research experience. Experience with B2B software research preferred.',
+            },
         ]
         
         jobs = []
-        for i, job_info in enumerate(job_data[:30]):  # Ensure exactly 30 jobs
+        for i, job_info in enumerate(job_data[:50]):  # Ensure exactly 50 jobs
             # Find company
             company = next((c for c in companies if c.name == job_info['company']), companies[0])
             

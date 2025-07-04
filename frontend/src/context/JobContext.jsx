@@ -12,7 +12,10 @@ export const JobProvider = ({ children }) => {
     location: '',
     company: '',
     type: '',
-    remote: false,
+    experience_level: '',
+    remote_type: '',
+    salary_min: '',
+    sort: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -33,7 +36,13 @@ export const JobProvider = ({ children }) => {
         }
 
         // Use Django backend instead of external API
-        const response = await jobService.searchJobs(filters);
+        // Default to 20 jobs per page
+        const searchFilters = {
+          ...filters,
+          page_size: 20
+        };
+        
+        const response = await jobService.searchJobs(searchFilters);
         
         if (response) {
           // Handle both paginated and non-paginated responses
@@ -45,7 +54,9 @@ export const JobProvider = ({ children }) => {
           } else if (Array.isArray(response)) {
             // Direct array response
             const transformedJobs = jobService.transformJobsResponse(response);
-            setJobs(transformedJobs);
+            // Limit to 20 jobs for display
+            const limitedJobs = transformedJobs.slice(0, 20);
+            setJobs(limitedJobs);
             setTotalJobs(transformedJobs.length);
           } else {
             // Single job or other format
@@ -75,7 +86,11 @@ export const JobProvider = ({ children }) => {
     setError(null);
     
     try {
-      const response = await jobService.searchJobs({ ...filters, page });
+      const response = await jobService.searchJobs({ 
+        ...filters, 
+        page,
+        page_size: 20
+      });
       
       if (response && response.results) {
         const transformedJobs = jobService.transformJobsResponse(response);
@@ -132,6 +147,7 @@ export const JobProvider = ({ children }) => {
   const contextValue = {
     // Job data
     jobs,
+    setJobs,
     selectedJob,
     setSelectedJob,
     totalJobs,

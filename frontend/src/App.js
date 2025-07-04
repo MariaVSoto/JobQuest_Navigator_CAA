@@ -6,7 +6,6 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import JobListings from './pages/JobListings';
 import JobApplicationForm from './pages/JobApplicationForm';
-import JobMap from './pages/JobMap';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import JobDetails from './pages/JobDetails';
@@ -54,11 +53,6 @@ function App() {
             <Route path="/apply/:jobId" element={
               <ProtectedRoute>
                 <JobApplicationForm />
-              </ProtectedRoute>
-            } />
-            <Route path="/map" element={
-              <ProtectedRoute>
-                <JobMap />
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={

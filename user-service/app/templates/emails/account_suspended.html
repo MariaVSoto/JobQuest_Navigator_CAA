@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Account Suspension Notice{% endblock %}
+
+{% block content %}
+<h1>⚠️ Account Suspension Notice</h1>
+
+<p>Hi {{ user_name }},</p>
+
+<div class="alert alert-warning">
+    <strong>Important:</strong> Your {{ company_name }} account has been suspended.
+</div>
+
+<h3>📋 Suspension Details:</h3>
+<ul style="margin: 1rem 0; padding-left: 1.5rem; color: #475569;">
+    <li><strong>Reason:</strong> {{ reason }}</li>
+    {% if not is_permanent %}
+    <li><strong>Duration:</strong> Until {{ suspension_until.strftime('%B %d, %Y at %I:%M %p') if suspension_until else 'Further notice' }}</li>
+    {% else %}
+    <li><strong>Type:</strong> Permanent suspension</li>
+    {% endif %}
+    <li><strong>Status:</strong> Account access restricted</li>
+</ul>
+
+{% if not is_permanent %}
+<h3>🔄 What happens next:</h3>
+<p>Your account access will be automatically restored on {{ suspension_until.strftime('%B %d, %Y at %I:%M %p') }}. You'll receive a notification when your account is reactivated.</p>
+{% else %}
+<h3>⛔ Permanent Suspension:</h3>
+<p>This suspension is permanent. Your account access has been permanently revoked due to violations of our terms of service.</p>
+{% endif %}
+
+<h3>📞 Need to appeal or have questions?</h3>
+<p>If you believe this suspension was made in error or you'd like to appeal this decision, please contact our support team:</p>
+
+<div style="text-align: center; margin: 2rem 0;">
+    <a href="mailto:{{ support_email }}?subject=Account Suspension Appeal - {{ user_name }}" class="button">
+        📧 Contact Support
+    </a>
+</div>
+
+<div class="alert alert-info">
+    <strong>📋 When contacting support, please include:</strong>
+    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+        <li>Your account email address</li>
+        <li>Detailed explanation of your appeal</li>
+        <li>Any relevant documentation or evidence</li>
+        <li>Your understanding of our terms of service</li>
+    </ul>
+</div>
+
+<div class="divider"></div>
+
+<h3>📖 Community Guidelines Reminder:</h3>
+<p>To maintain a safe and professional environment for all users, we enforce our community guidelines and terms of service. Please review them at:</p>
+<ul style="margin: 1rem 0; padding-left: 1.5rem;">
+    <li><a href="{{ frontend_url }}/terms" style="color: #667eea;">Terms of Service</a></li>
+    <li><a href="{{ frontend_url }}/community-guidelines" style="color: #667eea;">Community Guidelines</a></li>
+    <li><a href="{{ frontend_url }}/privacy" style="color: #667eea;">Privacy Policy</a></li>
+</ul>
+
+{% if not is_permanent %}
+<p><strong>Future Account Usage:</strong> When your account is reactivated, please ensure all activities comply with our terms of service to avoid future suspensions.</p>
+{% endif %}
+
+<p>We appreciate your understanding in helping us maintain a professional and safe platform for all job seekers and employers.</p>
+
+<p>
+    Best regards,<br>
+    <strong>The {{ company_name }} Moderation Team</strong>
+</p>
+{% endblock %}

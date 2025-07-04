@@ -1,14 +1,37 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { JobContext } from '../context/JobContext';
+import JobMapIntegrated from '../components/JobMapIntegrated';
 import './JobListings.css';
 
 const JobListings = () => {
   const navigate = useNavigate();
   
-  // Use Job Context instead of GraphQL
+  // Local state for search interface
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [cityInput, setCityInput] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  
+  // Ref for country dropdown
+  const countryDropdownRef = useRef(null);
+  
+  // Predefined country options
+  const countryOptions = [
+    { value: '', label: 'Any Country' },
+    { value: 'United States', label: 'United States' },
+    { value: 'Canada', label: 'Canada' },
+    { value: 'United Kingdom', label: 'United Kingdom' },
+    { value: 'Australia', label: 'Australia' },
+    { value: 'France', label: 'France' },
+    { value: 'Germany', label: 'Germany' },
+    { value: 'Italy', label: 'Italy' }
+  ];
+  
+  // Use Job Context
   const { 
     jobs, 
+    setJobs,
     loading, 
     error, 
     filters, 
@@ -22,12 +45,52 @@ const JobListings = () => {
 
   const hasMore = jobs.length < totalJobs;
 
-  const handleFilterChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
+        setShowCountryDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+
+  // Handle search functionality
+  const handleSearch = () => {
+    // Combine city and country for location search
+    const locationString = [cityInput, selectedCountry].filter(Boolean).join(', ');
+    
+    const searchFilters = {
+      search: searchKeyword,
+      location: locationString,
+      // Reset other filters for clean search
+      company: '',
+      type: '',
+      experience_level: '',
+      remote_type: '',
+      salary_min: '',
+      sort: '',
+    };
+    setFilters(searchFilters);
+  };
+
+  // Handle country selection
+  const handleCountrySelect = (option) => {
+    setSelectedCountry(option.value);
+    setShowCountryDropdown(false);
+  };
+
+
+  // Handle Enter key press in search input
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   const handleJobClick = (job) => {
@@ -44,14 +107,22 @@ const JobListings = () => {
     if (job.is_saved) {
       const result = await contextUnsaveJob(job.id);
       if (result.success) {
-        // Optionally refresh jobs or update local state
-        refreshJobs();
+        // Update job locally immediately for better UX
+        const updatedJobs = jobs.map(j => 
+          j.id === job.id ? { ...j, is_saved: false } : j
+        );
+        // Update the jobs state directly in the context
+        setJobs(updatedJobs);
       }
     } else {
       const result = await contextSaveJob(job.id);
       if (result.success) {
-        // Optionally refresh jobs or update local state
-        refreshJobs();
+        // Update job locally immediately for better UX
+        const updatedJobs = jobs.map(j => 
+          j.id === job.id ? { ...j, is_saved: true } : j
+        );
+        // Update the jobs state directly in the context
+        setJobs(updatedJobs);
       }
     }
   };
@@ -63,134 +134,129 @@ const JobListings = () => {
 
   return (
     <div className="joblistings-container">
-      <aside className="joblistings-sidebar">
-        <h3>Filters</h3>
+      {/* Search Section */}
+      <div className="search-section">
+        <div className="search-header">
+          <h1>Find Your Perfect Job</h1>
+          <p className="search-subtitle">Discover opportunities that match your skills and aspirations</p>
+        </div>
         
-        <div className="filter-section">
-          <label>Location
-            <input 
-              name="location" 
-              type="text" 
-              value={filters.location} 
-              onChange={handleFilterChange} 
-              placeholder="e.g. San Francisco, CA" 
-            />
-          </label>
-        </div>
-
-        <div className="filter-section">
-          <label>Company
-            <input 
-              name="company" 
-              type="text" 
-              value={filters.company} 
-              onChange={handleFilterChange} 
-              placeholder="e.g. TechCorp" 
-            />
-          </label>
-        </div>
-
-        <div className="filter-section">
-          <label>Job Type
-            <select name="type" value={filters.type} onChange={handleFilterChange}>
-              <option value="">All Types</option>
-              <option value="full_time">Full-time</option>
-              <option value="part_time">Part-time</option>
-              <option value="contract">Contract</option>
-              <option value="freelance">Freelance</option>
-              <option value="internship">Internship</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="filter-section">
-          <label>Experience Level
-            <select name="experience_level" value={filters.experience_level || ''} onChange={handleFilterChange}>
-              <option value="">All Levels</option>
-              <option value="entry">Entry Level</option>
-              <option value="junior">Junior</option>
-              <option value="mid">Mid Level</option>
-              <option value="senior">Senior</option>
-              <option value="lead">Lead</option>
-              <option value="manager">Manager</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="filter-section">
-          <label>Remote Type
-            <select name="remote_type" value={filters.remote_type || ''} onChange={handleFilterChange}>
-              <option value="">All Work Types</option>
-              <option value="on_site">On-site</option>
-              <option value="remote">Remote</option>
-              <option value="hybrid">Hybrid</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="filter-section">
-          <label>Minimum Salary
-            <input 
-              name="salary_min" 
-              type="number" 
-              value={filters.salary_min || ''} 
-              onChange={handleFilterChange} 
-              placeholder="e.g. 70000"
-              min="0"
-            />
-          </label>
-        </div>
-
-        <div className="filter-section">
-          <button 
-            className="clear-filters-btn" 
-            onClick={() => setFilters({
-              search: '',
-              location: '',
-              company: '',
-              type: '',
-              experience_level: '',
-              remote_type: '',
-              salary_min: '',
-            })}
-          >
-            Clear All Filters
-          </button>
-        </div>
-      </aside>
-      <main className="joblistings-main">
-        <div className="main-header">
-          <h1 className="joblistings-title">Job Listings</h1>
-          <div className="search-and-sort">
-            <div className="joblistings-searchbar">
-              <input
-                name="search"
-                type="text"
-                value={filters.search}
-                onChange={handleFilterChange}
-                placeholder="Search job titles, companies, or skills..."
-              />
+        <div className="search-card card">
+          <div className="search-form">
+            {/* Search Input Field */}
+            <div className="search-field">
+              <label className="field-label">What</label>
+              <div className="input-group">
+                <span className="input-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Job title, keywords, or company"
+                />
+              </div>
             </div>
-            <div className="sort-options">
-              <select 
-                name="sort" 
-                value={filters.sort || ''} 
-                onChange={handleFilterChange}
-                className="sort-select"
+
+            {/* Location Input */}
+            <div className="search-field">
+              <label className="field-label">Where</label>
+              <div className="input-group">
+                <span className="input-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={cityInput}
+                  onChange={(e) => setCityInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="City or location"
+                />
+              </div>
+            </div>
+
+            {/* Country Selector */}
+            <div className="search-field">
+              <label className="field-label">Country</label>
+              <div className="select-container" ref={countryDropdownRef}>
+                <div 
+                  className="form-select"
+                  onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                >
+                  <span>{selectedCountry || 'Any Country'}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="6,9 12,15 18,9"></polyline>
+                  </svg>
+                </div>
+                
+                {showCountryDropdown && (
+                  <div className="select-dropdown">
+                    {countryOptions.map((option, index) => (
+                      <button
+                        key={index}
+                        className="select-option"
+                        onClick={() => handleCountrySelect(option)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Search Button */}
+            <div className="search-action">
+              <button 
+                className="btn btn-primary search-btn"
+                onClick={handleSearch}
+                disabled={loading}
               >
-                <option value="">Sort by</option>
-                <option value="posted_date">Latest First</option>
-                <option value="-posted_date">Oldest First</option>
-                <option value="title">Title A-Z</option>
-                <option value="-title">Title Z-A</option>
-                <option value="salary_min">Salary: Low to High</option>
-                <option value="-salary_min">Salary: High to Low</option>
-              </select>
+                {loading ? (
+                  <>
+                    <svg width="16" height="16" className="animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                    </svg>
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    Search Jobs
+                  </>
+                )}
+              </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Map Section */}
+      {jobs.length > 0 && (
+        <div className="joblistings-main">
+          <JobMapIntegrated />
+        </div>
+      )}
+
+      {/* Results Section */}
+      <main className="joblistings-main">
+        <div className="results-header">
           {jobs.length > 0 && (
             <div className="results-count">
-              {jobs.length} jobs found
+Found {jobs.length} jobs
             </div>
           )}
         </div>
@@ -209,88 +275,127 @@ const JobListings = () => {
           <div className="joblistings-list">
             {jobs.length === 0 ? (
               <div className="no-jobs">
+                <div className="no-jobs-icon">
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                  </svg>
+                </div>
                 <h3>No jobs found</h3>
-                <p>Try adjusting your search criteria or filters</p>
+                <p>Try adjusting your search criteria or browse all available positions</p>
+                <button onClick={() => setFilters({search: '', location: '', company: '', type: '', experience_level: '', remote_type: '', salary_min: '', sort: ''})} className="clear-filters-btn">
+                  View All Jobs
+                </button>
               </div>
             ) : (
               <>
                 {jobs.map(job => (
-                  <div 
-                    className="job-card" 
+                  <article 
+                    className="job-card card" 
                     key={job.id}
                     onClick={() => handleJobClick(job)}
                   >
-                    <div className="job-card-header">
-                      <div className="job-info">
-                        <h4 className="job-title">{job.title}</h4>
-                        <p className="company-location">
-                          <span className="company">{job.company?.name || 'Unknown Company'}</span>
-                          <span className="separator">&bull;</span>
-                          <span className="location">{job.location?.full_address || job.location?.city || 'Unknown Location'}</span>
-                        </p>
+                    <div className="card-body">
+                      <div className="job-header">
+                        <div className="job-company-logo">
+                          <span>{job.company?.name?.[0] || 'C'}</span>
+                        </div>
+                        <div className="job-meta">
+                          <div className="job-posted">
+                            {new Date(job.posted_date || job.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </div>
+                          <button 
+                            className={`save-btn ${job.is_saved ? 'saved' : ''}`}
+                            onClick={(e) => handleSaveJob(e, job)}
+                            title={job.is_saved ? "Remove from saved jobs" : "Save this job"}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill={job.is_saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
+
+                      <div className="job-content">
+                        <h3 className="job-title">{job.title}</h3>
+                        <div className="job-company">{job.company?.name || 'Unknown Company'}</div>
+                        <div className="job-location">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                          </svg>
+                          <span>{job.location?.city || 'Remote'}</span>
+                          {job.location?.country && (
+                            <>
+                              <span className="location-separator">•</span>
+                              <span>{job.location.country}</span>
+                            </>
+                          )}
+                        </div>
+                        
+                        {job.description && (
+                          <p className="job-description">
+                            {job.description.length > 120 
+                              ? `${job.description.substring(0, 120)}...` 
+                              : job.description
+                            }
+                          </p>
+                        )}
+
+                        <div className="job-tags">
+                          {job.employment_type && (
+                            <span className="job-tag job-type">{job.employment_type}</span>
+                          )}
+                          {job.experience_level && (
+                            <span className="job-tag job-level">{job.experience_level}</span>
+                          )}
+                          {job.salary_min && job.salary_max && (
+                            <span className="job-tag job-salary">
+                              ${job.salary_min}k - ${job.salary_max}k
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
                       <div className="job-actions">
                         <button 
-                          className={`save-btn ${job.is_saved ? 'saved' : ''}`}
-                          onClick={(e) => handleSaveJob(e, job)}
-                          title={job.is_saved ? "Remove from saved jobs" : "Save this job"}
-                        >
-                          {job.is_saved ? '♥' : '♡'}
-                        </button>
-                        <button 
-                          className={`apply-btn ${job.is_applied ? 'applied' : ''}`}
+                          className={`btn btn-outline ${job.is_applied ? 'btn-secondary' : ''}`}
                           onClick={(e) => handleApply(e, job)}
-                          title={job.is_applied ? "Already applied" : "Apply to this job"}
                           disabled={job.is_applied}
                         >
-                          {job.is_applied ? 'Applied' : 'Apply'}
+                          {job.is_applied ? (
+                            <>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="20,6 9,17 4,12"></polyline>
+                              </svg>
+                              Applied
+                            </>
+                          ) : (
+                            'Apply Now'
+                          )}
+                        </button>
+                        <button 
+                          className="btn btn-secondary btn-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleJobClick(job);
+                          }}
+                        >
+                          View Details
                         </button>
                       </div>
                     </div>
                     
-                    <div className="job-card-body">
-                      {job.description && (
-                        <p className="job-description">
-                          {job.description.length > 150 
-                            ? `${job.description.substring(0, 150)}...` 
-                            : job.description}
-                        </p>
-                      )}
+                    {/* Hover indicator */}
+                    <div className="job-card-indicator">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="9,18 15,12 9,6"></polyline>
+                      </svg>
                     </div>
-
-                    <div className="job-card-footer">
-                      <div className="job-meta">
-                        <span className="job-type">
-                          {job.job_type || job.contract_type || 'Full-time'}
-                        </span>
-                        {job.remote_type && (
-                          <span className="remote-type">
-                            {job.remote_type.charAt(0).toUpperCase() + job.remote_type.slice(1)}
-                          </span>
-                        )}
-                        {job.experience_level && (
-                          <span className="experience-level">
-                            {job.experience_level.charAt(0).toUpperCase() + job.experience_level.slice(1)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="job-salary-date">
-                        {(job.salary_min || job.salary_max) && (
-                          <span className="salary">
-                            {job.salary_min && job.salary_max 
-                              ? `$${parseInt(job.salary_min).toLocaleString()} - $${parseInt(job.salary_max).toLocaleString()}`
-                              : job.salary_min 
-                              ? `From $${parseInt(job.salary_min).toLocaleString()}`
-                              : `Up to $${parseInt(job.salary_max).toLocaleString()}`}
-                            {job.salary_currency && job.salary_currency !== 'USD' && ` ${job.salary_currency}`}
-                          </span>
-                        )}
-                        <span className="posted-date">
-                          {new Date(job.posted_date || job.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  </article>
                 ))}
                 
                 {/* Pagination or Load More */}

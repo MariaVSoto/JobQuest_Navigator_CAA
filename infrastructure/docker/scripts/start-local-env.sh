@@ -239,8 +239,13 @@ check_services_health() {
         print_warning "Backend API is not responding yet (this is normal for first startup)"
     fi
     
-    # Check frontend
-    if curl -s http://localhost:3000/ > /dev/null 2>&1; then
+    # Check frontend - adjust port based on mode
+    local frontend_port="3000"
+    if [[ -f docker-compose.dev.yml ]] && [[ "$MODE" == "dev" ]]; then
+        frontend_port="3002"
+    fi
+    
+    if curl -s http://localhost:${frontend_port}/ > /dev/null 2>&1; then
         print_success "Frontend is responding"
     else
         print_warning "Frontend is not responding yet"
@@ -253,7 +258,14 @@ show_services() {
     echo ""
     echo "Service URLs:"
     echo "─────────────"
-    echo "🌐 Frontend:           http://localhost:3000"
+    
+    # Determine frontend port based on mode
+    local frontend_port="3000"
+    if [[ -f docker-compose.dev.yml ]] && [[ "$MODE" == "dev" ]]; then
+        frontend_port="3002"
+    fi
+    
+    echo "🌐 Frontend:           http://localhost:${frontend_port}"
     echo "🔗 API:                http://localhost:8000"
     echo "🔧 Django Admin:       http://localhost:8000/admin/"
     echo "📊 API Documentation:  http://localhost:8000/api/docs/"
