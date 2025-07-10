@@ -233,6 +233,12 @@ GRAPHENE = {
     ],
 }
 
+# Django Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'graphql_jwt.backends.JSONWebTokenBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # GraphQL JWT configuration
 import datetime
 

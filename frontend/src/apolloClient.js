@@ -11,20 +11,37 @@ import { ApolloClient, InMemoryCache, createHttpLink, ApolloLink } from '@apollo
 import { setContext } from '@apollo/client/link/context';
 
 // 1. Create HTTP Link pointing to GraphQL API endpoint
+// Support for both Django (migration) and FastAPI (new) endpoints
+const getGraphQLEndpoint = () => {
+  // Check if we should use FastAPI endpoint
+  const useFastAPI = process.env.REACT_APP_USE_FASTAPI_JOBS === 'true';
+  
+  if (useFastAPI) {
+    return process.env.REACT_APP_GRAPHQL_URL || 'http://localhost:8001/graphql';
+  } else {
+    // Use Django endpoint during migration phase
+    return '/graphql/';
+  }
+};
+
 const httpLink = createHttpLink({
-  uri: process.env.REACT_APP_GRAPHQL_ENDPOINT || 'http://localhost:8000/graphql/',
+  uri: getGraphQLEndpoint(),
 });
 
 // 2. Create authentication Link to inject JWT token
 const authLink = setContext((_, { headers }) => {
-  // Get authentication token from localStorage (using the same key as REST API)
-  const token = localStorage.getItem('jobquest_access_token');
+  // Get authentication token from localStorage 
+  // Support both Django JWT and AWS Cognito tokens
+  const token = localStorage.getItem('jobquest_access_token') || 
+                localStorage.getItem('cognito_access_token');
   
-  // Return headers with Authorization header (capital A for Django compatibility)
+  // Return headers with Authorization header
   return {
     headers: {
       ...headers,
       Authorization: token ? `Bearer ${token}` : "",
+      // Add content type for FastAPI compatibility
+      'Content-Type': 'application/json',
     }
   }
 });

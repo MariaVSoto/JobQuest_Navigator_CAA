@@ -11,6 +11,15 @@ const NavBar = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const timeoutRef = useRef(null);
   
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+  
   // Don't show navbar on login/signup pages
   if (location.pathname === '/login' || location.pathname === '/signup') {
     return null;
@@ -73,15 +82,6 @@ const NavBar = () => {
   const handleDropdownClose = () => {
     setActiveDropdown(null);
   };
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
 
   const isGroupActive = (group) => {
     return group.items.some(item => location.pathname === item.path);

@@ -46,7 +46,7 @@ class SecureAPIManager:
     
     def _load_api_keys(self):
         """Load and validate API keys from environment variables."""
-        required_keys = ['OPENAI_API_KEY', 'ADZUNA_APP_ID', 'ADZUNA_APP_KEY']
+        required_keys = ['OPENAI_API_KEY']  # Adzuna API removed as per project requirements
         
         for key_name in required_keys:
             key_value = getattr(settings, key_name, None)
@@ -80,15 +80,7 @@ class SecureAPIManager:
         """Get OpenAI API key."""
         return self.get_api_key('OPENAI_API_KEY')
     
-    @property
-    def adzuna_app_id(self) -> str:
-        """Get Adzuna App ID."""
-        return self.get_api_key('ADZUNA_APP_ID')
-    
-    @property
-    def adzuna_app_key(self) -> str:
-        """Get Adzuna App Key."""
-        return self.get_api_key('ADZUNA_APP_KEY')
+    # Adzuna API methods removed as per project requirements
 
 
 class APIUsageTracker:
@@ -100,7 +92,7 @@ class APIUsageTracker:
         self.redis_client = self._get_redis_client()
         self.openai_token_limit = getattr(settings, 'OPENAI_DAILY_TOKEN_LIMIT', 100000)
         self.openai_cost_limit = Decimal(str(getattr(settings, 'OPENAI_DAILY_COST_LIMIT', 50.00)))
-        self.adzuna_request_limit = getattr(settings, 'ADZUNA_DAILY_REQUEST_LIMIT', 1000)
+        # Adzuna limits removed as per project requirements
     
     def _get_redis_client(self):
         """Get Redis client for usage tracking."""
@@ -260,49 +252,7 @@ class APIUsageTracker:
             logger.error(f"Failed to track OpenAI usage: {e}")
             raise
     
-    def track_adzuna_usage(self) -> Dict:
-        """
-        Track Adzuna API usage and enforce limits.
-        
-        Returns:
-            Dict with usage statistics
-            
-        Raises:
-            APILimitExceededException: When limits are exceeded
-        """
-        request_key = self._get_daily_key('adzuna', 'requests')
-        
-        try:
-            current_requests = int(self.redis_client.get(request_key) or 0)
-            new_request_total = current_requests + 1
-            
-            # Check limit
-            if new_request_total > self.adzuna_request_limit:
-                logger.error(f"Adzuna daily request limit exceeded: {new_request_total} > {self.adzuna_request_limit}")
-                raise APILimitExceededException(
-                    f"Daily Adzuna request limit ({self.adzuna_request_limit}) exceeded"
-                )
-            
-            # Update usage
-            self.redis_client.set(request_key, new_request_total, 86400)
-            
-            usage_stats = {
-                'requests_today': new_request_total,
-                'requests_remaining': self.adzuna_request_limit - new_request_total,
-                'requests_limit': self.adzuna_request_limit
-            }
-            
-            logger.info(f"Adzuna usage tracked: 1 request")
-            
-            # Alert at 80% usage
-            if new_request_total > (self.adzuna_request_limit * 0.8):
-                logger.warning(f"Adzuna request usage at {(new_request_total/self.adzuna_request_limit)*100:.1f}%")
-            
-            return usage_stats
-            
-        except Exception as e:
-            logger.error(f"Failed to track Adzuna usage: {e}")
-            raise
+    # Adzuna tracking methods removed as per project requirements
     
     def get_usage_stats(self, service: str = None) -> Dict:
         """Get current usage statistics with detailed breakdown."""
@@ -333,16 +283,7 @@ class APIUsageTracker:
                     'cost_usage_percentage': (current_cost / float(self.openai_cost_limit) * 100) if self.openai_cost_limit > 0 else 0,
                 }
             
-            if service is None or service == 'adzuna':
-                request_key = self._get_daily_key('adzuna', 'requests')
-                current_requests = int(self.redis_client.get(request_key) or 0)
-                
-                stats['adzuna'] = {
-                    'requests_used': current_requests,
-                    'requests_remaining': max(0, self.adzuna_request_limit - current_requests),
-                    'requests_limit': self.adzuna_request_limit,
-                    'request_usage_percentage': (current_requests / self.adzuna_request_limit * 100) if self.adzuna_request_limit > 0 else 0,
-                }
+            # Adzuna stats removed as per project requirements
                 
         except Exception as e:
             logger.error(f"Failed to get usage stats: {e}")

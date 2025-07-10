@@ -39,22 +39,24 @@
 ## 3. 主要技术栈
 
 ### 后端技术
-- **核心框架**: Django 4.2 + Django REST Framework
+- **核心框架**: Django 4.2 + Django REST Framework + GraphQL (Graphene-Django)
 - **部署方式**: AWS Lambda + Zappa (无服务器部署)
 - **数据库**: 
-  - 开发环境: SQLite / PostgreSQL
+  - 开发环境: PostgreSQL (Docker) / SQLite (本地)
   - 生产环境: AWS RDS MySQL
 - **缓存系统**: Redis 7
-- **认证系统**: JWT Token认证
+- **认证系统**: JWT Token认证配合GraphQL支持
+- **GraphQL功能**: 全面的GraphQL模式配合JWT中间件
 - **数据模型**: 自定义User模型 + UUID主键
 
 ### 前端技术
 - **核心框架**: React 19 + React Router
 - **状态管理**: Context API (AuthContext, JobContext)
-- **API通信**: REST API (从GraphQL迁移)
-- **GraphQL支持**: Apollo Client (历史架构，已迁移至REST)
-- **样式系统**: 响应式设计
-- **构建工具**: Create React App
+- **API通信**: REST API优先架构 - 基于Django REST Framework
+- **GraphQL集成**: Apollo Client用于认证和部分查询功能
+- **认证系统**: 双重JWT认证 - REST API + GraphQL认证
+- **样式系统**: 响应式设计配合CSS模块
+- **构建工具**: Create React App配合Docker容器化
 
 ### 云服务与部署
 - **AWS服务**: Lambda、S3、RDS、CloudFormation、API Gateway
@@ -72,70 +74,80 @@
 ### 技术架构连接图
 ```mermaid
 graph TB
-    %% Frontend Layer
-    subgraph "前端层 (Frontend)"
+    %% Frontend Presentation Layer
+    subgraph "前端展示层 (Frontend Presentation Layer)"
         React["React 19<br/>+ React Router"]
         Context["Context API<br/>状态管理"]
-        Apollo["Apollo Client<br/>(历史GraphQL)"]
-        Services["Service层<br/>API调用"]
+        Apollo["Apollo Client<br/>认证和部分查询"]
+        Services["Service层<br/>REST API调用"]
     end
     
-    %% Communication Layer
-    subgraph "通信层 (Communication)"
-        REST["REST API<br/>主要通信方式"]
-        GraphQL["GraphQL<br/>(已迁移)"]
-        JWT["JWT Token<br/>身份认证"]
+    %% API Interface Layer
+    subgraph "API接口层 (API Interface Layer)"
+        REST["Django REST Framework<br/>主要业务API"]
+        GraphQL["GraphQL Schema<br/>认证和基础查询"]
+        JWT["JWT认证<br/>统一令牌系统"]
     end
     
-    %% Backend Layer
-    subgraph "后端层 (Backend)"
-        Django["Django 4.2<br/>+ DRF"]
-        Auth["用户认证<br/>系统"]
-        Business["业务逻辑<br/>8个核心模块"]
+    %% Business Logic Layer
+    subgraph "业务逻辑层 (Business Logic Layer)"
+        Django["Django 4.2<br/>核心应用框架"]
+        ViewSets["DRF ViewSets<br/>业务逻辑处理"]
+        CoreModules["8个核心业务模块<br/>(jobs, ai_suggestions, resumes, etc.)"]
     end
     
-    %% Data Layer
-    subgraph "数据层 (Data Layer)"
-        PostgreSQL["PostgreSQL<br/>主数据库"]
-        Redis["Redis<br/>缓存系统"]
-        S3["S3存储<br/>文件管理"]
+    %% Data Access Layer
+    subgraph "数据访问层 (Data Access Layer)"
+        PostgreSQL["PostgreSQL 15<br/>主数据库"]
+        Redis["Redis 7<br/>缓存系统"]
+        S3["S3兼容存储<br/>文件管理"]
     end
     
-    %% External APIs
-    subgraph "外部API (External APIs)"
-        Adzuna["Adzuna API<br/>职位数据"]
-        Maps["Google Maps<br/>地图服务"]
-        OpenAI["OpenAI API<br/>AI服务"]
+    %% External Services Layer
+    subgraph "外部服务层 (External Services Layer)"
+        Adzuna["Adzuna API<br/>实时职位数据"]
+        Maps["Google Maps API<br/>地理位置服务"]
+        OpenAI["OpenAI API<br/>AI智能服务"]
     end
     
-    %% Connections
+    %% Main Data Flow
     React --> Context
     Context --> Services
-    Services --> REST
-    Apollo -.-> GraphQL
-    REST --> Django
-    GraphQL -.-> Django
-    JWT --> Auth
-    Auth --> Business
-    Business --> PostgreSQL
-    Business --> Redis
-    Business --> S3
-    Business --> Adzuna
-    Business --> Maps
-    Business --> OpenAI
+    Context --> Apollo
+    
+    %% API Calls
+    Services -->|"业务API调用"| REST
+    Apollo -->|"认证和查询"| GraphQL
+    
+    %% Backend Processing
+    REST --> JWT
+    GraphQL --> JWT
+    JWT --> Django
+    Django --> ViewSets
+    ViewSets --> CoreModules
+    
+    %% Data Access
+    CoreModules --> PostgreSQL
+    CoreModules --> Redis
+    CoreModules --> S3
+    
+    %% External Service Calls
+    CoreModules --> Adzuna
+    CoreModules --> Maps
+    CoreModules --> OpenAI
     
     %% Styling
-    classDef frontend fill:#e1f5fe
-    classDef backend fill:#f3e5f5
-    classDef data fill:#e8f5e8
-    classDef external fill:#fff3e0
-    classDef communication fill:#fce4ec
+    classDef frontend fill:#e3f2fd
+    classDef api fill:#f3e5f5
+    classDef business fill:#e8f5e8
+    classDef data fill:#fff3e0
+    classDef external fill:#fafafa
     
     class React,Context,Apollo,Services frontend
-    class Django,Auth,Business backend
+    class REST,GraphQL,JWT api
+    class Django,ViewSets,CoreModules business
     class PostgreSQL,Redis,S3 data
     class Adzuna,Maps,OpenAI external
-    class REST,GraphQL,JWT communication
 ```
 
 ## 4. 系统架构
@@ -147,11 +159,11 @@ graph TB
 - **多环境部署支持** (开发/测试/生产)
 
 ### 核心架构层次
-1. **表现层**: React前端 + Nginx反向代理
-2. **API网关层**: Django REST Framework
-3. **业务逻辑层**: 8个核心应用模块
-4. **数据层**: 关系型数据库 + Redis缓存
-5. **存储层**: S3兼容对象存储
+1. **前端展示层**: React + Context API + Apollo Client
+2. **API接口层**: Django REST Framework + GraphQL (认证) + JWT
+3. **业务逻辑层**: Django框架 + 8个核心应用模块
+4. **数据访问层**: PostgreSQL + Redis + S3兼容存储
+5. **外部服务层**: Adzuna + Google Maps + OpenAI API集成
 
 ### 数据模型设计
 - **用户模型**: 扩展的AbstractUser模型 (`core/models.py:31`)
@@ -325,30 +337,38 @@ graph TB
 ## 5. 主要模块进展
 
 ### 已完成模块 ✅
-- **用户认证系统**
-  - JWT认证机制
-  - 自定义User模型
-  - 权限管理和保护路由
+- **增强认证系统**
+  - 双重JWT认证 (REST + GraphQL)
+  - 基于GraphQL的用户管理配合Apollo Client
+  - 自定义User模型配合UUID主键
+  - GraphQL中间件的JWT认证后端
+  - 令牌管理和刷新机制
+  - 带认证守卫的保护路由
   
-- **职位管理模块**
-  - 职位搜索和筛选
-  - 职位收藏和申请
-  - 实时职位数据集成 (Adzuna API)
+- **高级职位管理模块**
+  - REST API职位操作 + GraphQL查询补充
+  - 实时职位数据集成 (40+洛杉矶程序员职位)
+  - 职位搜索、筛选和高级匹配
+  - 职位收藏和申请跟踪
+  - Google Maps API地理职位可视化
+  - 全面的回退数据系统
   
-- **简历构建器**
-  - 在线简历编辑
-  - 简历模板管理
-  - 文件上传和存储
+- **简历构建系统**
+  - S3兼容文件存储 (MinIO/LocalStack)
+  - 简历模板管理和编辑
+  - 文件上传配合用户目录结构组织
+  - PDF简历样本管理
   
 - **公司研究模块**
-  - 企业信息分析
-  - 公司背景研究
-  - AI驱动的公司洞察
+  - 企业信息分析和存储
+  - 公司背景研究配合AI集成
+  - 基于GraphQL的公司数据管理
   
 - **技能评估系统**
   - 技能管理和分类
-  - 认证跟踪
-  - 技能评估工具
+  - 用户技能熟练度跟踪
+  - 认证管理系统
+  - 技能操作的GraphQL变更
 
 ### 开发中模块 🔄
 - **AI推荐系统**
@@ -367,10 +387,15 @@ graph TB
   - 面试技巧指导
 
 ### 核心功能特色
-- **实时数据集成**: 通过Adzuna API获取最新职位信息
-- **地图可视化**: Google Maps API实现职位地理分布
-- **智能回退机制**: 完善的Mock数据系统保证功能可用性
-- **全面质量保障**: 多层安全扫描和代码质量检查
+- **REST API优先架构**: Django DRF ViewSets处理主要业务逻辑
+- **双重认证系统**: REST API + GraphQL JWT认证集成
+- **实时数据集成**: 40+洛杉矶程序员实时职位通过Adzuna API
+- **地理可视化**: Google Maps API集成的交互式职位地图
+- **智能回退系统**: 确保演示期间完整功能的全面模拟数据
+- **容器优先开发**: 完整Docker环境配合PostgreSQL、Redis、MinIO
+- **S3兼容存储**: 本地开发用MinIO，AWS模拟用LocalStack
+- **全面安全**: 多层漏洞扫描和代码质量检查
+- **完整API覆盖**: REST API为主，GraphQL为辅的混合架构
 
 ## 6. 部署与运维
 
@@ -397,12 +422,14 @@ graph TB
 - **生产环境**: AWS Lambda + RDS + S3
 
 ### 本地开发支持
-- **Docker服务架构**
-  - 数据库: PostgreSQL 15
-  - 缓存: Redis 7
-  - 邮件测试: MailHog
-  - 存储: MinIO / LocalStack
-  - 监控: Prometheus + Grafana
+- **完整Docker环境**
+  - 数据库: PostgreSQL 15配合完整扩展
+  - 缓存: Redis 7配合持久化
+  - 邮件测试: MailHog用于开发
+  - 存储: MinIO (S3兼容) 和 LocalStack (AWS模拟)
+  - 监控: Prometheus + Grafana (可选)
+  - 前端: React配合Nginx反向代理
+  - 后端: Django + DRF (REST API主要) + GraphQL (认证辅助)
 
 ## 7. 未来构想
 
@@ -469,7 +496,46 @@ graph TB
   - 本地化合规要求
   - 国际市场扩展
 
-## 8. 项目亮点
+## 8. 最新改进与修复
+
+### 关键认证系统修复 ✅
+- **JWT认证后端配置**
+  - 添加缺失的 `graphql_jwt.backends.JSONWebTokenBackend` 到Django AUTHENTICATION_BACKENDS
+  - 修复GraphQL JWT中间件集成以实现正确的令牌验证
+  - 解决阻止用户登录的认证循环问题
+  
+- **前端认证服务增强**
+  - 改进GraphQL认证服务错误处理
+  - 添加回退用户数据机制确保稳健登录流程
+  - 修复未认证时JobContext中的无限刷新循环
+  
+- **静态文件服务解决方案**
+  - 修复React和Django静态文件之间的Nginx配置冲突
+  - 解决阻止页面访问的前端加载问题
+  - 优化Docker容器网络和端口配置
+
+### 数据库与开发环境 ✅
+- **实时职位数据集成**
+  - 通过Adzuna API成功导入40+洛杉矶真实程序员职位
+  - 配置正确的数据库连接和数据同步
+  - 建立具有正确认证的测试用户账户
+
+- **容器基础设施优化**
+  - 精简Docker Compose配置实现单端口前端访问
+  - 增强Nginx反向代理配置改善API路由
+  - 改进静态文件处理和容器构建优化
+
+### 测试账户设置 ✅
+- **可用测试账户**
+  - `testuser` / `password123`
+  - `kevinhust` / `password123`
+  - `flynn` / `password123`
+- **验证认证流程**
+  - GraphQL令牌生成正常工作
+  - 用户认证和授权正确配置
+  - 前端-后端API通信已建立
+
+## 9. 项目亮点
 
 ### 技术亮点
 - **现代化无服务器架构**

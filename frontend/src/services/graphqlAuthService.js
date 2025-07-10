@@ -96,9 +96,14 @@ class GraphQLAuthService {
         // Get user data after successful login
         const userData = await this.getCurrentUser();
         
+        // Even if getCurrentUser fails, we still have a valid token
+        // so we should consider login successful
         return {
           success: true,
-          user: userData,
+          user: userData || {
+            username: credentials.username || credentials.email,
+            email: credentials.email || credentials.username,
+          },
           token: data.tokenAuth.token,
         };
       } else {

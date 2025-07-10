@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { JobContext } from '../context/JobContext';
-import JobMapIntegrated from '../components/JobMapIntegrated';
+// JobMapIntegrated removed - using simplified location display only
 import './JobListings.css';
 
 const JobListings = () => {
@@ -244,21 +244,30 @@ const JobListings = () => {
         </div>
       </div>
 
-      {/* Map Section */}
-      {jobs.length > 0 && (
-        <div className="joblistings-main">
-          <JobMapIntegrated />
-        </div>
-      )}
+      {/* Map section removed - focusing on user input jobs */}
 
       {/* Results Section */}
       <main className="joblistings-main">
         <div className="results-header">
-          {jobs.length > 0 && (
-            <div className="results-count">
-Found {jobs.length} jobs
-            </div>
-          )}
+          <div className="results-info">
+            {jobs.length > 0 && (
+              <div className="results-count">
+                Found {jobs.length} jobs
+              </div>
+            )}
+          </div>
+          <div className="results-actions">
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate('/create-job')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Job Position
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -283,9 +292,17 @@ Found {jobs.length} jobs
                 </div>
                 <h3>No jobs found</h3>
                 <p>Try adjusting your search criteria or browse all available positions</p>
-                <button onClick={() => setFilters({search: '', location: '', company: '', type: '', experience_level: '', remote_type: '', salary_min: '', sort: ''})} className="clear-filters-btn">
-                  View All Jobs
-                </button>
+                <div className="no-jobs-actions">
+                  <button onClick={() => setFilters({search: '', location: '', company: '', type: '', experience_level: '', remote_type: '', salary_min: '', sort: ''})} className="clear-filters-btn">
+                    View All Jobs
+                  </button>
+                  <button 
+                    onClick={() => navigate('/create-job')} 
+                    className="btn btn-primary"
+                  >
+                    Add Job Position
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -327,13 +344,7 @@ Found {jobs.length} jobs
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                             <circle cx="12" cy="10" r="3"></circle>
                           </svg>
-                          <span>{job.location?.city || 'Remote'}</span>
-                          {job.location?.country && (
-                            <>
-                              <span className="location-separator">•</span>
-                              <span>{job.location.country}</span>
-                            </>
-                          )}
+                          <span>{job.location?.text || job.location?.display_name || 'Remote/Flexible'}</span>
                         </div>
                         
                         {job.description && (

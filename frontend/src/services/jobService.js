@@ -6,7 +6,7 @@
 import authService from './authService';
 import FallbackService from './fallbackService';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 class JobService {
   constructor() {
@@ -59,9 +59,9 @@ class JobService {
           
           return await retryResponse.json();
         } else {
-          // Redirect to login
-          window.location.href = '/login';
-          return null;
+          // Don't redirect automatically, let components handle authentication
+          console.log('Authentication failed, throwing error instead of redirecting');
+          throw new Error('Authentication required');
         }
       }
 
@@ -221,37 +221,8 @@ class JobService {
     return await this.makeRequest(url);
   }
 
-  /**
-   * Get nearby jobs
-   */
-  async getNearbyJobs(location, radius = 25) {
-    const params = new URLSearchParams({
-      location,
-      radius: radius.toString(),
-    });
-
-    const url = `${this.baseURL}/jobs/jobs/nearby/?${params.toString()}`;
-    return await this.makeRequest(url);
-  }
-
-  /**
-   * Get jobs for map view
-   */
-  async getJobsForMap(bounds = null) {
-    let url = `${this.baseURL}/jobs/jobs/map/`;
-    
-    if (bounds) {
-      const params = new URLSearchParams({
-        north: bounds.north.toString(),
-        south: bounds.south.toString(),
-        east: bounds.east.toString(),
-        west: bounds.west.toString(),
-      });
-      url += `?${params.toString()}`;
-    }
-
-    return await this.makeRequest(url);
-  }
+  // Location-based methods removed as per project requirements
+  // Jobs are now based on user input only, not geographic data
 
   /**
    * Save a job
@@ -428,19 +399,11 @@ class JobService {
         name: backendJob.company?.name || 'Unknown Company'
       },
       location: {
-        display_name: backendJob.location ? 
-          `${backendJob.location.city}, ${backendJob.location.state || backendJob.location.country}` : 
-          'Unknown Location',
-        full_address: backendJob.location ? 
-          `${backendJob.location.city}, ${backendJob.location.state || backendJob.location.country}` : 
-          'Unknown Location',
-        city: backendJob.location?.city,
-        state: backendJob.location?.state,
-        country: backendJob.location?.country
+        display_name: backendJob.location_text || 'Remote/Flexible',
+        full_address: backendJob.location_text || 'Remote/Flexible',
+        text: backendJob.location_text
       },
-      // Add latitude and longitude for map functionality
-      latitude: backendJob.location?.latitude ? parseFloat(backendJob.location.latitude) : null,
-      longitude: backendJob.location?.longitude ? parseFloat(backendJob.location.longitude) : null,
+      // Geographic coordinates removed - jobs are user input based
       description: backendJob.description,
       requirements: backendJob.requirements,
       benefits: backendJob.benefits,

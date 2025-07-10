@@ -12,6 +12,7 @@ import JobDetails from './pages/JobDetails';
 import SavedJobs from './pages/SavedJobs';
 import ApplicationHistory from './pages/ApplicationHistory';
 import Settings from './pages/Settings';
+import CreateJob from './pages/CreateJob';
 import NavBar from './components/NavBar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { JobProvider } from './context/JobContext';
@@ -103,6 +104,11 @@ function App() {
             <Route path="/skills" element={
               <ProtectedRoute>
                 <SkillsAndCertifications />
+              </ProtectedRoute>
+            } />
+            <Route path="/create-job" element={
+              <ProtectedRoute>
+                <CreateJob />
               </ProtectedRoute>
             } />
             

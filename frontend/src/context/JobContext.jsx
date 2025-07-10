@@ -30,9 +30,11 @@ export const JobProvider = ({ children }) => {
       try {
         // Check if user is authenticated first
         if (!authService.isAuthenticated()) {
-          // For jobs listing, we can show public jobs or require login
-          // For demo purposes, let's continue without authentication
-          console.log('User not authenticated, but continuing to fetch jobs for demo');
+          console.log('User not authenticated, skipping job fetch to prevent infinite loop');
+          setJobs([]);
+          setTotalJobs(0);
+          setLoading(false);
+          return;
         }
 
         // Use Django backend instead of external API

@@ -39,22 +39,24 @@
 ## 3. Major Technology Stack
 
 ### Backend Technologies
-- **Core Framework**: Django 4.2 + Django REST Framework
+- **Core Framework**: Django 4.2 + Django REST Framework + GraphQL (Graphene-Django)
 - **Deployment Method**: AWS Lambda + Zappa (serverless deployment)
 - **Database**: 
-  - Development Environment: SQLite / PostgreSQL
+  - Development Environment: PostgreSQL (Docker) / SQLite (local)
   - Production Environment: AWS RDS MySQL
 - **Cache System**: Redis 7
-- **Authentication System**: JWT Token authentication
+- **Authentication System**: JWT Token authentication with GraphQL support
+- **GraphQL Features**: Comprehensive GraphQL schema with JWT middleware
 - **Data Models**: Custom User model + UUID primary keys
 
 ### Frontend Technologies
 - **Core Framework**: React 19 + React Router
 - **State Management**: Context API (AuthContext, JobContext)
-- **API Communication**: REST API (migrated from GraphQL)
-- **GraphQL Support**: Apollo Client (legacy architecture, migrated to REST)
-- **Styling System**: Responsive design
-- **Build Tools**: Create React App
+- **API Communication**: GraphQL-first architecture - All API calls through Apollo Client
+- **GraphQL Integration**: Apollo Client as the sole API communication layer with JWT authentication and caching
+- **Authentication**: Fully GraphQL-based JWT authentication with token management
+- **Styling System**: Responsive design with CSS modules
+- **Build Tools**: Create React App with Docker containerization
 
 ### Cloud Services & Deployment
 - **AWS Services**: Lambda, S3, RDS, CloudFormation, API Gateway
@@ -72,70 +74,71 @@
 ### Technology Architecture Connection Diagram
 ```mermaid
 graph TB
-    %% Frontend Layer
-    subgraph "Frontend Layer"
+    %% Frontend Presentation Layer
+    subgraph "Frontend Presentation Layer"
         React["React 19<br/>+ React Router"]
         Context["Context API<br/>State Management"]
-        Apollo["Apollo Client<br/>(Legacy GraphQL)"]
-        Services["Service Layer<br/>API Calls"]
+        Apollo["Apollo Client<br/>API Client"]
     end
     
-    %% Communication Layer
-    subgraph "Communication Layer"
-        REST["REST API<br/>Primary Communication"]
-        GraphQL["GraphQL<br/>(Migrated)"]
-        JWT["JWT Token<br/>Authentication"]
+    %% API Interface Layer
+    subgraph "API Interface Layer"
+        GraphQL["GraphQL Schema<br/>+ JWT Auth Middleware<br/>Unified API Gateway"]
     end
     
-    %% Backend Layer
-    subgraph "Backend Layer"
-        Django["Django 4.2<br/>+ DRF"]
-        Auth["User Authentication<br/>System"]
-        Business["Business Logic<br/>8 Core Modules"]
+    %% Business Logic Layer
+    subgraph "Business Logic Layer"
+        Django["Django 4.2 + Graphene<br/>Core Application Framework"]
+        Auth["User Authentication & Authorization"]
+        CoreModules["8 Core Business Modules<br/>(jobs, ai_suggestions, resumes, etc.)"]
     end
     
-    %% Data Layer
-    subgraph "Data Layer"
-        PostgreSQL["PostgreSQL<br/>Primary Database"]
-        Redis["Redis<br/>Cache System"]
-        S3["S3 Storage<br/>File Management"]
+    %% Data Access Layer
+    subgraph "Data Access Layer"
+        PostgreSQL["PostgreSQL 15<br/>Primary Database"]
+        Redis["Redis 7<br/>Cache System"]
+        S3["S3-Compatible Storage<br/>File Management"]
     end
     
-    %% External APIs
-    subgraph "External APIs"
-        Adzuna["Adzuna API<br/>Job Data"]
-        Maps["Google Maps<br/>Map Services"]
-        OpenAI["OpenAI API<br/>AI Services"]
+    %% External Services Layer
+    subgraph "External Services Layer"
+        Adzuna["Adzuna API<br/>Real-time Job Data"]
+        Maps["Google Maps API<br/>Geographic Services"]
+        OpenAI["OpenAI API<br/>AI Intelligence Services"]
     end
     
-    %% Connections
+    %% Main Data Flow
     React --> Context
-    Context --> Services
-    Services --> REST
-    Apollo -.-> GraphQL
-    REST --> Django
-    GraphQL -.-> Django
-    JWT --> Auth
-    Auth --> Business
-    Business --> PostgreSQL
-    Business --> Redis
-    Business --> S3
-    Business --> Adzuna
-    Business --> Maps
-    Business --> OpenAI
+    Context --> Apollo
+    Apollo -->|"HTTP Request<br/>(with JWT Token)"| GraphQL
+    GraphQL -->|"JWT Validation<br/>Request Routing"| Django
+    
+    %% Authentication Flow
+    Django --> Auth
+    Auth -->|"JWT Verification Success"| CoreModules
+    
+    %% Data Access
+    CoreModules --> PostgreSQL
+    CoreModules --> Redis
+    CoreModules --> S3
+    
+    %% External Service Calls
+    CoreModules --> Adzuna
+    CoreModules --> Maps
+    CoreModules --> OpenAI
     
     %% Styling
-    classDef frontend fill:#e1f5fe
-    classDef backend fill:#f3e5f5
-    classDef data fill:#e8f5e8
-    classDef external fill:#fff3e0
-    classDef communication fill:#fce4ec
+    classDef frontend fill:#e3f2fd
+    classDef api fill:#f3e5f5
+    classDef business fill:#e8f5e8
+    classDef data fill:#fff3e0
+    classDef external fill:#fafafa
     
-    class React,Context,Apollo,Services frontend
-    class Django,Auth,Business backend
+    class React,Context,Apollo frontend
+    class GraphQL api
+    class Django,Auth,CoreModules business
     class PostgreSQL,Redis,S3 data
     class Adzuna,Maps,OpenAI external
-    class REST,GraphQL,JWT communication
 ```
 
 ## 4. System Architecture
@@ -147,11 +150,11 @@ graph TB
 - **Multi-Environment Deployment Support** (Development/Testing/Production)
 
 ### Core Architecture Layers
-1. **Presentation Layer**: React frontend + Nginx reverse proxy
-2. **API Gateway Layer**: Django REST Framework
-3. **Business Logic Layer**: 8 core application modules
-4. **Data Layer**: Relational database + Redis cache
-5. **Storage Layer**: S3-compatible object storage
+1. **Frontend Presentation Layer**: React + Context API + Apollo Client
+2. **API Interface Layer**: GraphQL Schema + JWT Authentication Middleware
+3. **Business Logic Layer**: Django Framework + 8 Core Application Modules
+4. **Data Access Layer**: PostgreSQL + Redis + S3-Compatible Storage
+5. **External Services Layer**: Adzuna + Google Maps + OpenAI API Integration
 
 ### Data Model Design
 - **User Model**: Extended AbstractUser model (`core/models.py:31`)
@@ -325,30 +328,38 @@ graph TB
 ## 5. Module Progress
 
 ### Completed Modules ✅
-- **User Authentication System**
-  - JWT authentication mechanism
-  - Custom User model
-  - Permission management and protected routes
+- **Enhanced Authentication System**
+  - Complete GraphQL JWT authentication
+  - GraphQL-based user management with Apollo Client
+  - Custom User model with UUID primary keys
+  - JWT authentication backends for GraphQL middleware
+  - Token management and refresh mechanisms
+  - Protected routes with authentication guards
   
-- **Job Management Module**
-  - Job search and filtering
-  - Job bookmarking and application
-  - Real-time job data integration (Adzuna API)
+- **Advanced Job Management Module**
+  - Complete GraphQL job operations
+  - Real-time job data integration (40+ Los Angeles programmer jobs)
+  - Job search, filtering, and advanced matching
+  - Job bookmarking and application tracking
+  - Geographic job visualization with Google Maps API
+  - Comprehensive fallback data system
   
-- **Resume Builder**
-  - Online resume editing
-  - Resume template management
-  - File upload and storage
+- **Resume Builder System**
+  - S3-compatible file storage (MinIO/LocalStack)
+  - Resume template management and editing
+  - File upload with organized user directory structure
+  - PDF resume sample management
   
 - **Company Research Module**
-  - Enterprise information analysis
-  - Company background research
-  - AI-driven company insights
+  - Enterprise information analysis and storage
+  - Company background research with AI integration
+  - GraphQL-based company data management
   
 - **Skills Assessment System**
   - Skills management and categorization
-  - Certification tracking
-  - Skills assessment tools
+  - User skill proficiency tracking
+  - Certification management system
+  - GraphQL mutations for skill operations
 
 ### In Development Modules 🔄
 - **AI Recommendation System**
@@ -367,10 +378,15 @@ graph TB
   - Interview techniques guidance
 
 ### Core Feature Highlights
-- **Real-time Data Integration**: Latest job information through Adzuna API
-- **Map Visualization**: Job geographic distribution via Google Maps API
-- **Smart Fallback Mechanism**: Comprehensive Mock data system ensuring functionality
-- **Comprehensive Quality Assurance**: Multi-layer security scanning and code quality checks
+- **GraphQL-First Architecture**: All frontend API calls through Apollo Client to GraphQL
+- **Complete JWT Authentication**: Unified authentication system with GraphQL middleware integration
+- **Real-time Data Integration**: 40+ live programmer jobs from Los Angeles via Adzuna API
+- **Geographic Visualization**: Interactive job mapping with Google Maps API integration
+- **Smart Fallback System**: Comprehensive mock data ensuring full functionality during demos
+- **Container-First Development**: Complete Docker environment with PostgreSQL, Redis, MinIO
+- **S3-Compatible Storage**: MinIO for local development, LocalStack for AWS emulation
+- **Comprehensive Security**: Multi-layer vulnerability scanning and code quality checks
+- **Complete GraphQL Schema**: Unified API layer for all business operations
 
 ## 6. Deployment & Operations
 
@@ -397,12 +413,14 @@ graph TB
 - **Production Environment**: AWS Lambda + RDS + S3
 
 ### Local Development Support
-- **Docker Service Architecture**
-  - Database: PostgreSQL 15
-  - Cache: Redis 7
-  - Email Testing: MailHog
-  - Storage: MinIO / LocalStack
-  - Monitoring: Prometheus + Grafana
+- **Complete Docker Environment**
+  - Database: PostgreSQL 15 with full extensions
+  - Cache: Redis 7 with persistence
+  - Email Testing: MailHog for development
+  - Storage: MinIO (S3-compatible) and LocalStack (AWS emulation)
+  - Monitoring: Prometheus + Grafana (optional)
+  - Frontend: React with Nginx reverse proxy
+  - Backend: Django with complete GraphQL API
 
 ## 7. Future Vision
 
@@ -469,7 +487,46 @@ graph TB
   - Local compliance requirements
   - International market expansion
 
-## 8. Project Highlights
+## 8. Recent Improvements & Fixes
+
+### Critical Authentication System Fixes ✅
+- **JWT Authentication Backend Configuration**
+  - Added missing `graphql_jwt.backends.JSONWebTokenBackend` to Django AUTHENTICATION_BACKENDS
+  - Fixed GraphQL JWT middleware integration for proper token validation
+  - Resolved authentication loop issues preventing user login
+  
+- **Frontend Authentication Service Enhancement**
+  - Improved GraphQL authentication service error handling
+  - Added fallback user data mechanism for robust login flow
+  - Fixed infinite refresh loop in JobContext when unauthenticated
+  
+- **Static File Serving Resolution**
+  - Fixed Nginx configuration conflicts between React and Django static files
+  - Resolved frontend loading issues preventing page access
+  - Optimized Docker container networking and port configuration
+
+### Database & Development Environment ✅
+- **Live Job Data Integration**
+  - Successfully imported 40+ real programmer jobs from Los Angeles via Adzuna API
+  - Configured proper database connections and data synchronization
+  - Established test user accounts with proper authentication
+
+- **Container Infrastructure Optimization**
+  - Streamlined Docker Compose configuration for single-port frontend access
+  - Enhanced Nginx reverse proxy configuration for better API routing
+  - Improved static file handling and container build optimization
+
+### Test Account Setup ✅
+- **Available Test Accounts**
+  - `testuser` / `password123`
+  - `kevinhust` / `password123`
+  - `flynn` / `password123`
+- **Verified Authentication Flow**
+  - GraphQL token generation working correctly
+  - User authentication and authorization properly configured
+  - Frontend-backend API communication established
+
+## 9. Project Highlights
 
 ### Technical Highlights
 - **Modern Serverless Architecture**
