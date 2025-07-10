@@ -5,11 +5,13 @@ Maintains compatibility with Django model structure
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy import Column, String, DateTime, Boolean, MetaData
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+# Create a custom MetaData instance to handle naming conflicts
+metadata = MetaData()
+Base = declarative_base(metadata=metadata)
 
 
 class BaseModel(Base):

@@ -17,6 +17,7 @@ class Company(BaseModel):
     Company model simplified without location complexity
     """
     __tablename__ = 'companies'
+    __table_args__ = {'extend_existing': True}
     
     name = Column(String(200), nullable=False)
     slug = Column(String(220), unique=True, nullable=True)
@@ -66,6 +67,7 @@ class Company(BaseModel):
 class Category(BaseModel):
     """Job category model for classification."""
     __tablename__ = 'categories'
+    __table_args__ = {'extend_existing': True}
     
     name = Column(String(100), unique=True, nullable=False)
     
@@ -76,6 +78,7 @@ class Category(BaseModel):
 class Skill(BaseModel):
     """Skill model for job requirements and user skills."""
     __tablename__ = 'skills'
+    __table_args__ = {'extend_existing': True}
     
     name = Column(String(100), unique=True, nullable=False)
     slug = Column(String(105), unique=True, nullable=False)
@@ -96,6 +99,7 @@ class Job(BaseModel):
     No external API dependencies
     """
     __tablename__ = 'jobs'
+    __table_args__ = {'extend_existing': True}
     
     # Basic job information
     title = Column(String(200), nullable=False)
@@ -141,6 +145,7 @@ class Job(BaseModel):
 class JobSkill(BaseModel):
     """Skills required for jobs."""
     __tablename__ = 'job_skills'
+    __table_args__ = {'extend_existing': True}
     
     job_id = Column(UUID(as_uuid=True), ForeignKey('jobs.id'), nullable=False)
     skill_id = Column(UUID(as_uuid=True), ForeignKey('skills.id'), nullable=False)
@@ -158,6 +163,7 @@ class JobSkill(BaseModel):
 class JobApplication(BaseModel):
     """User job applications."""
     __tablename__ = 'job_applications'
+    __table_args__ = {'extend_existing': True}
     
     user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     job_id = Column(UUID(as_uuid=True), ForeignKey('jobs.id'), nullable=False)
@@ -185,6 +191,7 @@ class JobApplication(BaseModel):
 class SavedJob(BaseModel):
     """User saved jobs."""
     __tablename__ = 'saved_jobs'
+    __table_args__ = {'extend_existing': True}
     
     user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     job_id = Column(UUID(as_uuid=True), ForeignKey('jobs.id'), nullable=False)
@@ -201,6 +208,7 @@ class SavedJob(BaseModel):
 class UserSkill(BaseModel):
     """User's skills and proficiency."""
     __tablename__ = 'user_skills'
+    __table_args__ = {'extend_existing': True}
     
     user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     skill_id = Column(UUID(as_uuid=True), ForeignKey('skills.id'), nullable=False)

@@ -18,6 +18,7 @@ class User(BaseModel):
     Simplified version without Location relationships
     """
     __tablename__ = 'users'
+    __table_args__ = {'extend_existing': True}
     
     # Authentication fields
     email = Column(String(254), unique=True, nullable=False, index=True)
@@ -62,6 +63,7 @@ class UserPreference(BaseModel):
     Simplified version without location preferences
     """
     __tablename__ = 'user_preferences'
+    __table_args__ = {'extend_existing': True}
     
     user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     
@@ -98,6 +100,7 @@ class ActivityLog(BaseModel):
     Activity log for tracking user actions
     """
     __tablename__ = 'activity_logs'
+    __table_args__ = {'extend_existing': True}
     
     user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     action = Column(String(100), nullable=False)
