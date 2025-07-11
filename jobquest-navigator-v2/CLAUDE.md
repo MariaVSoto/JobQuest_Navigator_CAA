@@ -2,6 +2,23 @@
 
 This file provides guidance to Claude Code when working with JobQuest Navigator v2.
 
+
+## Standard Workflow
+
+1. First think through the problem , read the codebase for relevant files , and write a plan to tasks / todo.md .
+
+2. The plan should have a list of todo items that you can check off as you complete them
+
+3. Before you begin working , check in with me and I will verify the plan .
+
+4. Then , begin working on the todo items , marking them as complete as you go .
+
+5. Please every step of the way just give me a high level explanation of what changes you made
+
+6. Make every task and code change you do as simple as possible . We want to avoid making any massive or complex changes . Every change should impact as little code as possible . Everything is about simplicity .
+
+7. Finally , add a review section to the todo.md file with a summary of the changes you made and any other relevant information .
+
 ## Project Overview
 
 JobQuest Navigator v2 is a **complete migration** from Django/GraphQL to FastAPI/Strawberry GraphQL, featuring:
@@ -366,17 +383,29 @@ cat backup.sql | docker-compose exec -T db psql -U jobquest_user jobquest_naviga
 - **Apollo Client**: Automatic token injection in headers
 - **Backend**: Cognito token validation (TODO: complete)
 
-### AWS Cognito Integration (TODO)
+### AWS Cognito Integration
 ```python
-# Backend configuration
-COGNITO_USER_POOL_ID = "us-east-1_xxxxxxxxx"
-COGNITO_CLIENT_ID = "xxxxxxxxxxxxxxxxxxxxxxxxxx"
+# Backend configuration (已配置)
+COGNITO_USER_POOL_ID = "us-east-1_bISZREFys"
+COGNITO_CLIENT_ID = ""  # 运行 ./scripts/setup-cognito.sh 配置
 
 # Middleware for token validation
 @strawberry.field
 async def protected_field(self, info) -> str:
     user = await get_current_user(info.context.request)
     return f"Hello {user.email}"
+```
+
+#### 配置 Cognito App Client
+```bash
+# 自动配置脚本
+./scripts/setup-cognito.sh
+
+# 或手动在 AWS 控制台创建 App Client:
+# 1. 访问 AWS Cognito 控制台
+# 2. 选择 User pool: us-east-1_bISZREFys
+# 3. 创建 App Client
+# 4. 复制 Client ID 到配置文件
 ```
 
 ## Testing

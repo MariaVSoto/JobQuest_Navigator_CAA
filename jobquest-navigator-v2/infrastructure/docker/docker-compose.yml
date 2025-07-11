@@ -58,9 +58,9 @@ services:
       DEBUG: true
       SECRET_KEY: dev-secret-key-change-in-production
       
-      # AWS Cognito Configuration (for production)
-      COGNITO_USER_POOL_ID: ""
-      COGNITO_CLIENT_ID: ""
+      # AWS Cognito Configuration
+      COGNITO_USER_POOL_ID: "us-east-1_blSZREFys"
+      COGNITO_CLIENT_ID: "5iui547bod6sqgsi1a4heidpep"
       AWS_REGION: us-east-1
       
       # CORS Settings

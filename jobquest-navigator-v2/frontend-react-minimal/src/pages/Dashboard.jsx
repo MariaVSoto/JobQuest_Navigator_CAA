@@ -47,9 +47,11 @@ const Dashboard = () => {
   }, [user]);
 
   const quickActions = [
-    { title: 'Browse Jobs', description: 'Find new opportunities', link: '/jobs', icon: '🔍' },
-    { title: 'AI Suggestions', description: 'Get personalized recommendations', link: '/ai-suggestions', icon: '🤖' },
-    { title: 'Resume Builder', description: 'Update your resume', link: '/resume-builder', icon: '📄' },
+    { title: 'Resume Builder', description: 'Create and edit professional resumes', link: '/resume-builder', icon: '📄' },
+    { title: 'Version Management', description: 'Manage multiple resume versions', link: '/resume-versions', icon: '🗂️' },
+    { title: 'Upload Job Position', description: 'Add job postings for optimization', link: '/upload-job', icon: '📋' },
+    { title: 'AI Insights', description: 'Get AI-powered job recommendations', link: '/ai-suggestions', icon: '🤖' },
+    { title: 'Skills Assessment', description: 'Enhance your qualifications', link: '/skills', icon: '🎯' },
     { title: 'Interview Prep', description: 'Practice for interviews', link: '/interview-prep', icon: '💼' }
   ];
 

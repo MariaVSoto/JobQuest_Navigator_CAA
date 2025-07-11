@@ -5,7 +5,7 @@ Strawberry type definitions maintaining compatibility with original Graphene sch
 
 import strawberry
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 
 
 @strawberry.type
@@ -19,6 +19,7 @@ class UserType:
     
     # Profile information
     full_name: Optional[str] = None
+    date_of_birth: Optional[date] = None
     bio: Optional[str] = None
     current_job_title: Optional[str] = None
     years_of_experience: Optional[int] = None
@@ -68,3 +69,34 @@ class AuthPayload:
     user: Optional[UserType] = None
     token: Optional[str] = None
     errors: Optional[List[str]] = None
+
+
+@strawberry.type
+class UserResponse:
+    """Standard user operation response"""
+    success: bool
+    user: Optional[UserType] = None
+    errors: Optional[List[str]] = None
+
+
+@strawberry.input
+class RegisterUserInput:
+    """Input type for user registration via Cognito"""
+    email: str
+    password: str
+    full_name: Optional[str] = None
+
+
+@strawberry.input
+class UpdateUserProfileInput:
+    """Input type for updating user profile"""
+    full_name: Optional[str] = None
+    bio: Optional[str] = None
+    current_job_title: Optional[str] = None
+    years_of_experience: Optional[int] = None
+    industry: Optional[str] = None
+    career_level: Optional[str] = None
+    job_search_status: Optional[str] = None
+    preferred_work_type: Optional[str] = None
+    salary_expectation_min: Optional[float] = None
+    salary_expectation_max: Optional[float] = None

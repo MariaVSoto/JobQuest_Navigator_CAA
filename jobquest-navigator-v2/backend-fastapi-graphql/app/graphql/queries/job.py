@@ -7,7 +7,6 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, exists
 from sqlalchemy.orm import selectinload
-from fastapi import Depends
 
 from app.core.database import get_db
 from app.graphql.types import (
@@ -29,34 +28,37 @@ class JobQuery:
     async def job(
         self,
         info,
-        id: strawberry.ID,
-        current_user: Optional[User] = Depends(get_optional_current_user),
-        db: AsyncSession = Depends(get_db)
+        id: strawberry.ID
     ) -> Optional[JobType]:
         """Get job by ID."""
-        result = await db.execute(
-            select(Job)
-            .options(
-                selectinload(Job.company),
-                selectinload(Job.category),
-                selectinload(Job.required_skills).selectinload(JobSkill.skill)
-            )
-            .where(and_(Job.id == id, Job.is_active == True))
-        )
-        job = result.scalar_one_or_none()
+        # Get database session and current user manually
+        db: AsyncSession = await get_db().__anext__()
+        current_user = await get_optional_current_user(info.context.request)
         
-        if not job:
-            return None
-            
-        # Check if user has saved or applied to this job
-        is_saved = False
-        is_applied = False
-        
-        if current_user:
-            saved_result = await db.execute(
-                select(SavedJob).where(
-                    and_(SavedJob.user_id == current_user.id, SavedJob.job_id == job.id)
+        try:
+            result = await db.execute(
+                select(Job)
+                .options(
+                    selectinload(Job.company),
+                    selectinload(Job.category),
+                    selectinload(Job.required_skills).selectinload(JobSkill.skill)
                 )
+                .where(and_(Job.id == id, Job.is_active == True))
+            )
+            job = result.scalar_one_or_none()
+            
+            if not job:
+                return None
+                
+            # Check if user has saved or applied to this job
+            is_saved = False
+            is_applied = False
+            
+            if current_user:
+                saved_result = await db.execute(
+                    select(SavedJob).where(
+                        and_(SavedJob.user_id == current_user.id, SavedJob.job_id == job.id)
+                    )
             )
             is_saved = saved_result.scalar_one_or_none() is not None
             

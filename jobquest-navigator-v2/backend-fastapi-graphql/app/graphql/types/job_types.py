@@ -96,3 +96,79 @@ class JobApplicationInput:
     """Input type for job applications"""
     job_id: str
     notes: Optional[str] = None
+
+
+@strawberry.type
+class SavedJobType:
+    """Saved job GraphQL type"""
+    id: str
+    job: JobType
+    user_id: str
+    saved_date: datetime
+    notes: Optional[str] = None
+
+
+@strawberry.type
+class CategoryType:
+    """Category GraphQL type for job categorization"""
+    id: str
+    name: str
+    description: Optional[str] = None
+    parent_category_id: Optional[str] = None
+
+
+@strawberry.type
+class JobSkillType:
+    """Job-Skill relationship type"""
+    id: str
+    job: JobType
+    skill: SkillType
+    importance_level: str = "nice_to_have"  # required, preferred, nice_to_have
+    experience_level: Optional[str] = None
+
+
+@strawberry.type
+class JobApplicationResponse:
+    """Job application operation response"""
+    success: bool
+    job_application: Optional[JobApplicationType] = None
+    errors: Optional[List[str]] = None
+
+
+@strawberry.type  
+class JobResponse:
+    """Job operation response"""
+    success: bool
+    job: Optional[JobType] = None
+    errors: Optional[List[str]] = None
+
+
+@strawberry.type
+class SavedJobResponse:
+    """Saved job operation response"""
+    success: bool
+    saved_job: Optional[SavedJobType] = None
+    errors: Optional[List[str]] = None
+
+
+@strawberry.type
+class GeneralResponse:
+    """General operation response"""
+    success: bool
+    message: Optional[str] = None
+    errors: Optional[List[str]] = None
+
+
+@strawberry.input
+class ApplyToJobInput:
+    """Input for applying to a job"""
+    job_id: str
+    notes: Optional[str] = None
+
+
+@strawberry.input
+class UpdateApplicationStatusInput:
+    """Input for updating application status"""
+    application_id: str
+    status: str
+    notes: Optional[str] = None

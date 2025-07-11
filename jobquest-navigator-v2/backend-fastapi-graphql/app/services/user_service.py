@@ -9,7 +9,7 @@ from sqlalchemy import select
 from uuid import UUID
 
 from app.models.user import User, UserPreference, ActivityLog
-from app.core.database import get_db_session
+from app.core.database import get_db, AsyncSessionLocal
 
 
 class UserService:

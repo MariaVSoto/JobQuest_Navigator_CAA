@@ -25,25 +25,39 @@ const NavBar = () => {
     return null;
   }
 
-  // Modern grouped navigation structure
+  // V2 Navigation Structure - Aligned with 4 Core Functions
   const navigationGroups = {
-    jobs: {
-      label: 'Jobs',
-      basePath: '/jobs',
+    resume: {
+      label: 'Resume Management',
+      basePath: '/resume-builder',
       items: [
-        { path: '/jobs', label: 'Browse Jobs', description: 'Search and discover opportunities' },
-        { path: '/saved-jobs', label: 'Saved Jobs', description: 'Your bookmarked positions' },
-        { path: '/application-history', label: 'Applications', description: 'Track your applications' }
+        { path: '/resume-builder', label: 'Resume Builder', description: 'Create and edit professional resumes' },
+        { path: '/resume-versions', label: 'Version Management', description: 'Manage multiple resume versions' }
       ]
     },
-    career: {
-      label: 'Career Tools',
-      basePath: '/career',
+    jobs: {
+      label: 'Job Optimization',
+      basePath: '/jobs',
       items: [
-        { path: '/resume-builder', label: 'Resume Builder', description: 'Create professional resumes' },
-        { path: '/ai-suggestions', label: 'AI Insights', description: 'Personalized job recommendations' },
+        { path: '/upload-job', label: 'Upload Job Position', description: 'Add job postings for optimization' },
+        { path: '/application-history', label: 'Application Tracing', description: 'Track your job applications' },
+        { path: '/ai-suggestions', label: 'AI Insights', description: 'Get AI-powered job recommendations' }
+      ]
+    },
+    skills: {
+      label: 'Skills & Learning',
+      basePath: '/skills',
+      items: [
         { path: '/skills', label: 'Skills & Certifications', description: 'Enhance your qualifications' },
-        { path: '/interview-prep', label: 'Interview Prep', description: 'Practice and improve' }
+        { path: '/learning-paths', label: 'Learning Paths', description: 'Structured learning roadmaps' }
+      ]
+    },
+    interview: {
+      label: 'Company & Interview',
+      basePath: '/interview-prep',
+      items: [
+        { path: '/interview-prep', label: 'Interview Prep', description: 'Practice and improve' },
+        { path: '/company/demo', label: 'Company Research', description: 'Research potential employers' }
       ]
     }
   };

@@ -11,7 +11,7 @@ from sqlalchemy import select
 import boto3
 import json
 import jwt
-from jwt import PyJWTError
+from jwt.exceptions import PyJWTError
 import requests
 from functools import lru_cache
 

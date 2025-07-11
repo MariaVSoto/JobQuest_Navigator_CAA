@@ -15,6 +15,7 @@ import Settings from './pages/Settings';
 import CreateJob from './pages/CreateJob';
 import NavBar from './components/NavBar';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import { JobProvider } from './context/JobContext';
 import { AuthProvider } from './context/AuthContext';
 import CompanyProfile from './pages/CompanyProfile';
@@ -22,18 +23,22 @@ import InterviewPrep from './pages/InterviewPrep';
 import ResumeBuilder from './pages/ResumeBuilder';
 import AISuggestions from './pages/AISuggestions';
 import SkillsAndCertifications from './pages/SkillsAndCertifications';
+import LearningPaths from './pages/LearningPaths';
+import UploadJob from './pages/UploadJob';
+import ResumeVersions from './pages/ResumeVersions';
 import NotFound from './pages/NotFound';
 import AuthTest from './pages/AuthTest';
 import './App.css';
 
 function App() {
   return (
-    <ApolloProvider client={client}>
-      <AuthProvider>
-        <JobProvider>
-          <Router>
-        <NavBar />
-        <Routes>
+    <ErrorBoundary>
+      <ApolloProvider client={client}>
+        <AuthProvider>
+          <JobProvider>
+            <Router>
+          <NavBar />
+          <Routes>
             {/* Public routes */}
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/login" element={<Login />} />
@@ -106,6 +111,21 @@ function App() {
                 <SkillsAndCertifications />
               </ProtectedRoute>
             } />
+            <Route path="/learning-paths" element={
+              <ProtectedRoute>
+                <LearningPaths />
+              </ProtectedRoute>
+            } />
+            <Route path="/upload-job" element={
+              <ProtectedRoute>
+                <UploadJob />
+              </ProtectedRoute>
+            } />
+            <Route path="/resume-versions" element={
+              <ProtectedRoute>
+                <ResumeVersions />
+              </ProtectedRoute>
+            } />
             <Route path="/create-job" element={
               <ProtectedRoute>
                 <CreateJob />
@@ -119,6 +139,7 @@ function App() {
         </JobProvider>
       </AuthProvider>
     </ApolloProvider>
+    </ErrorBoundary>
   );
 }
 

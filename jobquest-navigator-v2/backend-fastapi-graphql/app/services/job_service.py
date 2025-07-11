@@ -10,7 +10,7 @@ from uuid import UUID
 from datetime import datetime
 
 from app.models.job import Job, Company, Skill, JobApplication, JobSkill
-from app.core.database import get_db_session
+from app.core.database import get_db, AsyncSessionLocal
 
 
 class JobService:

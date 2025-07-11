@@ -114,7 +114,7 @@ class ActivityLog(BaseModel):
     user_agent = Column(Text, nullable=True)
     
     # Additional context data (JSON)
-    metadata = Column(Text, nullable=True)  # JSON string
+    context_data = Column(Text, nullable=True)  # JSON string
     
     def __repr__(self):
         return f"<ActivityLog(user_id='{self.user_id}', action='{self.action}')>"

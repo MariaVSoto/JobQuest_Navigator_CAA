@@ -19,13 +19,19 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql+asyncpg://postgres:password@localhost:5432/jobquest"
     
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+    
     # CORS settings
     allowed_hosts: List[str] = [
         "http://localhost:3000",  # React development
-        "http://localhost:3002",  # Docker React
+        "http://localhost:3001",  # Docker React (actual port)
+        "http://localhost:3002",  # Docker React (alternative)
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
         "http://127.0.0.1:3002",
     ]
+    cors_origins: str = "http://localhost:3000,http://localhost:3001"
     
     # Authentication settings
     secret_key: str = "your-secret-key-change-in-production"
@@ -35,8 +41,9 @@ class Settings(BaseSettings):
     # AWS Cognito settings
     aws_region: str = "us-east-1"  # General AWS region setting
     cognito_region: str = "us-east-1"  # Cognito specific region (alias)
-    cognito_user_pool_id: str = ""
-    cognito_client_id: str = ""  # Changed from app_client_id to client_id
+    cognito_user_pool_id: str = "us-east-1_blSZREFys"  # JobQuest Navigator User Pool
+    cognito_client_id: str = "5iui547bod6sqgsi1a4heidpep"
+    cognito_app_client_id: str = "5iui547bod6sqgsi1a4heidpep"  # Alternative field name
     
     # External APIs
     openai_api_key: str = ""
