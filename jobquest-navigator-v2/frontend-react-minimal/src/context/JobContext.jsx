@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { jobService } from '../services/jobService';
+import unifiedJobService from '../services/unifiedJobService';
 import authService from '../services/authService';
 
 export const JobContext = createContext();
@@ -44,28 +44,23 @@ export const JobProvider = ({ children }) => {
           page_size: 20
         };
         
-        const response = await jobService.searchJobs(searchFilters);
+        const response = await unifiedJobService.getJobs({
+          ...searchFilters,
+          limit: 20,
+          offset: 0
+        });
         
-        if (response) {
-          // Handle both paginated and non-paginated responses
-          if (response.results) {
-            // Paginated response
-            const transformedJobs = jobService.transformJobsResponse(response);
-            setJobs(transformedJobs.results);
-            setTotalJobs(response.count || transformedJobs.results.length);
-          } else if (Array.isArray(response)) {
-            // Direct array response
-            const transformedJobs = jobService.transformJobsResponse(response);
-            // Limit to 20 jobs for display
-            const limitedJobs = transformedJobs.slice(0, 20);
-            setJobs(limitedJobs);
-            setTotalJobs(transformedJobs.length);
-          } else {
-            // Single job or other format
-            setJobs([]);
-            setTotalJobs(0);
-          }
+        console.log('✅ Jobs loaded via UnifiedJobService:', response);
+        
+        if (response && response.results) {
+          setJobs(response.results);
+          setTotalJobs(response.count || response.results.length);
+        } else if (Array.isArray(response)) {
+          // Direct array response
+          setJobs(response.slice(0, 20));
+          setTotalJobs(response.length);
         } else {
+          // No jobs found
           setJobs([]);
           setTotalJobs(0);
         }
@@ -88,15 +83,14 @@ export const JobProvider = ({ children }) => {
     setError(null);
     
     try {
-      const response = await jobService.searchJobs({ 
+      const response = await unifiedJobService.getJobs({ 
         ...filters, 
-        page,
-        page_size: 20
+        limit: 20,
+        offset: (page - 1) * 20
       });
       
       if (response && response.results) {
-        const transformedJobs = jobService.transformJobsResponse(response);
-        setJobs(prevJobs => [...prevJobs, ...transformedJobs.results]);
+        setJobs(prevJobs => [...prevJobs, ...response.results]);
         setCurrentPage(page);
       }
     } catch (err) {
@@ -116,8 +110,14 @@ export const JobProvider = ({ children }) => {
   // Function to save a job
   const saveJob = async (jobId, notes = '') => {
     try {
-      await jobService.saveJob(jobId, notes);
-      return { success: true };
+      const result = await unifiedJobService.saveJob(jobId, notes);
+      // Update local state to reflect saved status
+      setJobs(prevJobs => 
+        prevJobs.map(job => 
+          job.id === jobId ? { ...job, isSaved: true, is_saved: true } : job
+        )
+      );
+      return result;
     } catch (err) {
       console.error('Failed to save job:', err);
       return { success: false, error: err.message };
@@ -127,8 +127,14 @@ export const JobProvider = ({ children }) => {
   // Function to unsave a job
   const unsaveJob = async (jobId) => {
     try {
-      await jobService.unsaveJob(jobId);
-      return { success: true };
+      const result = await unifiedJobService.saveJob(jobId); // Same endpoint, toggle behavior
+      // Update local state to reflect unsaved status
+      setJobs(prevJobs => 
+        prevJobs.map(job => 
+          job.id === jobId ? { ...job, isSaved: false, is_saved: false } : job
+        )
+      );
+      return result;
     } catch (err) {
       console.error('Failed to unsave job:', err);
       return { success: false, error: err.message };
@@ -138,8 +144,14 @@ export const JobProvider = ({ children }) => {
   // Function to apply to a job
   const applyToJob = async (jobId, applicationData) => {
     try {
-      const response = await jobService.applyToJob(jobId, applicationData);
-      return { success: true, data: response };
+      const result = await unifiedJobService.applyToJob(jobId, applicationData);
+      // Update local state to reflect applied status
+      setJobs(prevJobs => 
+        prevJobs.map(job => 
+          job.id === jobId ? { ...job, isApplied: true, is_applied: true } : job
+        )
+      );
+      return result;
     } catch (err) {
       console.error('Failed to apply to job:', err);
       return { success: false, error: err.message };

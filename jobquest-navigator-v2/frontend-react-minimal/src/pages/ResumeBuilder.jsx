@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import resumeService from '../services/resumeService';
+import graphqlResumeService from '../services/graphqlResumeService';
 import './ResumeBuilder.css';
 
 const ResumeBuilder = () => {
@@ -224,31 +225,73 @@ const ResumeBuilder = () => {
     setSuccess(null);
     
     try {
-      // Validate resume data
-      const validation = resumeService.validateResumeData(resumeData);
-      if (!validation.isValid) {
-        setError(`Please fix the following errors: ${validation.errors.join(', ')}`);
+      // Validate resume data using GraphQL service
+      const validationErrors = graphqlResumeService.validateResumeData(resumeData);
+      if (validationErrors.length > 0) {
+        setError(`Please fix the following errors: ${validationErrors.join(', ')}`);
         setSaving(false);
         return;
       }
 
-      // Transform data for backend
-      const backendData = resumeService.transformToBackendFormat(resumeData);
-      
       let savedResume;
-      if (currentResumeId) {
-        // Update existing resume
-        savedResume = await resumeService.updateResume(currentResumeId, backendData);
-        setSuccess('Resume updated successfully!');
-      } else {
-        // Create new resume
-        savedResume = await resumeService.createResume(backendData);
-        setCurrentResumeId(savedResume.id);
-        setSuccess('Resume saved successfully!');
+      
+      // Try GraphQL service first (v2 backend)
+      try {
+        console.log('🚀 Attempting to save resume via GraphQL...');
+        if (currentResumeId) {
+          // Update existing resume
+          savedResume = await graphqlResumeService.updateResume(currentResumeId, resumeData);
+          setSuccess('Resume updated successfully via GraphQL! ✅');
+        } else {
+          // Create new resume
+          savedResume = await graphqlResumeService.createResume(resumeData);
+          setCurrentResumeId(savedResume.data.id);
+          setSuccess('Resume saved successfully via GraphQL! ✅');
+        }
+        
+        console.log('✅ GraphQL save successful:', savedResume);
+        
+      } catch (graphqlError) {
+        console.warn('❌ GraphQL save failed, trying REST API fallback:', graphqlError);
+        
+        // Fallback to REST API service (v1 backend)
+        try {
+          // Validate resume data using REST service
+          const validation = resumeService.validateResumeData(resumeData);
+          if (!validation.isValid) {
+            setError(`Please fix the following errors: ${validation.errors.join(', ')}`);
+            setSaving(false);
+            return;
+          }
+
+          // Transform data for backend
+          const backendData = resumeService.transformToBackendFormat(resumeData);
+          
+          if (currentResumeId) {
+            // Update existing resume
+            savedResume = await resumeService.updateResume(currentResumeId, backendData);
+            setSuccess('Resume updated successfully via REST API! ⚡');
+          } else {
+            // Create new resume
+            savedResume = await resumeService.createResume(backendData);
+            setCurrentResumeId(savedResume.id);
+            setSuccess('Resume saved successfully via REST API! ⚡');
+          }
+          
+          console.log('✅ REST API fallback successful:', savedResume);
+          
+        } catch (restError) {
+          console.error('❌ Both GraphQL and REST API failed:', { graphqlError, restError });
+          throw new Error(`Failed to save resume. GraphQL error: ${graphqlError.message}. REST API error: ${restError.message}`);
+        }
       }
       
-      // Reload the list of saved resumes
-      await loadData();
+      // Try to reload the list of saved resumes (skip errors)
+      try {
+        await loadData();
+      } catch (loadError) {
+        console.warn('Could not reload resume list:', loadError);
+      }
       
     } catch (err) {
       console.error('Error saving resume:', err);

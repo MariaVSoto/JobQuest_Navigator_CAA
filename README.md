@@ -1,8 +1,13 @@
-# JobQuest Navigator - Production Deployment Package
+# JobQuest Navigator - Career Management Platform
 
 ## 🎯 Project Overview
 
-JobQuest Navigator is a complete job search navigation and career management platform. This package contains all the necessary files, configurations, and scripts for production deployment on the AWS cloud platform.
+JobQuest Navigator is a complete job search navigation and career management platform with two versions:
+
+- **📁 jobquest-navigator-v1/**: Django + React implementation with GraphQL/REST API
+- **📁 jobquest-navigator-v2/**: FastAPI + React minimal implementation with AWS Cognito
+
+This project contains all the necessary files, configurations, and scripts for both local development and AWS production deployment.
 
 **Project Features:**
 - 🚀 Modern Serverless architecture with REST API
@@ -18,15 +23,22 @@ JobQuest Navigator is a complete job search navigation and career management pla
 ## 📦 Contents
 
 ```
-prod/
-├── backend/              # Django REST API backend
-├── frontend/             # React frontend application
-├── infrastructure/       # AWS CloudFormation templates
-├── configs/              # Configuration files and environment variable templates
-├── docs/                 # Complete documentation set
-├── scripts/              # Deployment and management scripts
-├── tests/                # Test suite
-└── README.md             # This document
+JobQuest_Navigator_CAA/
+├── jobquest-navigator-v1/    # Version 1 (Django + React + GraphQL)
+│   ├── backend/              # Django REST API backend
+│   ├── frontend/             # React frontend application
+│   ├── infrastructure/       # AWS CloudFormation templates
+│   ├── configs/              # Configuration files and environment variable templates
+│   ├── docs/                 # Complete documentation set
+│   └── user-service/         # User management microservice
+├── jobquest-navigator-v2/    # Version 2 (FastAPI + React + Cognito)
+│   ├── backend-fastapi-graphql/  # FastAPI GraphQL backend
+│   ├── frontend-react-minimal/   # Minimal React frontend
+│   ├── infrastructure/           # Docker infrastructure
+│   ├── scripts/                  # Development scripts
+│   └── shared/                   # Shared TypeScript types
+├── CLAUDE.md                 # Development instructions
+└── README.md                 # This document
 ```
 
 ## 🏗️ System Architecture
@@ -80,11 +92,11 @@ For production and demonstration:
 - Docker & Docker Compose
 - Git
 
-**Quick Start:**
+**Version 1 (Django + React):**
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd JobQuest_Navigator_CAA
+cd JobQuest_Navigator_CAA/jobquest-navigator-v1
 
 # Start the development environment
 cd infrastructure/docker/
@@ -97,6 +109,20 @@ docker-compose exec backend python manage.py setup_minio_test_data --create-buck
 # Frontend: http://localhost:3000
 # Backend API: http://localhost:8000
 # MinIO Web UI: http://localhost:9001
+```
+
+**Version 2 (FastAPI + React):**
+```bash
+# Navigate to v2 directory
+cd JobQuest_Navigator_CAA/jobquest-navigator-v2
+
+# Start the development environment
+cd infrastructure/docker/
+./scripts/start-dev.sh
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
 ```
 
 **Local Services:**
