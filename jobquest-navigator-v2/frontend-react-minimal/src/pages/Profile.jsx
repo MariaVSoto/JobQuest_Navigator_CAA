@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import authService from '../services/authService';
+import unifiedUserService from '../services/unifiedUserService';
 import './Profile.css';
 
 const Profile = () => {
@@ -31,7 +31,7 @@ const Profile = () => {
     const loadProfile = async () => {
       try {
         setLoading(true);
-        const profile = await authService.getUserProfile();
+        const profile = await unifiedUserService.getUserProfile();
         if (profile) {
           setProfileData({
             full_name: profile.full_name || '',
@@ -88,7 +88,7 @@ const Profile = () => {
         preferred_work_type: profileData.preferred_work_type
       };
 
-      const updatedProfile = await authService.updateUserProfile(updateData);
+      const updatedProfile = await unifiedUserService.updateProfile(updateData);
       
       if (updatedProfile) {
         // Update the context with new user data

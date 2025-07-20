@@ -1,12 +1,30 @@
 /**
- * Fallback service for development bypass mode
- * Provides mock data when backend is not available or for testing
+ * Enhanced Fallback Service
+ * Centralized mock data provider with consistent structure
+ * Works with FallbackManager for unified error handling
  */
 
 export class FallbackService {
   static isDevBypass() {
     return process.env.NODE_ENV === 'development' && 
            process.env.REACT_APP_DEV_AUTH_BYPASS === 'true';
+  }
+
+  // Mock user data
+  static getMockUser() {
+    return {
+      id: 'mock-user-id',
+      email: 'demo@jobquest.com',
+      full_name: 'Demo User',
+      career_level: 'mid',
+      preferred_roles: ['Frontend Developer', 'Full Stack Engineer'],
+      location_preference: 'Los Angeles, CA',
+      remote_preference: 'hybrid',
+      salary_expectation_min: 80000,
+      salary_expectation_max: 120000,
+      profile_completed: true,
+      created_at: new Date().toISOString()
+    };
   }
 
   // Mock job data
@@ -174,6 +192,81 @@ export class FallbackService {
       ]
     };
   }
+
+  // Mock company research data
+  static getMockCompanyResearch() {
+    return {
+      results: [
+        {
+          id: 'mock-research-1',
+          companyName: 'Tech Innovations Inc',
+          industry: 'Technology',
+          size: '500-1000 employees',
+          culture: 'Innovation-focused, collaborative environment',
+          benefits: ['Health insurance', 'Remote work', '401k matching'],
+          recentNews: ['Raised Series B funding', 'Launched new product line'],
+          interviewProcess: 'Technical screening, coding challenge, final interview'
+        }
+      ]
+    };
+  }
+
+  // Mock certifications data
+  static getMockCertifications() {
+    return {
+      results: [
+        {
+          id: 'mock-cert-1',
+          name: 'AWS Certified Developer',
+          provider: 'Amazon Web Services',
+          status: 'in_progress',
+          completionDate: null,
+          expiryDate: null,
+          credentialUrl: null
+        }
+      ]
+    };
+  }
+
+  // Mock learning paths data
+  static getMockLearningPaths() {
+    return {
+      results: [
+        {
+          id: 'frontend-dev',
+          title: 'Frontend Development Mastery',
+          description: 'Complete frontend development learning path',
+          duration: '3-6 months',
+          difficulty: 'intermediate',
+          progress: 65,
+          modules: ['HTML/CSS', 'JavaScript', 'React', 'TypeScript'],
+          nextModule: 'TypeScript Fundamentals'
+        }
+      ]
+    };
+  }
+
+  // Helper method to create consistent API responses
+  static createMockResponse(data, operationName = 'operation') {
+    return {
+      success: true,
+      data: data,
+      message: `Mock ${operationName} - using fallback data`,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  // Helper method to create consistent list responses
+  static createMockListResponse(items, operationName = 'list') {
+    return {
+      results: items,
+      count: items.length,
+      message: `Mock ${operationName} - using fallback data`,
+      timestamp: new Date().toISOString()
+    };
+  }
 }
 
+// Export both class and singleton instance
+export const fallbackService = new FallbackService();
 export default FallbackService;

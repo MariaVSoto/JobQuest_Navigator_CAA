@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { JobContext } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
-import jobService from '../services/jobService';
+import unifiedJobService from '../services/unifiedJobService';
 import './JobApplicationForm.css';
 // import logo from '../assets/logo.png'; // Uncomment and use if you have a logo
 
@@ -28,9 +28,9 @@ const JobApplicationForm = () => {
     const loadJob = async () => {
       try {
         setLoading(true);
-        const jobData = await jobService.getJobById(jobId);
+        const jobData = await unifiedJobService.getJob(jobId);
         if (jobData) {
-          const transformedJob = jobService.transformJobData(jobData);
+          const transformedJob = jobData // jobService.transformJobData(jobData);
           setJob(transformedJob);
         } else {
           setError('Job not found');

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import applicationService from '../services/applicationService';
+import graphqlApplicationService from '../services/graphqlApplicationService';
 import './ApplicationHistory.css';
 
 const ApplicationHistory = () => {
@@ -25,7 +25,7 @@ const ApplicationHistory = () => {
     setError(null);
     
     try {
-      const response = await applicationService.getApplications();
+      const response = await graphqlApplicationService.getApplications();
       const applicationsData = response.results || response;
       setApplications(applicationsData);
     } catch (err) {
@@ -40,7 +40,7 @@ const ApplicationHistory = () => {
     const newStatus = e.target.value;
     
     try {
-      await applicationService.updateApplication(applicationId, { status: newStatus });
+      await graphqlApplicationService.updateApplication(applicationId, { status: newStatus });
       
       // Update local state
       setApplications(prev => prev.map(app => 
@@ -60,7 +60,7 @@ const ApplicationHistory = () => {
         const currentApp = applications.find(app => app.id === applicationId);
         const updatedNotes = currentApp.notes ? `${currentApp.notes}\n\n${note}` : note;
         
-        await applicationService.updateApplication(applicationId, { 
+        await graphqlApplicationService.updateApplication(applicationId, { 
           notes: updatedNotes 
         });
         

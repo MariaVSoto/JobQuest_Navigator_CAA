@@ -4,7 +4,8 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import graphqlAuthService from '../services/graphqlAuthService';
+import unifiedUserService from '../services/unifiedUserService';
+import secureAuthService from '../services/secureAuthService';
 
 const AuthContext = createContext();
 
@@ -23,6 +24,9 @@ export const AuthProvider = ({ children }) => {
 
   // Development bypass: Auto-login with test user
   const enableDevBypass = process.env.NODE_ENV === 'development' && process.env.REACT_APP_DEV_AUTH_BYPASS === 'true';
+  
+  // Security configuration: Use secure authentication with HttpOnly cookies
+  const useSecureAuth = process.env.REACT_APP_USE_SECURE_AUTH === 'true';
 
   // Initialize authentication state
   useEffect(() => {
@@ -57,9 +61,9 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
-        if (graphqlAuthService.isAuthenticated() && !graphqlAuthService.isTokenExpired()) {
-          console.log('Token exists and not expired, checking user data...');
-          const userData = graphqlAuthService.getUser();
+        if (unifiedUserService.isAuthenticated()) {
+          console.log('Token exists, checking user data...');
+          const userData = unifiedUserService.getUser();
           if (userData) {
             console.log('User data found in localStorage:', userData);
             setUser(userData);
@@ -67,15 +71,15 @@ export const AuthProvider = ({ children }) => {
           } else {
             console.log('No user data in localStorage, fetching from server...');
             // Fetch fresh user data if not in localStorage
-            const currentUser = await graphqlAuthService.getCurrentUser();
+            const currentUser = await unifiedUserService.getCurrentUser();
             if (currentUser) {
               console.log('User data fetched from server:', currentUser);
               setUser(currentUser);
               setIsAuthenticated(true);
             } else {
               console.log('Failed to fetch user data from server');
-              // Clear auth data if we can't get user info
-              graphqlAuthService.clearAuthData();
+              // Logout to clear any invalid auth state
+              await unifiedUserService.logout();
               setIsAuthenticated(false);
             }
           }
@@ -85,7 +89,7 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        graphqlAuthService.clearAuthData();
+        await unifiedUserService.logout();
         setIsAuthenticated(false);
       } finally {
         setLoading(false);
@@ -101,16 +105,34 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      const result = await graphqlAuthService.login(credentials);
       
-      if (result.success) {
-        console.log('Login successful, setting user state:', result.user);
-        setUser(result.user);
-        setIsAuthenticated(true);
-        return { success: true };
+      // Use secure authentication if configured
+      if (useSecureAuth) {
+        console.log('🔐 Using secure authentication with HttpOnly cookies');
+        const result = await secureAuthService.login(credentials);
+        
+        if (result.success) {
+          console.log('Secure login successful, setting user state:', result.data.user);
+          setUser(result.data.user);
+          setIsAuthenticated(true);
+          return { success: true };
+        } else {
+          console.log('Secure login failed:', result.error.message);
+          return { success: false, error: { message: result.error.message } };
+        }
       } else {
-        console.log('Login failed:', result.message);
-        return { success: false, error: { message: result.message } };
+        // Use regular unified service
+        const result = await unifiedUserService.login(credentials);
+        
+        if (result.success) {
+          console.log('Login successful, setting user state:', result.data.user);
+          setUser(result.data.user);
+          setIsAuthenticated(true);
+          return { success: true };
+        } else {
+          console.log('Login failed:', result.error.message);
+          return { success: false, error: { message: result.error.message } };
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -126,16 +148,16 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
-      const result = await graphqlAuthService.register(userData);
+      const result = await unifiedUserService.register(userData);
       
       if (result.success) {
-        console.log('Registration successful, setting user state:', result.user);
-        setUser(result.user);
+        console.log('Registration successful, setting user state:', result.data.user);
+        setUser(result.data.user);
         setIsAuthenticated(true);
         return { success: true };
       } else {
-        console.log('Registration failed:', result.errors);
-        return { success: false, errors: result.errors };
+        console.log('Registration failed:', result.error.message);
+        return { success: false, errors: [result.error.message] };
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -151,7 +173,14 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setLoading(true);
-      graphqlAuthService.logout();
+      
+      // Use secure authentication if configured
+      if (useSecureAuth) {
+        console.log('🚪 Using secure logout with HttpOnly cookie cleanup');
+        await secureAuthService.logout();
+      } else {
+        await unifiedUserService.logout();
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -162,19 +191,40 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Update user profile - TODO: Implement with GraphQL
+   * Update user profile
    */
   const updateProfile = async (profileData) => {
-    // TODO: Implement GraphQL profile update
-    return { success: false, error: { message: 'Profile update not implemented with GraphQL yet' } };
+    try {
+      setLoading(true);
+      const result = await unifiedUserService.updateProfile(profileData);
+      
+      if (result.success) {
+        console.log('Profile updated successfully:', result.data);
+        setUser(result.data);
+        return { success: true, data: result.data };
+      } else {
+        console.log('Profile update failed:', result.error.message);
+        return { success: false, error: { message: result.error.message } };
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      return { success: false, error: { message: 'Profile update failed' } };
+    } finally {
+      setLoading(false);
+    }
   };
 
   /**
-   * Change password - TODO: Implement with GraphQL
+   * Change password
    */
   const changePassword = async (passwordData) => {
-    // TODO: Implement GraphQL password change
-    return { success: false, error: { message: 'Password change not implemented with GraphQL yet' } };
+    try {
+      const result = await unifiedUserService.changePassword(passwordData);
+      return result;
+    } catch (error) {
+      console.error('Password change error:', error);
+      return { success: false, error: { message: 'Password change failed' } };
+    }
   };
 
   /**
@@ -182,7 +232,7 @@ export const AuthProvider = ({ children }) => {
    */
   const refreshUser = async () => {
     try {
-      const userData = await graphqlAuthService.getCurrentUser();
+      const userData = await unifiedUserService.getCurrentUser();
       if (userData) {
         setUser(userData);
         return userData;

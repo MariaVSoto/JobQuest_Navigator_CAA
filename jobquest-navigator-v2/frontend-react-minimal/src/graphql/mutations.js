@@ -186,3 +186,231 @@ export const UPDATE_APPLICATION_STATUS = gql`
     }
   }
 `;
+
+// ============================================================================
+// SKILLS & CERTIFICATIONS MUTATIONS
+// ============================================================================
+
+export const ADD_USER_SKILL = gql`
+  mutation AddUserSkill(
+    $skillId: ID!
+    $proficiencyLevel: String!
+    $yearsExperience: Int
+    $selfAssessedLevel: String
+    $targetProficiency: String
+    $frequencyOfUse: String
+    $evidenceUrl: String
+    $lastUsed: String
+  ) {
+    addUserSkill(
+      skillId: $skillId
+      proficiencyLevel: $proficiencyLevel
+      yearsExperience: $yearsExperience
+      selfAssessedLevel: $selfAssessedLevel
+      targetProficiency: $targetProficiency
+      frequencyOfUse: $frequencyOfUse
+      evidenceUrl: $evidenceUrl
+      lastUsed: $lastUsed
+    ) {
+      success
+      errors
+      userSkill {
+        id
+        proficiencyLevel
+        yearsExperience
+        selfAssessedLevel
+        targetProficiency
+        frequencyOfUse
+        evidenceUrl
+        lastUsed
+        isVerified
+        skill {
+          id
+          name
+          category
+          description
+        }
+      }
+    }
+  }
+`;
+
+export const UPDATE_USER_SKILL = gql`
+  mutation UpdateUserSkill(
+    $userSkillId: ID!
+    $proficiencyLevel: String
+    $yearsExperience: Int
+    $selfAssessedLevel: String
+    $targetProficiency: String
+    $frequencyOfUse: String
+    $evidenceUrl: String
+    $lastUsed: String
+  ) {
+    updateUserSkill(
+      userSkillId: $userSkillId
+      proficiencyLevel: $proficiencyLevel
+      yearsExperience: $yearsExperience
+      selfAssessedLevel: $selfAssessedLevel
+      targetProficiency: $targetProficiency
+      frequencyOfUse: $frequencyOfUse
+      evidenceUrl: $evidenceUrl
+      lastUsed: $lastUsed
+    ) {
+      success
+      errors
+      userSkill {
+        id
+        proficiencyLevel
+        yearsExperience
+        selfAssessedLevel
+        targetProficiency
+        frequencyOfUse
+        evidenceUrl
+        lastUsed
+        isVerified
+        skill {
+          id
+          name
+          category
+          description
+        }
+      }
+    }
+  }
+`;
+
+export const REMOVE_USER_SKILL = gql`
+  mutation RemoveUserSkill($userSkillId: ID!) {
+    removeUserSkill(userSkillId: $userSkillId) {
+      success
+      errors
+    }
+  }
+`;
+
+export const ADD_USER_CERTIFICATION = gql`
+  mutation AddUserCertification(
+    $certificationId: ID!
+    $status: String!
+    $earnedDate: String
+    $expiryDate: String
+    $credentialId: String
+    $credentialUrl: String
+    $targetCompletionDate: String
+    $studyProgress: Int
+    $notes: String
+  ) {
+    addUserCertification(
+      certificationId: $certificationId
+      status: $status
+      earnedDate: $earnedDate
+      expiryDate: $expiryDate
+      credentialId: $credentialId
+      credentialUrl: $credentialUrl
+      targetCompletionDate: $targetCompletionDate
+      studyProgress: $studyProgress
+      notes: $notes
+    ) {
+      success
+      errors
+      userCertification {
+        id
+        status
+        earnedDate
+        expiryDate
+        credentialId
+        credentialUrl
+        targetCompletionDate
+        studyProgress
+        notes
+        isVerified
+        certification {
+          id
+          name
+          issuingOrganization
+          description
+        }
+      }
+    }
+  }
+`;
+
+export const UPDATE_USER_CERTIFICATION = gql`
+  mutation UpdateUserCertification(
+    $userCertificationId: ID!
+    $status: String
+    $earnedDate: String
+    $expiryDate: String
+    $credentialId: String
+    $credentialUrl: String
+    $targetCompletionDate: String
+    $studyProgress: Int
+    $notes: String
+  ) {
+    updateUserCertification(
+      userCertificationId: $userCertificationId
+      status: $status
+      earnedDate: $earnedDate
+      expiryDate: $expiryDate
+      credentialId: $credentialId
+      credentialUrl: $credentialUrl
+      targetCompletionDate: $targetCompletionDate
+      studyProgress: $studyProgress
+      notes: $notes
+    ) {
+      success
+      errors
+      userCertification {
+        id
+        status
+        earnedDate
+        expiryDate
+        credentialId
+        credentialUrl
+        targetCompletionDate
+        studyProgress
+        notes
+        isVerified
+        certification {
+          id
+          name
+          issuingOrganization
+          description
+        }
+      }
+    }
+  }
+`;
+
+export const REMOVE_USER_CERTIFICATION = gql`
+  mutation RemoveUserCertification($userCertificationId: ID!) {
+    removeUserCertification(userCertificationId: $userCertificationId) {
+      success
+      errors
+    }
+  }
+`;
+
+export const ENROLL_IN_LEARNING_PATH = gql`
+  mutation EnrollInLearningPath($learningPathId: ID!) {
+    enrollInLearningPath(learningPathId: $learningPathId) {
+      success
+      errors
+      enrollment {
+        id
+        status
+        progressPercentage
+        startedDate
+        targetCompletionDate
+        totalStudyHours
+        learningPath {
+          id
+          name
+          description
+          estimatedDurationWeeks
+          difficultyLevel
+        }
+      }
+    }
+  }
+`;

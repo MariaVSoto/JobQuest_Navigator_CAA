@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import unifiedJobService from '../services/unifiedJobService';
 import companyResearchService from '../services/companyResearchService';
-import jobService from '../services/jobService';
 import './CompanyProfile.css';
 
 const CompanyProfile = () => {
@@ -25,35 +25,27 @@ const CompanyProfile = () => {
       
       try {
         // Fetch company details from jobs service (companies endpoint)
-        const companyData = await jobService.getCompanyById(companyId);
+        const companyData = await unifiedJobService.getJob(companyId);
         setCompany(companyData);
 
         // Fetch existing company research
-        const researchResponse = await companyResearchService.getCompanyResearch({
-          company: companyId
-        });
+        const researchResponse = await companyResearchService.getCompanyResearch({ company: companyId });
         
         if (researchResponse.results && researchResponse.results.length > 0) {
-          const research = await companyResearchService.getCompanyResearchById(
-            researchResponse.results[0].id
-          );
+          const research = await companyResearchService.getCompanyResearchById(researchResponse.results[0].id);
           setCompanyResearch(research);
         }
 
         // Fetch company jobs
-        const jobsResponse = await jobService.getJobs({ company: companyId });
+        const jobsResponse = await unifiedJobService.getJobs({ company: companyId });
         setCompanyJobs(jobsResponse.results || []);
 
         // Fetch company insights
-        const insightsResponse = await companyResearchService.getCompanyInsights({
-          company: companyId
-        });
+        const insightsResponse = await companyResearchService.getCompanyInsights({ company: companyId });
         setCompanyInsights(insightsResponse.results || []);
 
         // Fetch company news
-        const newsResponse = await companyResearchService.getCompanyNews({
-          company: companyId
-        });
+        const newsResponse = await companyResearchService.getCompanyNews({ company: companyId });
         setCompanyNews(newsResponse.results || []);
 
       } catch (err) {

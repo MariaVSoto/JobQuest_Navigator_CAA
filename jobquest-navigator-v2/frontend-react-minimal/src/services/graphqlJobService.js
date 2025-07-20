@@ -16,6 +16,7 @@ const GET_JOBS_QUERY = gql`
     $jobType: String
     $experienceLevel: String
     $remoteType: String
+    $userCreated: Boolean
   ) {
     jobs(
       limit: $limit
@@ -25,6 +26,7 @@ const GET_JOBS_QUERY = gql`
       jobType: $jobType
       experienceLevel: $experienceLevel
       remoteType: $remoteType
+      userCreated: $userCreated
     ) {
       id
       title
@@ -108,6 +110,27 @@ const CREATE_JOB_MUTATION = gql`
   }
 `;
 
+// GraphQL Mutations
+const DELETE_JOB_MUTATION = gql`
+  mutation DeleteJob($jobId: String!) {
+    deleteJob(jobId: $jobId) {
+      success
+      jobId
+      errors
+    }
+  }
+`;
+
+const UPDATE_JOB_MUTATION = gql`
+  mutation UpdateJob($jobId: String!, $input: UpdateJobInput!) {
+    updateJob(jobId: $jobId, input: $input) {
+      success
+      jobId
+      errors
+    }
+  }
+`;
+
 class GraphQLJobService {
   constructor() {
     this.client = apolloClient;
@@ -128,6 +151,7 @@ class GraphQLJobService {
         jobType: filters.jobType || null,
         experienceLevel: filters.experienceLevel || null,
         remoteType: filters.remoteType || null,
+        userCreated: filters.user_created || filters.userCreated || null,
       };
 
       const { data } = await this.client.query({
@@ -408,6 +432,107 @@ class GraphQLJobService {
         posted_date: new Date().toISOString()
       }
     ];
+  }
+
+  /**
+   * Delete a job
+   */
+  async deleteJob(jobId) {
+    try {
+      console.log('Deleting job via GraphQL:', jobId);
+      
+      const { data } = await this.client.mutate({
+        mutation: DELETE_JOB_MUTATION,
+        variables: { jobId },
+        update: (cache, { data: mutationData }) => {
+          // Update the cache to remove the deleted job
+          if (mutationData.deleteJob.success) {
+            // Invalidate jobs query to refetch
+            cache.evict({ fieldName: 'jobs' });
+            cache.gc(); // Garbage collect to remove orphaned data
+          }
+        }
+      });
+
+      const result = data.deleteJob;
+      
+      if (result.success) {
+        console.log('✅ Job deleted successfully via GraphQL');
+        return {
+          success: true,
+          message: 'Job deleted successfully'
+        };
+      } else {
+        console.error('❌ Job deletion failed:', result.errors);
+        throw new Error(result.errors?.join(', ') || 'Job deletion failed');
+      }
+    } catch (error) {
+      console.error('GraphQL deleteJob error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a job
+   */
+  async updateJob(jobId, jobData) {
+    try {
+      console.log('Updating job via GraphQL:', jobId, jobData);
+      
+      // Transform frontend data to match GraphQL input
+      const input = {
+        title: jobData.title,
+        companyName: jobData.companyName || jobData.company?.name,
+        locationText: jobData.locationText || jobData.location_text,
+        description: jobData.description,
+        requirements: jobData.requirements,
+        benefits: jobData.benefits,
+        salaryMin: jobData.salaryMin || jobData.salary_min,
+        salaryMax: jobData.salaryMax || jobData.salary_max,
+        salaryCurrency: jobData.salaryCurrency || jobData.salary_currency,
+        salaryPeriod: jobData.salaryPeriod || jobData.salary_period,
+        jobType: jobData.jobType || jobData.job_type,
+        contractType: jobData.contractType || jobData.contract_type,
+        experienceLevel: jobData.experienceLevel || jobData.experience_level,
+        remoteType: jobData.remoteType || jobData.remote_type
+      };
+
+      // Remove undefined values
+      Object.keys(input).forEach(key => {
+        if (input[key] === undefined || input[key] === null) {
+          delete input[key];
+        }
+      });
+      
+      const { data } = await this.client.mutate({
+        mutation: UPDATE_JOB_MUTATION,
+        variables: { jobId, input },
+        update: (cache, { data: mutationData }) => {
+          // Update the cache with new job data
+          if (mutationData.updateJob.success) {
+            // Invalidate jobs query to refetch
+            cache.evict({ fieldName: 'jobs' });
+            cache.gc(); // Garbage collect to remove orphaned data
+          }
+        }
+      });
+
+      const result = data.updateJob;
+      
+      if (result.success) {
+        console.log('✅ Job updated successfully via GraphQL');
+        return {
+          success: true,
+          message: 'Job updated successfully'
+        };
+      } else {
+        console.error('❌ Job update failed:', result.errors);
+        throw new Error(result.errors?.join(', ') || 'Job update failed');
+      }
+    } catch (error) {
+      console.error('GraphQL updateJob error:', error);
+      throw error;
+    }
   }
 }
 

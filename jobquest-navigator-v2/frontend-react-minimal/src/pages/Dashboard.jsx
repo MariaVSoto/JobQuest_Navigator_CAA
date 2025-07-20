@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import applicationService from '../services/applicationService';
+import graphqlApplicationService from '../services/graphqlApplicationService';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -24,7 +24,7 @@ const Dashboard = () => {
         setLoading(true);
         
         // Fetch recent applications
-        const applications = await applicationService.getApplications({ limit: 5 });
+        const applications = await graphqlApplicationService.getApplications({ limit: 5 });
         setAppliedJobs(applications.results || applications || []);
         
         // Mock stats for demonstration

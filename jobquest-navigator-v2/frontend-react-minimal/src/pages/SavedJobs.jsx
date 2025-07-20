@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import jobService from '../services/jobService';
+import unifiedJobService from '../services/unifiedJobService';
 import './SavedJobs.css';
 
 const SavedJobs = () => {
@@ -20,7 +20,7 @@ const SavedJobs = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await jobService.getSavedJobs({ 
+        const response = await unifiedJobService.getSavedJobs({ 
           ordering: `-${sortBy}`,
           limit: 50 
         });
@@ -43,7 +43,7 @@ const SavedJobs = () => {
   const handleRemoveJob = async (e, jobId) => {
     e.stopPropagation();
     try {
-      await jobService.unsaveJob(jobId);
+      await unifiedJobService.unsaveJob(jobId);
       setSavedJobs(prev => prev.filter(job => job.job?.id !== jobId));
     } catch (err) {
       console.error('Error removing saved job:', err);

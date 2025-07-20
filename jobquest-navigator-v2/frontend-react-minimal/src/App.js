@@ -18,6 +18,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import { JobProvider } from './context/JobContext';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import CompanyProfile from './pages/CompanyProfile';
 import InterviewPrep from './pages/InterviewPrep';
 import ResumeBuilder from './pages/ResumeBuilder';
@@ -26,8 +27,11 @@ import SkillsAndCertifications from './pages/SkillsAndCertifications';
 import LearningPaths from './pages/LearningPaths';
 import UploadJob from './pages/UploadJob';
 import ResumeVersions from './pages/ResumeVersions';
+import MyJobs from './pages/MyJobs';
+import SkillJobMapping from './pages/SkillJobMapping';
 import NotFound from './pages/NotFound';
 import AuthTest from './pages/AuthTest';
+import ServicesTest from './pages/ServicesTest';
 import './App.css';
 
 function App() {
@@ -36,7 +40,8 @@ function App() {
       <ApolloProvider client={client}>
         <AuthProvider>
           <JobProvider>
-            <Router>
+            <ToastProvider>
+              <Router>
           <NavBar />
           <Routes>
             {/* Public routes */}
@@ -44,6 +49,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/auth-test" element={<AuthTest />} />
+            <Route path="/services-test" element={<ServicesTest />} />
             
             {/* Protected routes */}
             <Route path="/jobs" element={
@@ -131,14 +137,25 @@ function App() {
                 <CreateJob />
               </ProtectedRoute>
             } />
+            <Route path="/my-jobs" element={
+              <ProtectedRoute>
+                <MyJobs />
+              </ProtectedRoute>
+            } />
+            <Route path="/skill-job-mapping" element={
+              <ProtectedRoute>
+                <SkillJobMapping />
+              </ProtectedRoute>
+            } />
             
             {/* 404 page */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </Router>
-        </JobProvider>
-      </AuthProvider>
-    </ApolloProvider>
+              </Router>
+            </ToastProvider>
+          </JobProvider>
+        </AuthProvider>
+      </ApolloProvider>
     </ErrorBoundary>
   );
 }

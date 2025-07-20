@@ -1,10 +1,25 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import './UploadJob.css';
+
+const CREATE_USER_JOB = gql`
+  mutation CreateJob($input: CreateJobInput!) {
+    createJob(input: $input) {
+      success
+      errors
+      jobId
+    }
+  }
+`;
 
 const UploadJob = () => {
   const { user } = useAuth();
+  const { showSuccess, showError, showWarning } = useToast();
+  const navigate = useNavigate();
   const [method, setMethod] = useState('paste'); // 'paste', 'url', 'file'
   const [jobData, setJobData] = useState({
     title: '',
@@ -20,6 +35,10 @@ const UploadJob = () => {
   const [jobUrl, setJobUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [parsedJob, setParsedJob] = useState(null);
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const [createJob, { loading: createJobLoading }] = useMutation(CREATE_USER_JOB);
 
   const handleMethodChange = (newMethod) => {
     setMethod(newMethod);
@@ -38,75 +57,115 @@ const UploadJob = () => {
 
   const handleTextSubmit = async () => {
     if (!jobText.trim()) {
-      alert('Please paste the job posting text');
+      showWarning('Please paste the job posting text');
       return;
     }
 
     setIsProcessing(true);
+    setError(null);
     
-    // Simulate AI parsing of job posting text
-    setTimeout(() => {
-      const mockParsedJob = {
-        title: "Senior Full Stack Developer",
-        company: "TechFlow Inc.",
-        location: "San Francisco, CA (Remote)",
-        description: "Join our dynamic team to build scalable web applications using modern technologies. You'll work on exciting projects that impact millions of users worldwide.",
-        requirements: [
-          "5+ years of experience in full-stack development",
-          "Proficiency in React, Node.js, and TypeScript",
-          "Experience with cloud platforms (AWS, Azure, or GCP)",
-          "Strong understanding of database design and optimization",
-          "Excellent communication and teamwork skills"
-        ],
-        skills: ["React", "Node.js", "TypeScript", "AWS", "PostgreSQL", "GraphQL", "Docker"],
-        salary: "$120,000 - $150,000",
-        type: "full-time",
-        source: "pasted-text",
-        matchScore: 85
+    try {
+      // Simple parsing - extract basic info from the pasted text
+      const text = jobText.trim();
+      
+      // Try to extract title (first line that looks like a job title)
+      const lines = text.split('\n').filter(line => line.trim());
+      let title = lines[0] || 'Job Position';
+      
+      // Try to find company name (look for common patterns)
+      let company = 'Company Name';
+      const companyPatterns = [
+        /at\s+([A-Z][A-Za-z\s&.,]+)/i,
+        /Company:\s*([A-Za-z\s&.,]+)/i,
+        /([A-Z][A-Za-z\s&.,]+)\s+is\s+hiring/i
+      ];
+      
+      for (const pattern of companyPatterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+          company = match[1].trim();
+          break;
+        }
+      }
+      
+      // Try to find location
+      let location = 'Location not specified';
+      const locationPatterns = [
+        /Location:\s*([A-Za-z\s,.-]+)/i,
+        /(Remote|Hybrid|On-site)/i,
+        /([A-Za-z\s]+,\s*[A-Z]{2,})/i
+      ];
+      
+      for (const pattern of locationPatterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+          location = match[1].trim();
+          break;
+        }
+      }
+      
+      // Use the full text as description
+      const description = text;
+      
+      const parsedJob = {
+        title: title,
+        company: company,
+        location: location,
+        description: description,
+        requirements: [], // Will be filled from description
+        skills: [], // Will be extracted later
+        salary: 'Not specified',
+        type: 'full-time',
+        source: 'pasted-text',
+        rawText: text
       };
       
-      setParsedJob(mockParsedJob);
+      setParsedJob(parsedJob);
       setIsProcessing(false);
-    }, 2000);
+    } catch (error) {
+      console.error('Error parsing job text:', error);
+      setError('Failed to parse job posting. Please check the format and try again.');
+      setIsProcessing(false);
+    }
   };
 
   const handleUrlSubmit = async () => {
     if (!jobUrl.trim()) {
-      alert('Please enter a job posting URL');
+      showWarning('Please enter a job posting URL');
       return;
     }
 
     setIsProcessing(true);
+    setError(null);
     
-    // Simulate fetching and parsing job from URL
-    setTimeout(() => {
-      const mockParsedJob = {
-        title: "Product Manager",
-        company: "InnovateCorp",
-        location: "New York, NY",
-        description: "Lead product development initiatives and work closely with engineering teams to deliver exceptional user experiences.",
-        requirements: [
-          "3+ years of product management experience",
-          "Experience with agile development methodologies",
-          "Strong analytical and problem-solving skills",
-          "Excellent stakeholder management abilities",
-          "Technical background preferred"
-        ],
-        skills: ["Product Management", "Agile", "Analytics", "Stakeholder Management", "Technical Strategy"],
-        salary: "$100,000 - $130,000",
-        type: "full-time",
+    try {
+      // For now, create a placeholder job from URL
+      // In a real app, this would fetch and parse the URL content
+      const parsedJob = {
+        title: "Job from URL",
+        company: "Company from Job Board",
+        location: "Location not specified",
+        description: `Job posting from URL: ${jobUrl}\n\nThis job was imported from a job board. Please edit the details below to complete the information.`,
+        requirements: [],
+        skills: [],
+        salary: 'Not specified',
+        type: 'full-time',
         source: jobUrl,
-        matchScore: 72
+        url: jobUrl
       };
       
-      setParsedJob(mockParsedJob);
+      setParsedJob(parsedJob);
       setIsProcessing(false);
-    }, 3000);
+    } catch (error) {
+      console.error('Error fetching job from URL:', error);
+      setError('Failed to fetch job posting from URL. Please check the URL and try again.');
+      setIsProcessing(false);
+    }
   };
 
   const handleManualSave = () => {
     if (!jobData.title || !jobData.company) {
-      alert('Please fill in at least the job title and company');
+      showWarning('Please fill in at least the job title and company');
       return;
     }
 
@@ -121,10 +180,53 @@ const UploadJob = () => {
     setParsedJob(manualJob);
   };
 
-  const handleSaveJob = () => {
-    // In a real app, this would save to backend
-    alert('Job posting saved successfully! You can now get AI optimization suggestions.');
-    window.location.href = '/ai-suggestions?newJob=true';
+  const handleSaveJob = async () => {
+    if (!parsedJob) {
+      showWarning('No job data to save. Please parse a job posting first.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      console.log('🚀 Saving job via GraphQL:', parsedJob);
+
+      const { data } = await createJob({
+        variables: {
+          input: {
+            title: parsedJob.title,
+            companyName: parsedJob.company,
+            locationText: parsedJob.location,
+            description: parsedJob.description,
+            requirements: parsedJob.requirements?.join('\n') || null,
+            benefits: null,
+            salaryMin: null,
+            salaryMax: null,
+            salaryCurrency: 'USD',
+            salaryPeriod: 'yearly',
+            jobType: parsedJob.type === 'full-time' ? 'full_time' : 'part_time',
+            contractType: 'permanent',
+            experienceLevel: null,
+            remoteType: parsedJob.location?.toLowerCase().includes('remote') ? 'remote' : 'on_site'
+          }
+        }
+      });
+
+      if (data.createJob.success) {
+        console.log('✅ Job saved successfully with ID:', data.createJob.jobId);
+        showSuccess('Job posting saved successfully! You can now get AI optimization suggestions.');
+        navigate('/ai-suggestions?newJob=true');
+      } else {
+        console.error('❌ Job save failed:', data.createJob.errors);
+        setError('Failed to save job: ' + (data.createJob.errors?.join(', ') || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('GraphQL createJob error:', err);
+      setError('Failed to save job: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -345,6 +447,22 @@ const UploadJob = () => {
           </div>
         )}
 
+        {/* Error State */}
+        {error && (
+          <div className="error-state card">
+            <div className="card-body">
+              <div className="error-content">
+                <div className="error-icon">❌</div>
+                <h3>Error</h3>
+                <p>{error}</p>
+                <button className="btn btn-outline" onClick={() => setError(null)}>
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Parsed Job Preview */}
         {parsedJob && (
           <div className="parsed-job-section">
@@ -413,8 +531,9 @@ const UploadJob = () => {
                   <button 
                     className="btn btn-primary btn-lg"
                     onClick={handleSaveJob}
+                    disabled={saving || createJobLoading}
                   >
-                    Save & Get AI Insights
+                    {saving || createJobLoading ? 'Saving...' : 'Save & Get AI Insights'}
                   </button>
                   <Link to="/application-history" className="btn btn-outline btn-lg">
                     Track Application

@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import unifiedJobService from '../services/unifiedJobService';
-import authService from '../services/authService';
+import unifiedUserService from '../services/unifiedUserService';
 
 export const JobContext = createContext();
 
@@ -29,7 +29,7 @@ export const JobProvider = ({ children }) => {
       
       try {
         // Check if user is authenticated first
-        if (!authService.isAuthenticated()) {
+        if (!unifiedUserService.isAuthenticated()) {
           console.log('User not authenticated, skipping job fetch to prevent infinite loop');
           setJobs([]);
           setTotalJobs(0);

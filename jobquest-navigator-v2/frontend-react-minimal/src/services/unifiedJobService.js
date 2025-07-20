@@ -4,12 +4,12 @@
  */
 
 import graphqlJobService from './graphqlJobService';
-import jobService from './jobService';
+import { FallbackService } from './fallbackService';
 
 class UnifiedJobService {
   constructor() {
     this.primaryService = graphqlJobService;
-    this.fallbackService = jobService;
+    this.fallbackService = FallbackService;
     this.useGraphQL = process.env.REACT_APP_USE_FASTAPI_JOBS === 'true';
     
     console.log(`🔧 UnifiedJobService initialized with GraphQL: ${this.useGraphQL}`);
@@ -199,6 +199,44 @@ class UnifiedJobService {
       success: true,
       message: 'Job application functionality not yet implemented'
     };
+  }
+
+  /**
+   * Delete a job
+   */
+  async deleteJob(jobId) {
+    if (this.useGraphQL) {
+      try {
+        return await this.primaryService.deleteJob(jobId);
+      } catch (error) {
+        console.warn('❌ GraphQL deleteJob failed:', error.message);
+        // For delete operations, we don't want to fall back to REST
+        // as it could cause data inconsistency
+        throw error;
+      }
+    }
+    
+    // REST fallback - not implemented yet
+    throw new Error('Job deletion via REST API not implemented');
+  }
+
+  /**
+   * Update a job
+   */
+  async updateJob(jobId, jobData) {
+    if (this.useGraphQL) {
+      try {
+        return await this.primaryService.updateJob(jobId, jobData);
+      } catch (error) {
+        console.warn('❌ GraphQL updateJob failed:', error.message);
+        // For update operations, we don't want to fall back to REST
+        // as it could cause data inconsistency
+        throw error;
+      }
+    }
+    
+    // REST fallback - not implemented yet
+    throw new Error('Job update via REST API not implemented');
   }
 
   /**

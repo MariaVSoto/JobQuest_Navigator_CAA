@@ -173,10 +173,7 @@ const SkillsAndCertifications = () => {
 
   const handleEnrollInLearningPath = async (learningPathId) => {
     try {
-      const enrollment = await skillsService.enrollInLearningPath({
-        learning_path: learningPathId,
-        status: 'not_started'
-      });
+      const enrollment = await skillsService.enrollInLearningPath({ learning_path: learningPathId, status: 'not_started' });
       setUserLearningPaths(prev => [...prev, enrollment]);
       setSuccess('Enrolled in learning path successfully!');
     } catch (err) {

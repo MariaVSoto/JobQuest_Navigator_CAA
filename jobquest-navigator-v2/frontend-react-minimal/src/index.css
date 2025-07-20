@@ -96,6 +96,17 @@
   --container-lg: 1024px;
   --container-xl: 1280px;
   --container-2xl: 1536px;
+
+  /* Additional semantic colors for compatibility */
+  --background-primary: var(--neutral-0);
+  --background-secondary: var(--neutral-100);
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --border-color: var(--neutral-200);
+  --success-100: var(--success-50);
+  --success-700: var(--success-600);
+  --primary-100: var(--primary-100);
+  --primary-700: var(--primary-700);
 }
 
 /* Base Styles */
@@ -153,7 +164,7 @@ code {
 
 /* Button System */
 .btn {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   padding: var(--space-3) var(--space-6);
@@ -166,6 +177,8 @@ code {
   transition: all 0.2s ease;
   text-decoration: none;
   gap: var(--space-2);
+  min-height: 40px;
+  min-width: 80px;
 }
 
 .btn:disabled {
@@ -175,36 +188,39 @@ code {
 
 /* Button Variants */
 .btn-primary {
-  background-color: var(--primary-600);
-  color: var(--neutral-0);
-  border-color: var(--primary-600);
+  background-color: var(--primary-600) !important;
+  color: var(--neutral-0) !important;
+  border-color: var(--primary-600) !important;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-700);
-  border-color: var(--primary-700);
+  background-color: var(--primary-700) !important;
+  border-color: var(--primary-700) !important;
+  color: var(--neutral-0) !important;
 }
 
 .btn-secondary {
-  background-color: var(--neutral-0);
-  color: var(--neutral-700);
-  border-color: var(--neutral-300);
+  background-color: var(--neutral-0) !important;
+  color: var(--neutral-700) !important;
+  border-color: var(--neutral-300) !important;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--neutral-50);
-  border-color: var(--neutral-400);
+  background-color: var(--neutral-50) !important;
+  border-color: var(--neutral-400) !important;
+  color: var(--neutral-700) !important;
 }
 
 .btn-outline {
-  background-color: transparent;
-  color: var(--primary-600);
-  border-color: var(--primary-600);
+  background-color: transparent !important;
+  color: var(--primary-600) !important;
+  border-color: var(--primary-600) !important;
 }
 
 .btn-outline:hover:not(:disabled) {
-  background-color: var(--primary-600);
-  color: var(--neutral-0);
+  background-color: var(--primary-600) !important;
+  color: var(--neutral-0) !important;
+  border-color: var(--primary-600) !important;
 }
 
 /* Button Sizes */

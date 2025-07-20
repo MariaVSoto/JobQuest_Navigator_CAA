@@ -1,804 +1,843 @@
 /**
- * Company Research service for Epic 6: Company Research & Interview Preparation
- * Handles all API calls related to company research and interview preparation
+ * Company Research Service - Handles company research and interview preparation
+ * Uses GraphQL when available, fallback to mock data for development
  */
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+import { FallbackService } from './fallbackService';
+import apolloClient from '../apolloClient';
+import { gql } from '@apollo/client';
+
+// GraphQL Queries for Company Research
+const GET_COMPANY_RESEARCH = gql`
+  query GetCompanyResearch($companyId: ID, $limit: Int) {
+    companyResearch(companyId: $companyId, limit: $limit) {
+      id
+      companyId
+      companyName
+      industry
+      size
+      founded
+      headquarters
+      description
+      culture
+      benefits
+      salaryRange
+      growthTrends
+      financialHealth
+      recentNews
+      interviewProcess
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const GET_COMPANY_INSIGHTS = gql`
+  query GetCompanyInsights($companyId: ID!) {
+    companyInsights(companyId: $companyId) {
+      id
+      companyId
+      marketPosition
+      competitiveAdvantages
+      challenges
+      opportunities
+      workCulture
+      employeeRetention
+      diversityMetrics
+      careerGrowth
+      technicalStack
+      remotePolicy
+      glassdoorRating
+      linkedinFollowers
+    }
+  }
+`;
+
+const GET_INTERVIEW_QUESTIONS = gql`
+  query GetInterviewQuestions($category: String, $difficulty: String, $limit: Int) {
+    interviewQuestions(category: $category, difficulty: $difficulty, limit: $limit) {
+      id
+      question
+      category
+      difficulty
+      expectedAnswer
+      tips
+      followUpQuestions
+      isCommon
+    }
+  }
+`;
+
+// GraphQL Mutations for Company Research
+const GENERATE_COMPANY_RESEARCH = gql`
+  mutation GenerateCompanyResearch($companyId: ID!) {
+    generateCompanyResearch(companyId: $companyId) {
+      success
+      errors
+      research {
+        id
+        companyId
+        companyName
+        industry
+        description
+        culture
+        benefits
+        salaryRange
+        interviewProcess
+      }
+    }
+  }
+`;
+
+const SAVE_RESEARCH_ITEM = gql`
+  mutation SaveResearchItem($researchId: ID!) {
+    saveResearchItem(researchId: $researchId) {
+      success
+      errors
+      savedItem {
+        id
+        savedAt
+      }
+    }
+  }
+`;
+
+const GENERATE_INTERVIEW_QUESTIONS = gql`
+  mutation GenerateInterviewQuestions($category: String!, $difficulty: String!, $count: Int) {
+    generateInterviewQuestions(category: $category, difficulty: $difficulty, count: $count) {
+      success
+      errors
+      questions {
+        id
+        question
+        category
+        difficulty
+        expectedAnswer
+        tips
+      }
+    }
+  }
+`;
 
 class CompanyResearchService {
   constructor() {
-    this.baseURL = `${API_BASE_URL}/company-research`;
+    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8001';
+    this.useGraphQL = process.env.REACT_APP_USE_GRAPHQL === 'true';
   }
 
-  /**
-   * Get authentication token from localStorage
-   */
-  getAuthToken() {
-    return localStorage.getItem('jobquest_access_token');
-  }
-
-  /**
-   * Make authenticated API request
-   */
-  async makeRequest(endpoint, options = {}) {
-    const token = this.getAuthToken();
-    const url = `${this.baseURL}${endpoint}`;
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    };
-
+  // Company Research
+  async getCompanyResearch(params = {}) {
     try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching company research via GraphQL...', params);
+        const { data } = await apolloClient.query({
+          query: GET_COMPANY_RESEARCH,
+          variables: {
+            companyId: params.companyId,
+            limit: params.limit || 20
+          },
+          fetchPolicy: 'cache-and-network'
+        });
 
-      return response;
+        const research = data.companyResearch || [];
+        console.log('✅ Company research fetched successfully:', research.length, 'items');
+        
+        return {
+          results: research.map(item => ({
+            id: item.id,
+            title: `${item.companyName} Analysis`,
+            company: item.companyName,
+            research_date: item.createdAt?.split('T')[0] || item.createdAt,
+            confidence_score: 0.85, // Default score
+            is_saved: false,
+            overview: item.description,
+            culture_analysis: item.culture,
+            recent_news: item.recentNews,
+            financial_highlights: item.financialHealth,
+            growth_prospects: item.growthTrends
+          }))
+        };
+      }
+      return this.getFallbackCompanyResearch();
     } catch (error) {
-      console.error('API request failed:', error);
+      console.warn('❌ GraphQL company research failed, using fallback:', error);
+      return this.getFallbackCompanyResearch();
+    }
+  }
+
+  async getCompanyResearchById(researchId) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching company research by ID via GraphQL:', researchId);
+        const { data } = await apolloClient.query({
+          query: GET_COMPANY_RESEARCH,
+          variables: {
+            companyId: researchId,
+            limit: 1
+          },
+          fetchPolicy: 'cache-and-network'
+        });
+
+        const research = data.companyResearch?.[0];
+        if (research) {
+          console.log('✅ Company research fetched successfully:', research.id);
+          return {
+            id: research.id,
+            title: `${research.companyName} Analysis`,
+            company: research.companyName,
+            research_date: research.createdAt?.split('T')[0] || research.createdAt,
+            confidence_score: 0.85,
+            overview: research.description || 'No overview available',
+            culture_analysis: research.culture || 'No culture analysis available',
+            recent_news: research.recentNews || 'No recent news available',
+            financial_highlights: research.financialHealth || 'No financial data available',
+            growth_prospects: research.growthTrends || 'No growth analysis available',
+            is_saved: false
+          };
+        } else {
+          console.log('⚠️ No research found for ID, using fallback');
+          return this.getFallbackCompanyResearchDetail();
+        }
+      }
+      return this.getFallbackCompanyResearchDetail();
+    } catch (error) {
+      console.warn('❌ GraphQL company research by ID failed, using fallback:', error);
+      return this.getFallbackCompanyResearchDetail();
+    }
+  }
+
+  async generateCompanyResearch(companyId) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Generating company research via GraphQL:', companyId);
+        const { data } = await apolloClient.mutate({
+          mutation: GENERATE_COMPANY_RESEARCH,
+          variables: { companyId },
+          refetchQueries: [{ query: GET_COMPANY_RESEARCH, variables: { companyId } }]
+        });
+
+        if (data.generateCompanyResearch.success) {
+          const research = data.generateCompanyResearch.research;
+          console.log('✅ Company research generated successfully:', research.id);
+          return {
+            id: research.id,
+            title: `AI-Generated Research - ${research.companyName}`,
+            company: research.companyName,
+            research_date: new Date().toISOString().split('T')[0],
+            confidence_score: 0.88,
+            overview: research.description || 'AI-generated company overview',
+            culture_analysis: research.culture || 'AI-generated culture analysis',
+            recent_news: 'AI-generated recent news and updates',
+            financial_highlights: 'AI-generated financial insights',
+            growth_prospects: 'AI-generated growth analysis',
+            is_saved: false
+          };
+        } else {
+          throw new Error(data.generateCompanyResearch.errors?.join(', ') || 'Failed to generate research');
+        }
+      }
+      return this.getMockGeneratedResearch(companyId);
+    } catch (error) {
+      console.warn('❌ GraphQL generate company research failed, using mock:', error);
+      return this.getMockGeneratedResearch(companyId);
+    }
+  }
+
+  async saveResearchItem(researchId) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Saving research item via GraphQL:', researchId);
+        const { data } = await apolloClient.mutate({
+          mutation: SAVE_RESEARCH_ITEM,
+          variables: { researchId },
+          refetchQueries: [{ query: GET_COMPANY_RESEARCH }]
+        });
+
+        if (data.saveResearchItem.success) {
+          console.log('✅ Research item saved successfully:', data.saveResearchItem.savedItem.id);
+          return { 
+            success: true,
+            savedItem: data.saveResearchItem.savedItem
+          };
+        } else {
+          throw new Error(data.saveResearchItem.errors?.join(', ') || 'Failed to save research');
+        }
+      }
+      return { success: true };
+    } catch (error) {
+      console.warn('❌ GraphQL save research failed:', error);
       throw error;
     }
   }
 
-  // Company Research Methods
-
-  /**
-   * Get all company research for user
-   */
-  async getCompanyResearch(filters = {}) {
-    const queryParams = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
-
-    const endpoint = `/company-research/${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await this.makeRequest(endpoint);
-    return await response.json();
-  }
-
-  /**
-   * Get specific company research by ID
-   */
-  async getCompanyResearchById(id) {
-    const response = await this.makeRequest(`/company-research/${id}/`);
-    return await response.json();
-  }
-
-  /**
-   * Create new company research
-   */
-  async createCompanyResearch(data) {
-    const response = await this.makeRequest('/company-research/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Generate new company research
-   */
-  async generateCompanyResearch(companyId) {
-    const response = await this.makeRequest('/company-research/generate/', {
-      method: 'POST',
-      body: JSON.stringify({ company_id: companyId }),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Update company research
-   */
-  async updateCompanyResearch(id, data) {
-    const response = await this.makeRequest(`/company-research/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Partially update company research
-   */
-  async patchCompanyResearch(id, data) {
-    const response = await this.makeRequest(`/company-research/${id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Delete company research
-   */
-  async deleteCompanyResearch(id) {
-    await this.makeRequest(`/company-research/${id}/`, {
-      method: 'DELETE',
-    });
-  }
-
-  /**
-   * Save research item
-   */
-  async saveResearchItem(id, notes = '', tags = []) {
-    const response = await this.makeRequest(`/company-research/${id}/save/`, {
-      method: 'POST',
-      body: JSON.stringify({ notes, tags }),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Unsave research item
-   */
-  async unsaveResearchItem(id) {
-    await this.makeRequest(`/company-research/${id}/unsave/`, {
-      method: 'DELETE',
-    });
-  }
-
-  /**
-   * Get saved research
-   */
-  async getSavedResearch() {
-    const response = await this.makeRequest('/company-research/saved/');
-    return await response.json();
-  }
-
-  // Interview Preparation Methods
-
-  /**
-   * Get interview preparations
-   */
-  async getInterviewPreparations(filters = {}) {
-    const queryParams = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
-
-    const endpoint = `/interview-preparation/${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await this.makeRequest(endpoint);
-    return await response.json();
-  }
-
-  /**
-   * Get specific interview preparation by ID
-   */
-  async getInterviewPreparationById(id) {
-    const response = await this.makeRequest(`/interview-preparation/${id}/`);
-    return await response.json();
-  }
-
-  /**
-   * Create interview preparation
-   */
-  async createInterviewPreparation(data) {
-    const response = await this.makeRequest('/interview-preparation/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Generate interview preparation
-   */
-  async generateInterviewPreparation(researchId, positionTitle = '') {
-    const response = await this.makeRequest('/interview-preparation/generate/', {
-      method: 'POST',
-      body: JSON.stringify({
-        research_id: researchId,
-        position_title: positionTitle,
-      }),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Update interview preparation
-   */
-  async updateInterviewPreparation(id, data) {
-    const response = await this.makeRequest(`/interview-preparation/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Partially update interview preparation
-   */
-  async patchInterviewPreparation(id, data) {
-    const response = await this.makeRequest(`/interview-preparation/${id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Delete interview preparation
-   */
-  async deleteInterviewPreparation(id) {
-    await this.makeRequest(`/interview-preparation/${id}/`, {
-      method: 'DELETE',
-    });
-  }
-
-  /**
-   * Mark preparation as reviewed
-   */
-  async markPreparationReviewed(id) {
-    const response = await this.makeRequest(`/interview-preparation/${id}/mark_reviewed/`, {
-      method: 'POST',
-    });
-    return await response.json();
-  }
-
-  // Interview Questions Methods
-
-  /**
-   * Get interview questions
-   */
-  async getInterviewQuestions(filters = {}) {
+  // Company Insights
+  async getCompanyInsights(params = {}) {
     try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const endpoint = `/interview-questions/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching interview questions, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 'mock-q-1',
-            question_text: 'Tell me about yourself and your experience.',
-            question_type: 'general',
-            difficulty: 'easy',
-            difficulty_display: 'Easy',
-            sample_answer: 'Start with a brief professional summary, highlight key achievements, and connect your experience to the role.',
-            answer_framework: 'Past-Present-Future structure',
-            is_generated: false,
-            times_used: 25
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching company insights via GraphQL...', params);
+        const { data } = await apolloClient.query({
+          query: GET_COMPANY_INSIGHTS,
+          variables: {
+            companyId: params.companyId
           },
-          {
-            id: 'mock-q-2',
-            question_text: 'Explain the difference between var, let, and const in JavaScript.',
-            question_type: 'technical',
-            difficulty: 'medium',
-            difficulty_display: 'Medium',
-            sample_answer: 'var has function scope, let and const have block scope. const cannot be reassigned.',
-            answer_framework: 'Definition + Examples + Use Cases',
+          fetchPolicy: 'cache-and-network'
+        });
+
+        const insights = data.companyInsights;
+        if (insights) {
+          console.log('✅ Company insights fetched successfully');
+          return {
+            results: [
+              {
+                id: 'insight-culture',
+                title: 'Work Culture Analysis',
+                insight_type: 'culture',
+                insight_type_display: 'Culture',
+                content: insights.workCulture || 'No culture data available',
+                source: 'AI Analysis',
+                confidence_score: 0.82
+              },
+              {
+                id: 'insight-growth',
+                title: 'Career Growth Opportunities',
+                insight_type: 'career',
+                insight_type_display: 'Career Growth',
+                content: insights.careerGrowth || 'No career growth data available',
+                source: 'Employee Data Analysis',
+                confidence_score: 0.78
+              },
+              {
+                id: 'insight-tech',
+                title: 'Technical Stack',
+                insight_type: 'technical',
+                insight_type_display: 'Technology',
+                content: insights.technicalStack || 'No technical stack information available',
+                source: 'Technical Analysis',
+                confidence_score: 0.85
+              }
+            ]
+          };
+        } else {
+          console.log('⚠️ No insights found, using fallback');
+          return this.getFallbackCompanyInsights();
+        }
+      }
+      return this.getFallbackCompanyInsights();
+    } catch (error) {
+      console.warn('❌ GraphQL company insights failed, using fallback:', error);
+      return this.getFallbackCompanyInsights();
+    }
+  }
+
+  // Company News
+  async getCompanyNews(params = {}) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching company news via GraphQL...', params);
+        // For now, we'll use the company research query to get recent news
+        const { data } = await apolloClient.query({
+          query: GET_COMPANY_RESEARCH,
+          variables: {
+            companyId: params.companyId,
+            limit: params.limit || 10
+          },
+          fetchPolicy: 'cache-and-network'
+        });
+
+        const research = data.companyResearch || [];
+        console.log('✅ Company news data fetched successfully');
+        
+        return {
+          results: research
+            .filter(item => item.recentNews)
+            .map((item, index) => ({
+              id: `news-${index + 1}`,
+              title: `${item.companyName} Recent Updates`,
+              summary: item.recentNews,
+              source: 'Company Research',
+              published_date: item.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+              url: `#/company/${item.companyId}`,
+              relevance_score: 0.8
+            }))
+        };
+      }
+      return this.getFallbackCompanyNews();
+    } catch (error) {
+      console.warn('❌ GraphQL company news failed, using fallback:', error);
+      return this.getFallbackCompanyNews();
+    }
+  }
+
+  // Interview Preparation
+  async getInterviewQuestions(params = {}) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching interview questions via GraphQL...', params);
+        const { data } = await apolloClient.query({
+          query: GET_INTERVIEW_QUESTIONS,
+          variables: {
+            category: params.category,
+            difficulty: params.difficulty,
+            limit: params.limit || 20
+          },
+          fetchPolicy: 'cache-and-network'
+        });
+
+        const questions = data.interviewQuestions || [];
+        console.log('✅ Interview questions fetched successfully:', questions.length, 'questions');
+        
+        return {
+          results: questions.map(q => ({
+            id: q.id,
+            question_text: q.question,
+            question_type: q.category?.toLowerCase() || 'general',
+            difficulty: q.difficulty,
+            difficulty_display: q.difficulty?.charAt(0).toUpperCase() + q.difficulty?.slice(1) || 'Medium',
+            sample_answer: q.expectedAnswer || 'Sample answer would be provided here',
+            answer_framework: q.tips || (q.category === 'behavioral' ? 'STAR Method' : 'Technical Approach'),
+            is_generated: false,
+            times_used: 0,
+            is_common: q.isCommon || false,
+            follow_up_questions: q.followUpQuestions || []
+          }))
+        };
+      }
+      return this.getFallbackInterviewQuestions();
+    } catch (error) {
+      console.warn('❌ GraphQL interview questions failed, using fallback:', error);
+      return this.getFallbackInterviewQuestions();
+    }
+  }
+
+  async generateInterviewQuestions(category, difficulty) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Generating interview questions via GraphQL:', category, difficulty);
+        const { data } = await apolloClient.mutate({
+          mutation: GENERATE_INTERVIEW_QUESTIONS,
+          variables: { 
+            category,
+            difficulty,
+            count: 5
+          },
+          refetchQueries: [{ query: GET_INTERVIEW_QUESTIONS, variables: { category, difficulty } }]
+        });
+
+        if (data.generateInterviewQuestions.success) {
+          const questions = data.generateInterviewQuestions.questions;
+          console.log('✅ Interview questions generated successfully:', questions.length);
+          return questions.map(q => ({
+            id: q.id,
+            question_text: q.question,
+            question_type: q.category?.toLowerCase() || category,
+            difficulty: q.difficulty || difficulty,
+            difficulty_display: (q.difficulty || difficulty)?.charAt(0).toUpperCase() + (q.difficulty || difficulty)?.slice(1),
+            sample_answer: q.expectedAnswer || `This is a sample answer for the ${category} question.`,
+            answer_framework: q.tips || (category === 'behavioral' ? 'STAR Method' : 'Structured Approach'),
             is_generated: true,
-            times_used: 18
-          },
-          {
-            id: 'mock-q-3',
-            question_text: 'Describe a time when you had to work with a difficult team member.',
-            question_type: 'behavioral',
-            difficulty: 'medium',
-            difficulty_display: 'Medium',
-            sample_answer: 'Use the STAR method to structure your response with specific examples.',
-            answer_framework: 'STAR (Situation, Task, Action, Result)',
-            is_generated: false,
-            times_used: 12
-          }
-        ]
-      };
-    }
-  }
-
-  /**
-   * Get specific interview question by ID
-   */
-  async getInterviewQuestionById(id) {
-    const response = await this.makeRequest(`/interview-questions/${id}/`);
-    return await response.json();
-  }
-
-  /**
-   * Create interview question
-   */
-  async createInterviewQuestion(data) {
-    const response = await this.makeRequest('/interview-questions/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Generate interview questions
-   */
-  async generateInterviewQuestions(questionType, difficulty = 'medium', companyId = null, positionType = '') {
-    const response = await this.makeRequest('/interview-questions/generate/', {
-      method: 'POST',
-      body: JSON.stringify({
-        question_type: questionType,
-        difficulty,
-        company_id: companyId,
-        position_type: positionType,
-      }),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Update interview question
-   */
-  async updateInterviewQuestion(id, data) {
-    const response = await this.makeRequest(`/interview-questions/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Delete interview question
-   */
-  async deleteInterviewQuestion(id) {
-    await this.makeRequest(`/interview-questions/${id}/`, {
-      method: 'DELETE',
-    });
-  }
-
-  /**
-   * Rate an interview question
-   */
-  async rateInterviewQuestion(id, rating) {
-    const response = await this.makeRequest(`/interview-questions/${id}/rate/`, {
-      method: 'POST',
-      body: JSON.stringify({ rating }),
-    });
-    return await response.json();
-  }
-
-  // Practice Sessions Methods
-
-  /**
-   * Get practice sessions
-   */
-  async getPracticeSessions(filters = {}) {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const endpoint = `/practice-sessions/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
+            times_used: 0
+          }));
+        } else {
+          throw new Error(data.generateInterviewQuestions.errors?.join(', ') || 'Failed to generate questions');
+        }
+      }
+      return this.getMockGeneratedQuestions(category, difficulty);
     } catch (error) {
-      console.error('Error fetching practice sessions, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 'mock-session-1',
-            session_type: 'mock_interview',
-            session_type_display: 'Mock Interview',
-            completion_status: 'completed',
-            completion_status_display: 'Completed',
-            duration_minutes: 45,
-            questions_attempted: 8,
-            self_rating: 4,
-            notes: 'Good overall performance, need to work on technical questions.',
-            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
-          },
-          {
-            id: 'mock-session-2',
-            session_type: 'question_practice',
-            session_type_display: 'Question Practice',
-            completion_status: 'completed',
-            completion_status_display: 'Completed',
-            duration_minutes: 30,
-            questions_attempted: 12,
-            self_rating: 3,
-            notes: 'Focused on behavioral questions. Need more practice with STAR method.',
-            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago
-          },
-          {
-            id: 'mock-session-3',
-            session_type: 'mock_interview',
-            session_type_display: 'Mock Interview',
-            completion_status: 'in_progress',
-            completion_status_display: 'In Progress',
-            duration_minutes: 15,
-            questions_attempted: 3,
-            self_rating: null,
-            notes: null,
-            created_at: new Date().toISOString()
-          }
-        ]
-      };
+      console.warn('❌ GraphQL generate interview questions failed, using mock:', error);
+      return this.getMockGeneratedQuestions(category, difficulty);
     }
   }
 
-  /**
-   * Get specific practice session by ID
-   */
-  async getPracticeSessionById(id) {
-    const response = await this.makeRequest(`/practice-sessions/${id}/`);
-    return await response.json();
-  }
-
-  /**
-   * Create practice session
-   */
-  async createPracticeSession(data) {
-    const response = await this.makeRequest('/practice-sessions/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Start new practice session
-   */
-  async startPracticeSession(sessionType, companyId = null) {
-    const response = await this.makeRequest('/practice-sessions/start/', {
-      method: 'POST',
-      body: JSON.stringify({
-        session_type: sessionType,
-        company_id: companyId,
-      }),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Update practice session
-   */
-  async updatePracticeSession(id, data) {
-    const response = await this.makeRequest(`/practice-sessions/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Delete practice session
-   */
-  async deletePracticeSession(id) {
-    await this.makeRequest(`/practice-sessions/${id}/`, {
-      method: 'DELETE',
-    });
-  }
-
-  /**
-   * Complete practice session
-   */
-  async completePracticeSession(id, sessionData) {
-    const response = await this.makeRequest(`/practice-sessions/${id}/complete/`, {
-      method: 'POST',
-      body: JSON.stringify(sessionData),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Get recent practice sessions for dashboard
-   */
-  async getRecentPracticeSessions() {
-    const response = await this.makeRequest('/practice-sessions/recent/');
-    return await response.json();
-  }
-
-  // Company Insights Methods
-
-  /**
-   * Get company insights
-   */
-  async getCompanyInsights(filters = {}) {
-    const queryParams = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
-
-    const endpoint = `/company-insights/${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await this.makeRequest(endpoint);
-    return await response.json();
-  }
-
-  /**
-   * Get specific company insight by ID
-   */
-  async getCompanyInsightById(id) {
-    const response = await this.makeRequest(`/company-insights/${id}/`);
-    return await response.json();
-  }
-
-  /**
-   * Create company insight
-   */
-  async createCompanyInsight(data) {
-    const response = await this.makeRequest('/company-insights/', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Update company insight
-   */
-  async updateCompanyInsight(id, data) {
-    const response = await this.makeRequest(`/company-insights/${id}/`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Delete company insight
-   */
-  async deleteCompanyInsight(id) {
-    await this.makeRequest(`/company-insights/${id}/`, {
-      method: 'DELETE',
-    });
-  }
-
-  /**
-   * Upvote company insight
-   */
-  async upvoteCompanyInsight(id) {
-    const response = await this.makeRequest(`/company-insights/${id}/upvote/`, {
-      method: 'POST',
-    });
-    return await response.json();
-  }
-
-  /**
-   * Downvote company insight
-   */
-  async downvoteCompanyInsight(id) {
-    const response = await this.makeRequest(`/company-insights/${id}/downvote/`, {
-      method: 'POST',
-    });
-    return await response.json();
-  }
-
-  // Company News Methods
-
-  /**
-   * Get company news
-   */
-  async getCompanyNews(filters = {}) {
-    const queryParams = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
-
-    const endpoint = `/company-news/${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await this.makeRequest(endpoint);
-    return await response.json();
-  }
-
-  /**
-   * Get specific news article by ID
-   */
-  async getCompanyNewsById(id) {
-    const response = await this.makeRequest(`/company-news/${id}/`);
-    return await response.json();
-  }
-
-  /**
-   * Get recent company news for dashboard
-   */
-  async getRecentCompanyNews() {
-    const response = await this.makeRequest('/company-news/recent/');
-    return await response.json();
-  }
-
-  /**
-   * Get interview tips by category
-   */
-  async getInterviewTips(category = 'general') {
+  async getInterviewTips(category) {
     try {
-      const response = await this.makeRequest(`/interview-tips/?category=${category}`);
-      return await response.json();
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching interview tips via GraphQL for category:', category);
+        // For tips, we'll use the general interview questions query but filter for tips
+        const { data } = await apolloClient.query({
+          query: GET_INTERVIEW_QUESTIONS,
+          variables: {
+            category: category || 'general',
+            limit: 10
+          },
+          fetchPolicy: 'cache-and-network'
+        });
+
+        const questions = data.interviewQuestions || [];
+        console.log('✅ Interview tips data fetched successfully');
+        
+        // Convert questions data to tips format
+        const tips = questions
+          .filter(q => q.tips)
+          .map((q, index) => ({
+            id: `tip-${category}-${index + 1}`,
+            title: `${q.category} Interview Tip`,
+            content: q.tips,
+            category: category || 'general',
+            priority: q.isCommon ? 'high' : 'medium'
+          }));
+
+        // Add some default tips if none found
+        if (tips.length === 0) {
+          console.log('⚠️ No GraphQL tips found, using fallback');
+          return this.getFallbackInterviewTips(category);
+        }
+
+        return { results: tips };
+      }
+      return this.getFallbackInterviewTips(category);
     } catch (error) {
-      console.error('Error fetching interview tips, using mock data:', error);
-      // Return mock data for demo
-      const mockTips = {
-        general: [
-          {
-            id: 'tip-g-1',
-            title: 'Research the Company',
-            content: 'Spend time researching the company\'s mission, values, recent news, and culture. This shows genuine interest and helps you ask informed questions.',
-            category: 'general',
-            priority: 'high'
-          },
-          {
-            id: 'tip-g-2',
-            title: 'Prepare Your STAR Stories',
-            content: 'Have 3-5 specific examples ready using the STAR method (Situation, Task, Action, Result) to demonstrate your skills and experience.',
-            category: 'general',
-            priority: 'high'
-          },
-          {
-            id: 'tip-g-3',
-            title: 'Dress Appropriately',
-            content: 'Dress slightly more formal than the company\'s usual dress code. When in doubt, business professional is usually safe.',
-            category: 'general',
-            priority: 'medium'
-          }
-        ],
-        technical: [
-          {
-            id: 'tip-t-1',
-            title: 'Practice Coding Problems',
-            content: 'Review fundamental data structures and algorithms. Practice coding problems on platforms like LeetCode or HackerRank.',
-            category: 'technical',
-            priority: 'high'
-          },
-          {
-            id: 'tip-t-2',
-            title: 'Know Your Resume',
-            content: 'Be prepared to discuss any technology, project, or experience mentioned on your resume in detail.',
-            category: 'technical',
-            priority: 'high'
-          },
-          {
-            id: 'tip-t-3',
-            title: 'Think Out Loud',
-            content: 'During technical problems, verbalize your thought process. Interviewers want to see how you approach problems.',
-            category: 'technical',
-            priority: 'medium'
-          }
-        ],
-        behavioral: [
-          {
-            id: 'tip-b-1',
-            title: 'Use Specific Examples',
-            content: 'Always provide concrete examples when answering behavioral questions. Avoid hypothetical scenarios.',
-            category: 'behavioral',
-            priority: 'high'
-          },
-          {
-            id: 'tip-b-2',
-            title: 'Show Self-Awareness',
-            content: 'Demonstrate that you can reflect on your experiences and learn from both successes and failures.',
-            category: 'behavioral',
-            priority: 'medium'
-          },
-          {
-            id: 'tip-b-3',
-            title: 'Highlight Collaboration',
-            content: 'Emphasize your ability to work well with others and contribute to team success.',
-            category: 'behavioral',
-            priority: 'medium'
-          }
-        ]
-      };
-      
-      return {
-        results: mockTips[category] || []
-      };
+      console.warn('❌ GraphQL interview tips failed, using fallback:', error);
+      return this.getFallbackInterviewTips(category);
     }
   }
 
-  /**
-   * Get interview resources
-   */
-  async getInterviewResources(filters = {}) {
+  // Practice Sessions
+  async getPracticeSessions(params = {}) {
     try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const endpoint = `/interview-resources/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching practice sessions via GraphQL...', params);
+        // For now, we'll create mock practice sessions based on user's interview data
+        // This would typically come from a dedicated practice sessions backend
+        console.log('⚠️ Practice sessions not yet implemented in backend, using enhanced fallback');
+        
+        // Enhanced fallback with more realistic data
+        const sessions = this.getFallbackPracticeSessions();
+        console.log('✅ Practice sessions loaded (fallback)');
+        return sessions;
+      }
+      return this.getFallbackPracticeSessions();
     } catch (error) {
-      console.error('Error fetching interview resources, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 'resource-1',
-            resource_type: 'article',
-            title: 'The Complete Guide to Technical Interviews',
-            description: 'Comprehensive guide covering all aspects of technical interviews, from preparation to follow-up.',
-            url: 'https://example.com/technical-interview-guide',
-            category: 'technical',
-            difficulty: 'intermediate'
-          },
-          {
-            id: 'resource-2',
-            resource_type: 'video',
-            title: 'Behavioral Interview Mastery',
-            description: 'Video series on answering behavioral questions using the STAR method with real examples.',
-            url: 'https://example.com/behavioral-interviews',
-            category: 'behavioral',
-            difficulty: 'beginner'
-          },
-          {
-            id: 'resource-3',
-            resource_type: 'book',
-            title: 'Cracking the Coding Interview',
-            description: 'Classic resource for preparing for technical coding interviews at top tech companies.',
-            file_url: 'https://example.com/download/coding-interview-book',
-            category: 'technical',
-            difficulty: 'advanced'
-          },
-          {
-            id: 'resource-4',
-            resource_type: 'checklist',
-            title: 'Interview Day Preparation Checklist',
-            description: 'Complete checklist to ensure you\'re fully prepared for your interview day.',
-            url: 'https://example.com/interview-checklist',
-            category: 'general',
-            difficulty: 'beginner'
-          }
-        ]
-      };
+      console.warn('❌ GraphQL practice sessions failed, using fallback:', error);
+      return this.getFallbackPracticeSessions();
     }
   }
 
-  // Utility Methods
+  async startPracticeSession(sessionType) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Starting practice session via GraphQL:', sessionType);
+        // This would typically create a new practice session in the backend
+        console.log('⚠️ Practice session creation not yet implemented in backend, using enhanced mock');
+        
+        const session = this.getMockPracticeSession(sessionType);
+        console.log('✅ Practice session started (mock):', session.id);
+        return session;
+      }
+      return this.getMockPracticeSession(sessionType);
+    } catch (error) {
+      console.warn('❌ GraphQL start practice session failed, using mock:', error);
+      return this.getMockPracticeSession(sessionType);
+    }
+  }
 
-  /**
-   * Transform API data for frontend consumption
-   */
-  transformResearchData(research) {
+  // Interview Resources
+  async getInterviewResources(params = {}) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching interview resources via GraphQL...', params);
+        // For now, we'll use enhanced fallback data
+        // This would typically come from a dedicated resources backend
+        console.log('⚠️ Interview resources not yet implemented in backend, using enhanced fallback');
+        
+        const resources = this.getFallbackInterviewResources();
+        console.log('✅ Interview resources loaded (fallback):', resources.results.length);
+        return resources;
+      }
+      return this.getFallbackInterviewResources();
+    } catch (error) {
+      console.warn('❌ GraphQL interview resources failed, using fallback:', error);
+      return this.getFallbackInterviewResources();
+    }
+  }
+
+  // Fallback Data Methods
+  getFallbackCompanyResearch() {
     return {
-      ...research,
-      researchDate: new Date(research.research_date),
-      createdAt: new Date(research.created_at),
-      updatedAt: new Date(research.updated_at),
+      results: [
+        {
+          id: 'research-1',
+          title: 'TechCorp Company Analysis',
+          company: 'TechCorp',
+          research_date: '2025-07-18',
+          confidence_score: 0.85,
+          is_saved: false
+        }
+      ]
     };
   }
 
-  /**
-   * Transform interview question data
-   */
-  transformQuestionData(question) {
+  getFallbackCompanyResearchDetail() {
     return {
-      ...question,
-      createdAt: new Date(question.created_at),
-      updatedAt: new Date(question.updated_at),
+      id: 'research-1',
+      title: 'TechCorp Company Analysis',
+      company: 'TechCorp',
+      research_date: '2025-07-18',
+      confidence_score: 0.85,
+      overview: 'TechCorp is a leading technology company specializing in innovative software solutions. Founded in 2010, the company has grown rapidly and now employs over 1,000 people globally.',
+      culture_analysis: 'TechCorp promotes a collaborative and innovative work environment. They value work-life balance and offer flexible working arrangements. The company culture emphasizes continuous learning and professional development.',
+      recent_news: 'TechCorp recently announced a $50M Series C funding round led by prominent venture capital firms. The company is expanding into new markets and hiring aggressively across all departments.',
+      financial_highlights: 'Revenue growth of 150% year-over-year. The company is profitable and has a strong cash position. Recent partnerships with major enterprise clients have strengthened their market position.',
+      growth_prospects: 'Strong growth prospects in the AI and cloud computing sectors. The company is well-positioned to capitalize on emerging technology trends and has a robust product roadmap.',
+      is_saved: false
     };
   }
 
-  /**
-   * Transform practice session data
-   */
-  transformSessionData(session) {
+  getMockGeneratedResearch(companyId) {
     return {
-      ...session,
-      createdAt: new Date(session.created_at),
-      updatedAt: new Date(session.updated_at),
-      sessionData: typeof session.session_data === 'string' 
-        ? JSON.parse(session.session_data) 
-        : session.session_data,
+      id: `research-${Date.now()}`,
+      title: `AI-Generated Company Research`,
+      company: companyId,
+      research_date: new Date().toISOString(),
+      confidence_score: 0.88,
+      overview: 'This company demonstrates strong market presence in their sector with innovative approaches to solving industry challenges.',
+      culture_analysis: 'Based on employee reviews and company communications, the organization promotes collaboration, innovation, and professional growth.',
+      recent_news: 'Recent company updates indicate positive growth trajectory and strategic market expansion initiatives.',
+      financial_highlights: 'Financial indicators suggest stable performance with growth opportunities in emerging market segments.',
+      growth_prospects: 'The company is well-positioned for continued growth given current market trends and their strategic positioning.',
+      is_saved: false
+    };
+  }
+
+  getFallbackCompanyInsights() {
+    return {
+      results: [
+        {
+          id: 'insight-1',
+          title: 'Company Culture Insight',
+          insight_type: 'culture',
+          insight_type_display: 'Culture',
+          content: 'Employees frequently mention the collaborative work environment and opportunities for professional development.',
+          source: 'Employee Reviews Analysis',
+          confidence_score: 0.82
+        },
+        {
+          id: 'insight-2',
+          title: 'Interview Process Insight',
+          insight_type: 'interview',
+          insight_type_display: 'Interview Process',
+          content: 'Technical interviews typically include coding challenges and system design discussions. The process is reported to be fair and thorough.',
+          source: 'Interview Experience Data',
+          confidence_score: 0.75
+        }
+      ]
+    };
+  }
+
+  getFallbackCompanyNews() {
+    return {
+      results: [
+        {
+          id: 'news-1',
+          title: 'Company Announces Major Product Launch',
+          summary: 'The company unveiled their latest innovation which is expected to revolutionize the industry.',
+          source: 'Tech News Today',
+          published_date: '2025-07-15',
+          url: 'https://example.com/news/product-launch',
+          relevance_score: 0.9
+        },
+        {
+          id: 'news-2',
+          title: 'Expansion into New Markets',
+          summary: 'Strategic expansion announced for Q4 2025, targeting international markets.',
+          source: 'Business Weekly',
+          published_date: '2025-07-10',
+          url: 'https://example.com/news/expansion',
+          relevance_score: 0.75
+        }
+      ]
+    };
+  }
+
+  getFallbackInterviewQuestions() {
+    const interviewData = FallbackService.getMockInterviewData();
+    return {
+      results: interviewData.practiceQuestions.map((q, index) => ({
+        id: `question-${index + 1}`,
+        question_text: q.question,
+        question_type: q.category.toLowerCase(),
+        difficulty: q.difficulty,
+        difficulty_display: q.difficulty.charAt(0).toUpperCase() + q.difficulty.slice(1),
+        sample_answer: 'Sample answer would be provided here based on the question type and complexity.',
+        answer_framework: q.category === 'React' ? 'STAR Method' : 'Technical Approach',
+        is_generated: false,
+        times_used: Math.floor(Math.random() * 10)
+      }))
+    };
+  }
+
+  getMockGeneratedQuestions(category, difficulty) {
+    const questions = {
+      general: [
+        'Tell me about yourself and your career journey.',
+        'Why are you interested in this position?',
+        'What are your greatest strengths and weaknesses?'
+      ],
+      technical: [
+        'Explain the concept of asynchronous programming in JavaScript.',
+        'How would you optimize a slow database query?',
+        'Describe your approach to debugging production issues.'
+      ],
+      behavioral: [
+        'Describe a time when you had to work with a difficult team member.',
+        'Tell me about a challenging project you completed successfully.',
+        'How do you handle tight deadlines and pressure?'
+      ]
+    };
+
+    const categoryQuestions = questions[category] || questions.general;
+    return categoryQuestions.map((question, index) => ({
+      id: `generated-${category}-${index + 1}`,
+      question_text: question,
+      question_type: category,
+      difficulty: difficulty,
+      difficulty_display: difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
+      sample_answer: `This is a sample answer for the ${category} question about ${question.split(' ').slice(0, 3).join(' ')}.`,
+      answer_framework: category === 'behavioral' ? 'STAR Method' : 'Structured Approach',
+      is_generated: true,
+      times_used: 0
+    }));
+  }
+
+  getFallbackInterviewTips(category) {
+    const tips = {
+      general: [
+        {
+          id: 'tip-general-1',
+          title: 'Research the Company',
+          content: 'Thoroughly research the company\'s mission, values, recent news, and industry position before the interview.',
+          category: 'general',
+          priority: 'high'
+        },
+        {
+          id: 'tip-general-2',
+          title: 'Prepare Questions',
+          content: 'Prepare thoughtful questions about the role, team, and company culture to show your genuine interest.',
+          category: 'general',
+          priority: 'high'
+        }
+      ],
+      technical: [
+        {
+          id: 'tip-technical-1',
+          title: 'Practice Coding',
+          content: 'Practice coding problems similar to what you might encounter. Focus on explaining your thought process clearly.',
+          category: 'technical',
+          priority: 'high'
+        },
+        {
+          id: 'tip-technical-2',
+          title: 'Know Your Projects',
+          content: 'Be ready to discuss your past projects in detail, including challenges faced and solutions implemented.',
+          category: 'technical',
+          priority: 'medium'
+        }
+      ],
+      behavioral: [
+        {
+          id: 'tip-behavioral-1',
+          title: 'Use STAR Method',
+          content: 'Structure your answers using Situation, Task, Action, Result format for behavioral questions.',
+          category: 'behavioral',
+          priority: 'high'
+        },
+        {
+          id: 'tip-behavioral-2',
+          title: 'Prepare Examples',
+          content: 'Have specific examples ready that demonstrate leadership, problem-solving, and teamwork skills.',
+          category: 'behavioral',
+          priority: 'high'
+        }
+      ]
+    };
+
+    return {
+      results: tips[category] || tips.general
+    };
+  }
+
+  getFallbackPracticeSessions() {
+    return {
+      results: [
+        {
+          id: 'session-1',
+          session_type: 'mock_interview',
+          session_type_display: 'Mock Interview',
+          completion_status: 'completed',
+          completion_status_display: 'Completed',
+          duration_minutes: 45,
+          questions_attempted: 8,
+          self_rating: 4,
+          notes: 'Good technical answers, need to work on behavioral responses.',
+          created_at: '2025-07-15T10:00:00Z'
+        },
+        {
+          id: 'session-2',
+          session_type: 'question_practice',
+          session_type_display: 'Question Practice',
+          completion_status: 'in_progress',
+          completion_status_display: 'In Progress',
+          duration_minutes: 30,
+          questions_attempted: 12,
+          self_rating: null,
+          notes: '',
+          created_at: '2025-07-18T14:30:00Z'
+        }
+      ]
+    };
+  }
+
+  getMockPracticeSession(sessionType) {
+    return {
+      id: `session-${Date.now()}`,
+      session_type: sessionType,
+      session_type_display: sessionType === 'mock_interview' ? 'Mock Interview' : 'Question Practice',
+      completion_status: 'in_progress',
+      completion_status_display: 'In Progress',
+      duration_minutes: 0,
+      questions_attempted: 0,
+      self_rating: null,
+      notes: '',
+      created_at: new Date().toISOString()
+    };
+  }
+
+  getFallbackInterviewResources() {
+    return {
+      results: [
+        {
+          id: 'resource-1',
+          title: 'Technical Interview Preparation Guide',
+          description: 'Comprehensive guide covering common technical interview topics and coding challenges.',
+          resource_type: 'Guide',
+          category: 'Technical',
+          difficulty: 'Intermediate',
+          url: 'https://example.com/tech-interview-guide',
+          file_url: null
+        },
+        {
+          id: 'resource-2',
+          title: 'Behavioral Interview Questions Bank',
+          description: 'Collection of common behavioral interview questions with example answers.',
+          resource_type: 'Document',
+          category: 'Behavioral',
+          difficulty: 'Beginner',
+          url: null,
+          file_url: 'https://example.com/behavioral-questions.pdf'
+        },
+        {
+          id: 'resource-3',
+          title: 'System Design Interview Course',
+          description: 'Video course covering system design principles and common interview scenarios.',
+          resource_type: 'Course',
+          category: 'Technical',
+          difficulty: 'Advanced',
+          url: 'https://example.com/system-design-course',
+          file_url: null
+        }
+      ]
     };
   }
 }
 
-export default new CompanyResearchService();
+const companyResearchService = new CompanyResearchService();
+export default companyResearchService;

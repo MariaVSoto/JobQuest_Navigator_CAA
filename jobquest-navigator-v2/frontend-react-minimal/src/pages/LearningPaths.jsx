@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import './LearningPaths.css';
 
 const LearningPaths = () => {
   const { user } = useAuth();
+  const { showSuccess, showInfo } = useToast();
   const [selectedPath, setSelectedPath] = useState(null);
   const [userProgress, setUserProgress] = useState({});
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,8 @@ const LearningPaths = () => {
     // In a real app, this would start the learning path
     console.log('Starting learning path:', pathId);
     // For now, just show a message
-    alert(`Starting ${learningPaths.find(p => p.id === pathId)?.title} learning path!`);
+    const pathTitle = learningPaths.find(p => p.id === pathId)?.title;
+    showSuccess(`Starting ${pathTitle} learning path!`);
   };
 
   return (

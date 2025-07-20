@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { JobContext } from '../context/JobContext';
-import { jobService } from '../services/jobService';
+import unifiedJobService from '../services/unifiedJobService';
 import './JobDetails.css';
 
 const JobDetails = () => {
@@ -21,10 +21,10 @@ const JobDetails = () => {
       
       try {
         // Fetch job details from Django backend
-        const jobData = await jobService.getJobById(jobId);
+        const jobData = await unifiedJobService.getJob(jobId);
         
         if (jobData) {
-          const transformedJob = jobService.transformJobData(jobData);
+          const transformedJob = jobData // jobService.transformJobData(jobData);
           setJob(transformedJob);
           setIsSaved(jobData.is_saved || false);
         } else {

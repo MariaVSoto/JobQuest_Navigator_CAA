@@ -343,8 +343,8 @@ export const SEARCH_COMPANIES = gql`
 // ============================================================================
 
 export const GET_SKILLS = gql`
-  query GetSkills {
-    skills {
+  query GetSkills($category: String, $search: String, $limit: Int) {
+    skills(category: $category, search: $search, limit: $limit) {
       id
       name
       slug
@@ -352,6 +352,132 @@ export const GET_SKILLS = gql`
       description
       isTechnical
       popularityScore
+      marketDemand
+      averageSalary
+      isTrending
+    }
+  }
+`;
+
+export const GET_USER_SKILLS = gql`
+  query GetUserSkills {
+    userSkills {
+      id
+      proficiencyLevel
+      yearsExperience
+      selfAssessedLevel
+      targetProficiency
+      frequencyOfUse
+      evidenceUrl
+      lastUsed
+      isVerified
+      skill {
+        id
+        name
+        category
+        description
+        isTechnical
+        popularityScore
+        marketDemand
+        averageSalary
+      }
+    }
+  }
+`;
+
+export const GET_USER_CERTIFICATIONS = gql`
+  query GetUserCertifications {
+    userCertifications {
+      id
+      status
+      earnedDate
+      expiryDate
+      credentialId
+      credentialUrl
+      targetCompletionDate
+      studyProgress
+      notes
+      isVerified
+      certification {
+        id
+        name
+        issuingOrganization
+        description
+        validityPeriodMonths
+        difficultyLevel
+      }
+    }
+  }
+`;
+
+export const GET_USER_LEARNING_PATHS = gql`
+  query GetUserLearningPaths {
+    userLearningPaths {
+      id
+      status
+      progressPercentage
+      startedDate
+      targetCompletionDate
+      totalStudyHours
+      learningPath {
+        id
+        name
+        description
+        estimatedDurationWeeks
+        difficultyLevel
+        targetRole
+        isFeatured
+      }
+    }
+  }
+`;
+
+export const GET_SKILL_CATEGORIES = gql`
+  query GetSkillCategories {
+    skillCategories {
+      id
+      name
+      description
+      iconName
+      skillCount
+    }
+  }
+`;
+
+export const GET_CERTIFICATIONS = gql`
+  query GetCertifications($category: String, $search: String, $limit: Int) {
+    certifications(category: $category, search: $search, limit: $limit) {
+      id
+      name
+      issuingOrganization
+      description
+      validityPeriodMonths
+      difficultyLevel
+      averagePreparationHours
+      marketValue
+      isPopular
+    }
+  }
+`;
+
+export const GET_LEARNING_PATHS = gql`
+  query GetLearningPaths($targetRole: String, $difficultyLevel: String, $limit: Int) {
+    learningPaths(targetRole: $targetRole, difficultyLevel: $difficultyLevel, limit: $limit) {
+      id
+      name
+      description
+      estimatedDurationWeeks
+      difficultyLevel
+      targetRole
+      totalModules
+      completionRate
+      averageRating
+      isFeatured
+      skills {
+        id
+        name
+        category
+      }
     }
   }
 `;

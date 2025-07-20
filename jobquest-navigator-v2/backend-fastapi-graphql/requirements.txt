@@ -28,5 +28,8 @@ requests==2.32.4
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
+# Redis Cache
+redis==5.0.1
+
 # Development
 python-dotenv==1.0.0

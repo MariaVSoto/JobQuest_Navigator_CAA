@@ -40,6 +40,7 @@ const NavBar = () => {
       basePath: '/jobs',
       items: [
         { path: '/upload-job', label: 'Upload Job Position', description: 'Add job postings for optimization' },
+        { path: '/my-jobs', label: 'My Job Listings', description: 'View and manage your uploaded jobs' },
         { path: '/application-history', label: 'Application Tracing', description: 'Track your job applications' },
         { path: '/ai-suggestions', label: 'AI Insights', description: 'Get AI-powered job recommendations' }
       ]
@@ -49,6 +50,7 @@ const NavBar = () => {
       basePath: '/skills',
       items: [
         { path: '/skills', label: 'Skills & Certifications', description: 'Enhance your qualifications' },
+        { path: '/skill-job-mapping', label: 'Skill-Job Mapping', description: 'Analyze skill matches with jobs' },
         { path: '/learning-paths', label: 'Learning Paths', description: 'Structured learning roadmaps' }
       ]
     },

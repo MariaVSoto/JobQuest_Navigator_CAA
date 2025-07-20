@@ -1,1099 +1,800 @@
 /**
- * Skills and Certifications service for Phase 3 MVP
- * Handles all API calls related to skills management and certification tracking
+ * Skills Service - Handles skills and certifications management
+ * Uses GraphQL when available, fallback to mock data for development
  */
 
-import FallbackService from './fallbackService';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+import { FallbackService } from './fallbackService';
+import apolloClient from '../apolloClient';
+import {
+  GET_USER_SKILLS,
+  GET_USER_CERTIFICATIONS,
+  GET_USER_LEARNING_PATHS,
+  GET_SKILLS,
+  GET_SKILL_CATEGORIES,
+  GET_CERTIFICATIONS,
+  GET_LEARNING_PATHS
+} from '../graphql/queries';
+import {
+  ADD_USER_SKILL,
+  UPDATE_USER_SKILL,
+  REMOVE_USER_SKILL,
+  ADD_USER_CERTIFICATION,
+  UPDATE_USER_CERTIFICATION,
+  REMOVE_USER_CERTIFICATION,
+  ENROLL_IN_LEARNING_PATH
+} from '../graphql/mutations';
 
 class SkillsService {
   constructor() {
-    this.baseURL = `${API_BASE_URL}/skills`;
+    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8001';
+    this.useGraphQL = process.env.REACT_APP_USE_GRAPHQL === 'true';
   }
 
-  /**
-   * Get authentication token from localStorage
-   */
-  getAuthToken() {
-    return localStorage.getItem('jobquest_access_token');
-  }
-
-  /**
-   * Make authenticated API request
-   */
-  async makeRequest(endpoint, options = {}) {
-    const token = this.getAuthToken();
-    const url = `${this.baseURL}${endpoint}`;
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    };
-
+  // User Skills Management
+  async getUserSkills(params = {}) {
     try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.detail || `HTTP ${response.status}`);
-      }
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching user skills via GraphQL...');
+        const { data } = await apolloClient.query({
+          query: GET_USER_SKILLS,
+          fetchPolicy: 'cache-and-network'
+        });
 
-      return response;
+        const skills = data.userSkills || [];
+        console.log('✅ User skills fetched successfully:', skills.length, 'skills');
+        
+        return {
+          results: skills.map(userSkill => ({
+            id: userSkill.id,
+            skill: userSkill.skill,
+            skill_name: userSkill.skill.name,
+            proficiency_level: userSkill.proficiencyLevel,
+            years_experience: userSkill.yearsExperience,
+            self_assessed_level: userSkill.selfAssessedLevel,
+            target_proficiency: userSkill.targetProficiency,
+            frequency_of_use: userSkill.frequencyOfUse,
+            evidence_url: userSkill.evidenceUrl,
+            is_verified: userSkill.isVerified,
+            last_used: userSkill.lastUsed
+          }))
+        };
+      }
+      return this.getFallbackUserSkills();
     } catch (error) {
-      console.error('Skills API request failed:', error);
+      console.warn('❌ GraphQL user skills failed, using fallback:', error);
+      return this.getFallbackUserSkills();
+    }
+  }
+
+  async addUserSkill(skillData) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Adding user skill via GraphQL:', skillData);
+        const { data } = await apolloClient.mutate({
+          mutation: ADD_USER_SKILL,
+          variables: {
+            skillId: skillData.skill || skillData.skillId,
+            proficiencyLevel: skillData.proficiency_level || skillData.proficiencyLevel,
+            yearsExperience: skillData.years_experience || skillData.yearsExperience,
+            selfAssessedLevel: skillData.self_assessed_level || skillData.selfAssessedLevel,
+            targetProficiency: skillData.target_proficiency || skillData.targetProficiency,
+            frequencyOfUse: skillData.frequency_of_use || skillData.frequencyOfUse,
+            evidenceUrl: skillData.evidence_url || skillData.evidenceUrl,
+            lastUsed: skillData.last_used || skillData.lastUsed
+          },
+          refetchQueries: [{ query: GET_USER_SKILLS }]
+        });
+
+        if (data.addUserSkill.success) {
+          console.log('✅ User skill added successfully:', data.addUserSkill.userSkill);
+          return data.addUserSkill.userSkill;
+        } else {
+          throw new Error(data.addUserSkill.errors?.join(', ') || 'Failed to add skill');
+        }
+      }
+      return this.getMockUserSkill(skillData);
+    } catch (error) {
+      console.warn('❌ GraphQL add skill failed, using mock:', error);
+      return this.getMockUserSkill(skillData);
+    }
+  }
+
+  async updateUserSkill(userSkillId, skillData) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Updating user skill via GraphQL:', userSkillId, skillData);
+        const { data } = await apolloClient.mutate({
+          mutation: UPDATE_USER_SKILL,
+          variables: {
+            userSkillId,
+            proficiencyLevel: skillData.proficiency_level || skillData.proficiencyLevel,
+            yearsExperience: skillData.years_experience || skillData.yearsExperience,
+            selfAssessedLevel: skillData.self_assessed_level || skillData.selfAssessedLevel,
+            targetProficiency: skillData.target_proficiency || skillData.targetProficiency,
+            frequencyOfUse: skillData.frequency_of_use || skillData.frequencyOfUse,
+            evidenceUrl: skillData.evidence_url || skillData.evidenceUrl,
+            lastUsed: skillData.last_used || skillData.lastUsed
+          },
+          refetchQueries: [{ query: GET_USER_SKILLS }]
+        });
+
+        if (data.updateUserSkill.success) {
+          console.log('✅ User skill updated successfully:', data.updateUserSkill.userSkill);
+          return data.updateUserSkill.userSkill;
+        } else {
+          throw new Error(data.updateUserSkill.errors?.join(', ') || 'Failed to update skill');
+        }
+      }
+      return this.getMockUserSkill(skillData, userSkillId);
+    } catch (error) {
+      console.warn('❌ GraphQL update skill failed, using mock:', error);
+      return this.getMockUserSkill(skillData, userSkillId);
+    }
+  }
+
+  async removeUserSkill(userSkillId) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Removing user skill via GraphQL:', userSkillId);
+        const { data } = await apolloClient.mutate({
+          mutation: REMOVE_USER_SKILL,
+          variables: { userSkillId },
+          refetchQueries: [{ query: GET_USER_SKILLS }]
+        });
+
+        if (data.removeUserSkill.success) {
+          console.log('✅ User skill removed successfully');
+          return { success: true };
+        } else {
+          throw new Error(data.removeUserSkill.errors?.join(', ') || 'Failed to remove skill');
+        }
+      }
+      return { success: true };
+    } catch (error) {
+      console.warn('❌ GraphQL remove skill failed:', error);
       throw error;
     }
   }
 
-  // Skill Category Operations
-
-  /**
-   * Get skill categories
-   */
-  async getSkillCategories(filters = {}) {
-    // Development bypass: return mock skill categories data
-    if (FallbackService.isDevBypass()) {
-      console.log('🔧 SkillsService: Using mock skill categories data (dev bypass)');
-      return {
-        count: 5,
-        next: null,
-        previous: null,
-        results: [
-          {
-            id: 1,
-            name: 'Programming Languages',
-            description: 'Programming and scripting languages',
-            icon: '💻',
-            skill_count: 25
-          },
-          {
-            id: 2,
-            name: 'Frontend Frameworks',
-            description: 'Frontend development frameworks and libraries',
-            icon: '🎨',
-            skill_count: 15
-          },
-          {
-            id: 3,
-            name: 'Backend Frameworks',
-            description: 'Backend development frameworks and tools',
-            icon: '⚙️',
-            skill_count: 18
-          },
-          {
-            id: 4,
-            name: 'Databases',
-            description: 'Database technologies and tools',
-            icon: '💾',
-            skill_count: 12
-          },
-          {
-            id: 5,
-            name: 'Cloud Computing',
-            description: 'Cloud platforms and services',
-            icon: '☁️',
-            skill_count: 20
-          }
-        ]
-      };
-    }
-
+  // Certifications Management
+  async getUserCertifications(params = {}) {
     try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching user certifications via GraphQL...');
+        const { data } = await apolloClient.query({
+          query: GET_USER_CERTIFICATIONS,
+          fetchPolicy: 'cache-and-network'
+        });
 
-      const endpoint = `/categories/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
+        const certifications = data.userCertifications || [];
+        console.log('✅ User certifications fetched successfully:', certifications.length, 'certifications');
+        
+        return {
+          results: certifications.map(userCert => ({
+            id: userCert.id,
+            certification: userCert.certification,
+            status: userCert.status,
+            earned_date: userCert.earnedDate,
+            expiry_date: userCert.expiryDate,
+            credential_id: userCert.credentialId,
+            credential_url: userCert.credentialUrl,
+            target_completion_date: userCert.targetCompletionDate,
+            study_progress: userCert.studyProgress,
+            notes: userCert.notes,
+            is_verified: userCert.isVerified
+          }))
+        };
+      }
+      return this.getFallbackUserCertifications();
     } catch (error) {
-      console.error('Error fetching skill categories, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 1,
-            name: 'Programming Languages',
-            description: 'Programming and scripting languages',
-            icon: '💻',
-            skill_count: 25
-          },
-          {
-            id: 2,
-            name: 'Frontend Frameworks',
-            description: 'Frontend development frameworks and libraries',
-            icon: '🎨',
-            skill_count: 15
-          },
-          {
-            id: 3,
-            name: 'Backend Frameworks',
-            description: 'Backend development frameworks and tools',
-            icon: '⚙️',
-            skill_count: 18
-          },
-          {
-            id: 4,
-            name: 'Databases',
-            description: 'Database technologies and tools',
-            icon: '💾',
-            skill_count: 12
-          },
-          {
-            id: 5,
-            name: 'Cloud Computing',
-            description: 'Cloud platforms and services',
-            icon: '☁️',
-            skill_count: 20
-          }
-        ]
-      };
+      console.warn('❌ GraphQL user certifications failed, using fallback:', error);
+      return this.getFallbackUserCertifications();
     }
   }
 
-  /**
-   * Get a specific skill category
-   */
-  async getSkillCategory(categoryId) {
-    const response = await this.makeRequest(`/categories/${categoryId}/`);
-    return await response.json();
-  }
-
-  // Skill Operations
-
-  /**
-   * Get skills with filtering and search
-   */
-  async getSkills(filters = {}) {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const endpoint = `/skills/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching skills, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 1,
-            name: 'JavaScript',
-            description: 'Dynamic programming language for web development',
-            category: 1,
-            market_demand: 'very_high',
-            average_salary: 85000,
-            is_trending: true,
-            popularity_score: 95
-          },
-          {
-            id: 2,
-            name: 'React',
-            description: 'JavaScript library for building user interfaces',
-            category: 2,
-            market_demand: 'high',
-            average_salary: 90000,
-            is_trending: true,
-            popularity_score: 88
-          },
-          {
-            id: 3,
-            name: 'Python',
-            description: 'High-level programming language for various applications',
-            category: 1,
-            market_demand: 'very_high',
-            average_salary: 88000,
-            is_trending: true,
-            popularity_score: 92
-          },
-          {
-            id: 4,
-            name: 'Node.js',
-            description: 'JavaScript runtime for server-side development',
-            category: 3,
-            market_demand: 'high',
-            average_salary: 87000,
-            is_trending: false,
-            popularity_score: 82
-          },
-          {
-            id: 5,
-            name: 'PostgreSQL',
-            description: 'Advanced open-source relational database',
-            category: 4,
-            market_demand: 'high',
-            average_salary: 78000,
-            is_trending: false,
-            popularity_score: 75
-          },
-          {
-            id: 6,
-            name: 'AWS',
-            description: 'Amazon Web Services cloud computing platform',
-            category: 5,
-            market_demand: 'very_high',
-            average_salary: 95000,
-            is_trending: true,
-            popularity_score: 89
-          }
-        ]
-      };
-    }
-  }
-
-  /**
-   * Get a specific skill
-   */
-  async getSkill(skillId) {
-    const response = await this.makeRequest(`/skills/${skillId}/`);
-    return await response.json();
-  }
-
-  /**
-   * Search skills (using DRF's built-in search)
-   */
-  async searchSkills(query, filters = {}) {
-    const queryParams = new URLSearchParams();
-    queryParams.append('search', query);
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
-
-    const response = await this.makeRequest(`/skills/?${queryParams}`);
-    return await response.json();
-  }
-
-  /**
-   * Create a new skill (admin only)
-   */
-  async createSkill(skillData) {
-    const response = await this.makeRequest('/skills/', {
-      method: 'POST',
-      body: JSON.stringify(skillData),
-    });
-    return await response.json();
-  }
-
-  // User Skills Operations
-
-  /**
-   * Get user's skills
-   */
-  async getUserSkills(filters = {}) {
-    // Development bypass: return mock user skills data
-    if (FallbackService.isDevBypass()) {
-      console.log('🔧 SkillsService: Using mock user skills data (dev bypass)');
-      const mockSkills = FallbackService.getMockSkills();
-      return {
-        count: mockSkills.userSkills.length,
-        next: null,
-        previous: null,
-        results: mockSkills.userSkills.map((skill, index) => ({
-          id: `user-skill-${index + 1}`,
-          skill: {
-            id: index + 1,
-            name: skill.name,
-            category: skill.name === 'React' ? 'Frontend Frameworks' : 'Programming Languages'
-          },
-          proficiency_level: skill.level,
-          years_experience: skill.years,
-          verified: index < 2, // First two skills are verified
-          last_updated: new Date().toISOString()
-        }))
-      };
-    }
-
-    try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const endpoint = `/user-skills/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching user skills, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 'mock-skill-1',
-            skill: {
-              id: 1,
-              name: 'JavaScript',
-              category: 'Programming Languages'
-            },
-            proficiency_level: 'advanced',
-            years_experience: 3,
-            verified: true,
-            last_updated: new Date().toISOString()
-          },
-          {
-            id: 'mock-skill-2',
-            skill: {
-              id: 2,
-              name: 'React',
-              category: 'Frontend Frameworks'
-            },
-            proficiency_level: 'intermediate',
-            years_experience: 2,
-            verified: true,
-            last_updated: new Date().toISOString()
-          },
-          {
-            id: 'mock-skill-3',
-            skill: {
-              id: 3,
-              name: 'Python',
-              category: 'Programming Languages'
-            },
-            proficiency_level: 'beginner',
-            years_experience: 1,
-            verified: false,
-            last_updated: new Date().toISOString()
-          }
-        ]
-      };
-    }
-  }
-
-  /**
-   * Add a skill to user's profile
-   */
-  async addUserSkill(skillData) {
-    const response = await this.makeRequest('/user-skills/', {
-      method: 'POST',
-      body: JSON.stringify(skillData),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Update user's skill
-   */
-  async updateUserSkill(userSkillId, skillData) {
-    const response = await this.makeRequest(`/user-skills/${userSkillId}/`, {
-      method: 'PUT',
-      body: JSON.stringify(skillData),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Remove user's skill
-   */
-  async removeUserSkill(userSkillId) {
-    await this.makeRequest(`/user-skills/${userSkillId}/`, {
-      method: 'DELETE',
-    });
-    return true;
-  }
-
-  // Certification Operations
-
-  /**
-   * Get available certifications
-   */
-  async getCertifications(filters = {}) {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const endpoint = `/certifications/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching certifications, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 1,
-            name: 'AWS Certified Solutions Architect',
-            issuing_organization: 'Amazon Web Services',
-            description: 'Validates expertise in designing distributed systems on AWS',
-            category: 'Cloud Computing',
-            difficulty_level: 'intermediate',
-            average_preparation_time: '120 hours',
-            popularity_score: 95
-          },
-          {
-            id: 2,
-            name: 'Google Analytics Certified',
-            issuing_organization: 'Google',
-            description: 'Demonstrates proficiency in Google Analytics',
-            category: 'Digital Marketing',
-            difficulty_level: 'beginner',
-            average_preparation_time: '40 hours',
-            popularity_score: 88
-          },
-          {
-            id: 3,
-            name: 'Certified Scrum Master',
-            issuing_organization: 'Scrum Alliance',
-            description: 'Validates knowledge of Scrum framework and agile principles',
-            category: 'Project Management',
-            difficulty_level: 'intermediate',
-            average_preparation_time: '60 hours',
-            popularity_score: 82
-          },
-          {
-            id: 4,
-            name: 'React Developer Certification',
-            issuing_organization: 'Meta',
-            description: 'Validates skills in React development and best practices',
-            category: 'Frontend Development',
-            difficulty_level: 'intermediate',
-            average_preparation_time: '80 hours',
-            popularity_score: 79
-          }
-        ]
-      };
-    }
-  }
-
-  /**
-   * Get a specific certification
-   */
-  async getCertification(certificationId) {
-    const response = await this.makeRequest(`/certifications/${certificationId}/`);
-    return await response.json();
-  }
-
-  // User Certification Operations
-
-  /**
-   * Get user's certifications
-   */
-  async getUserCertifications(filters = {}) {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const endpoint = `/user-certifications/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching user certifications, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 'mock-cert-1',
-            certification: {
-              id: 1,
-              name: 'AWS Certified Solutions Architect',
-              provider: 'Amazon Web Services',
-              category: 'Cloud Computing'
-            },
-            status: 'active',
-            earned_date: '2023-01-15',
-            expiry_date: '2026-01-15',
-            verification_url: 'https://example.com/verify/cert1',
-            score: 85
-          },
-          {
-            id: 'mock-cert-2',
-            certification: {
-              id: 2,
-              name: 'Google Analytics Certified',
-              provider: 'Google',
-              category: 'Digital Marketing'
-            },
-            status: 'active',
-            earned_date: '2023-06-20',
-            expiry_date: '2024-06-20',
-            verification_url: 'https://example.com/verify/cert2',
-            score: 92
-          },
-          {
-            id: 'mock-cert-3',
-            certification: {
-              id: 3,
-              name: 'Certified Scrum Master',
-              provider: 'Scrum Alliance',
-              category: 'Project Management'
-            },
-            status: 'in_progress',
-            planned_date: '2024-03-01',
-            progress_percentage: 65
-          }
-        ]
-      };
-    }
-  }
-
-  /**
-   * Add a certification to user's profile
-   */
   async addUserCertification(certificationData) {
-    const response = await this.makeRequest('/user-certifications/', {
-      method: 'POST',
-      body: JSON.stringify(certificationData),
-    });
-    return await response.json();
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Adding user certification via GraphQL:', certificationData);
+        const { data } = await apolloClient.mutate({
+          mutation: ADD_USER_CERTIFICATION,
+          variables: {
+            certificationId: certificationData.certification || certificationData.certificationId,
+            status: certificationData.status,
+            earnedDate: certificationData.earned_date || certificationData.earnedDate,
+            expiryDate: certificationData.expiry_date || certificationData.expiryDate,
+            credentialId: certificationData.credential_id || certificationData.credentialId,
+            credentialUrl: certificationData.credential_url || certificationData.credentialUrl,
+            targetCompletionDate: certificationData.target_completion_date || certificationData.targetCompletionDate,
+            studyProgress: certificationData.study_progress || certificationData.studyProgress,
+            notes: certificationData.notes
+          },
+          refetchQueries: [{ query: GET_USER_CERTIFICATIONS }]
+        });
+
+        if (data.addUserCertification.success) {
+          console.log('✅ User certification added successfully:', data.addUserCertification.userCertification);
+          return data.addUserCertification.userCertification;
+        } else {
+          throw new Error(data.addUserCertification.errors?.join(', ') || 'Failed to add certification');
+        }
+      }
+      return this.getMockUserCertification(certificationData);
+    } catch (error) {
+      console.warn('❌ GraphQL add certification failed, using mock:', error);
+      return this.getMockUserCertification(certificationData);
+    }
   }
 
-  /**
-   * Update user's certification
-   */
   async updateUserCertification(userCertificationId, certificationData) {
-    const response = await this.makeRequest(`/user-certifications/${userCertificationId}/`, {
-      method: 'PUT',
-      body: JSON.stringify(certificationData),
-    });
-    return await response.json();
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Updating user certification via GraphQL:', userCertificationId, certificationData);
+        const { data } = await apolloClient.mutate({
+          mutation: UPDATE_USER_CERTIFICATION,
+          variables: {
+            userCertificationId,
+            status: certificationData.status,
+            earnedDate: certificationData.earned_date || certificationData.earnedDate,
+            expiryDate: certificationData.expiry_date || certificationData.expiryDate,
+            credentialId: certificationData.credential_id || certificationData.credentialId,
+            credentialUrl: certificationData.credential_url || certificationData.credentialUrl,
+            targetCompletionDate: certificationData.target_completion_date || certificationData.targetCompletionDate,
+            studyProgress: certificationData.study_progress || certificationData.studyProgress,
+            notes: certificationData.notes
+          },
+          refetchQueries: [{ query: GET_USER_CERTIFICATIONS }]
+        });
+
+        if (data.updateUserCertification.success) {
+          console.log('✅ User certification updated successfully:', data.updateUserCertification.userCertification);
+          return data.updateUserCertification.userCertification;
+        } else {
+          throw new Error(data.updateUserCertification.errors?.join(', ') || 'Failed to update certification');
+        }
+      }
+      return this.getMockUserCertification(certificationData, userCertificationId);
+    } catch (error) {
+      console.warn('❌ GraphQL update certification failed, using mock:', error);
+      return this.getMockUserCertification(certificationData, userCertificationId);
+    }
   }
 
-  /**
-   * Remove user's certification
-   */
   async removeUserCertification(userCertificationId) {
-    await this.makeRequest(`/user-certifications/${userCertificationId}/`, {
-      method: 'DELETE',
-    });
-    return true;
-  }
-
-  // Learning Path Operations
-
-  /**
-   * Get learning paths
-   */
-  async getLearningPaths(filters = {}) {
     try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
+      if (this.useGraphQL) {
+        console.log('🚀 Removing user certification via GraphQL:', userCertificationId);
+        const { data } = await apolloClient.mutate({
+          mutation: REMOVE_USER_CERTIFICATION,
+          variables: { userCertificationId },
+          refetchQueries: [{ query: GET_USER_CERTIFICATIONS }]
+        });
 
-      const endpoint = `/learning-paths/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
+        if (data.removeUserCertification.success) {
+          console.log('✅ User certification removed successfully');
+          return { success: true };
+        } else {
+          throw new Error(data.removeUserCertification.errors?.join(', ') || 'Failed to remove certification');
+        }
+      }
+      return { success: true };
     } catch (error) {
-      console.error('Error fetching learning paths, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 1,
-            name: 'Full Stack Web Developer',
-            description: 'Comprehensive path to become a full stack web developer using modern technologies',
-            difficulty_level: 'intermediate',
-            estimated_duration_weeks: 24,
-            target_role: 'Full Stack Developer',
-            is_featured: true,
-            completion_rate: 78
-          },
-          {
-            id: 2,
-            name: 'Cloud Infrastructure Specialist',
-            description: 'Learn cloud computing fundamentals and advanced AWS services',
-            difficulty_level: 'advanced',
-            estimated_duration_weeks: 16,
-            target_role: 'Cloud Engineer',
-            is_featured: true,
-            completion_rate: 65
-          },
-          {
-            id: 3,
-            name: 'Data Science Fundamentals',
-            description: 'Introduction to data science with Python, statistics, and machine learning',
-            difficulty_level: 'beginner',
-            estimated_duration_weeks: 20,
-            target_role: 'Data Scientist',
-            is_featured: true,
-            completion_rate: 72
-          },
-          {
-            id: 4,
-            name: 'DevOps Engineer Path',
-            description: 'Master DevOps tools and practices for modern software delivery',
-            difficulty_level: 'advanced',
-            estimated_duration_weeks: 18,
-            target_role: 'DevOps Engineer',
-            is_featured: false,
-            completion_rate: 69
-          }
-        ]
-      };
+      console.warn('❌ GraphQL remove certification failed:', error);
+      throw error;
     }
   }
 
-  /**
-   * Get a specific learning path
-   */
-  async getLearningPath(learningPathId) {
-    const response = await this.makeRequest(`/learning-paths/${learningPathId}/`);
-    return await response.json();
-  }
-
-  /**
-   * Get user's learning paths
-   */
-  async getUserLearningPaths(filters = {}) {
+  // Learning Paths Management
+  async getUserLearningPaths(params = {}) {
     try {
-      const queryParams = new URLSearchParams();
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching user learning paths via GraphQL...');
+        const { data } = await apolloClient.query({
+          query: GET_USER_LEARNING_PATHS,
+          fetchPolicy: 'cache-and-network'
+        });
 
-      const endpoint = `/user-learning-paths/${queryParams.toString() ? `?${queryParams}` : ''}`;
-      const response = await this.makeRequest(endpoint);
-      return await response.json();
+        const learningPaths = data.userLearningPaths || [];
+        console.log('✅ User learning paths fetched successfully:', learningPaths.length, 'paths');
+        
+        return {
+          results: learningPaths.map(userPath => ({
+            id: userPath.id,
+            learning_path: userPath.learningPath,
+            status: userPath.status,
+            progress_percentage: userPath.progressPercentage,
+            started_date: userPath.startedDate,
+            target_completion_date: userPath.targetCompletionDate,
+            total_study_hours: userPath.totalStudyHours
+          }))
+        };
+      }
+      return this.getFallbackUserLearningPaths();
     } catch (error) {
-      console.error('Error fetching user learning paths, using mock data:', error);
-      // Return mock data for demo
-      return {
-        results: [
-          {
-            id: 'user-path-1',
-            learning_path: {
-              id: 1,
-              name: 'Full Stack Web Developer',
-              description: 'Comprehensive path to become a full stack web developer using modern technologies',
-              difficulty_level: 'intermediate',
-              estimated_duration_weeks: 24,
-              target_role: 'Full Stack Developer'
-            },
-            status: 'in_progress',
-            progress_percentage: 35,
-            started_date: '2024-01-15',
-            target_completion_date: '2024-07-15',
-            total_study_hours: 45
-          },
-          {
-            id: 'user-path-2',
-            learning_path: {
-              id: 3,
-              name: 'Data Science Fundamentals',
-              description: 'Introduction to data science with Python, statistics, and machine learning',
-              difficulty_level: 'beginner',
-              estimated_duration_weeks: 20,
-              target_role: 'Data Scientist'
-            },
-            status: 'not_started',
-            progress_percentage: 0,
-            started_date: null,
-            target_completion_date: '2024-09-01',
-            total_study_hours: 0
-          }
-        ]
-      };
+      console.warn('❌ GraphQL user learning paths failed, using fallback:', error);
+      return this.getFallbackUserLearningPaths();
     }
   }
 
-  /**
-   * Enroll in a learning path
-   */
-  async enrollInLearningPath(learningPathData) {
-    const response = await this.makeRequest('/user-learning-paths/', {
-      method: 'POST',
-      body: JSON.stringify(learningPathData),
-    });
-    return await response.json();
+  async enrollInLearningPath(enrollmentData) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Enrolling in learning path via GraphQL:', enrollmentData);
+        const { data } = await apolloClient.mutate({
+          mutation: ENROLL_IN_LEARNING_PATH,
+          variables: {
+            learningPathId: enrollmentData.learning_path || enrollmentData.learningPathId
+          },
+          refetchQueries: [{ query: GET_USER_LEARNING_PATHS }]
+        });
+
+        if (data.enrollInLearningPath.success) {
+          console.log('✅ Learning path enrollment successful:', data.enrollInLearningPath.enrollment);
+          return data.enrollInLearningPath.enrollment;
+        } else {
+          throw new Error(data.enrollInLearningPath.errors?.join(', ') || 'Failed to enroll in learning path');
+        }
+      }
+      return this.getMockLearningPathEnrollment(enrollmentData);
+    } catch (error) {
+      console.warn('❌ GraphQL enroll learning path failed, using mock:', error);
+      return this.getMockLearningPathEnrollment(enrollmentData);
+    }
   }
 
-  /**
-   * Update learning path progress
-   */
-  async updateLearningPathProgress(userLearningPathId, progressData) {
-    const response = await this.makeRequest(`/user-learning-paths/${userLearningPathId}/update_progress/`, {
-      method: 'POST',
-      body: JSON.stringify(progressData),
-    });
-    return await response.json();
+  // Skills Catalog
+  async getSkills(params = {}) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching available skills via GraphQL...');
+        const { data } = await apolloClient.query({
+          query: GET_SKILLS,
+          variables: {
+            category: params.category,
+            search: params.search,
+            limit: params.limit || 50
+          },
+          fetchPolicy: 'cache-and-network'
+        });
+
+        const skills = data.skills || [];
+        console.log('✅ Available skills fetched successfully:', skills.length, 'skills');
+        
+        return {
+          results: skills.map(skill => ({
+            id: skill.id,
+            name: skill.name,
+            slug: skill.slug,
+            category: skill.category,
+            description: skill.description,
+            is_technical: skill.isTechnical,
+            popularity_score: skill.popularityScore,
+            market_demand: skill.marketDemand,
+            average_salary: skill.averageSalary,
+            is_trending: skill.isTrending
+          }))
+        };
+      }
+      return this.getFallbackSkills();
+    } catch (error) {
+      console.warn('❌ GraphQL available skills failed, using fallback:', error);
+      return this.getFallbackSkills();
+    }
   }
 
-  // Skill Assessment Operations
+  async getSkillCategories(params = {}) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching skill categories via GraphQL...');
+        const { data } = await apolloClient.query({
+          query: GET_SKILL_CATEGORIES,
+          fetchPolicy: 'cache-and-network'
+        });
 
-  /**
-   * Get skill assessments
-   */
-  async getSkillAssessments(filters = {}) {
-    const queryParams = new URLSearchParams();
+        const categories = data.skillCategories || [];
+        console.log('✅ Skill categories fetched successfully:', categories.length, 'categories');
+        
+        return {
+          results: categories.map(category => ({
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            icon_name: category.iconName,
+            skill_count: category.skillCount
+          }))
+        };
+      }
+      return this.getFallbackSkillCategories();
+    } catch (error) {
+      console.warn('❌ GraphQL skill categories failed, using fallback:', error);
+      return this.getFallbackSkillCategories();
+    }
+  }
+
+  async getCertifications(params = {}) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching available certifications via GraphQL...');
+        const { data } = await apolloClient.query({
+          query: GET_CERTIFICATIONS,
+          variables: {
+            category: params.category,
+            search: params.search,
+            limit: params.limit || 50
+          },
+          fetchPolicy: 'cache-and-network'
+        });
+
+        const certifications = data.certifications || [];
+        console.log('✅ Available certifications fetched successfully:', certifications.length, 'certifications');
+        
+        return {
+          results: certifications.map(cert => ({
+            id: cert.id,
+            name: cert.name,
+            issuing_organization: cert.issuingOrganization,
+            description: cert.description,
+            validity_period_months: cert.validityPeriodMonths,
+            difficulty_level: cert.difficultyLevel,
+            average_preparation_hours: cert.averagePreparationHours,
+            market_value: cert.marketValue,
+            is_popular: cert.isPopular
+          }))
+        };
+      }
+      return this.getFallbackCertifications();
+    } catch (error) {
+      console.warn('❌ GraphQL available certifications failed, using fallback:', error);
+      return this.getFallbackCertifications();
+    }
+  }
+
+  async getLearningPaths(params = {}) {
+    try {
+      if (this.useGraphQL) {
+        console.log('🚀 Fetching available learning paths via GraphQL...');
+        const { data } = await apolloClient.query({
+          query: GET_LEARNING_PATHS,
+          variables: {
+            targetRole: params.targetRole,
+            difficultyLevel: params.difficultyLevel,
+            limit: params.limit || 20
+          },
+          fetchPolicy: 'cache-and-network'
+        });
+
+        const learningPaths = data.learningPaths || [];
+        console.log('✅ Available learning paths fetched successfully:', learningPaths.length, 'paths');
+        
+        return {
+          results: learningPaths.map(path => ({
+            id: path.id,
+            name: path.name,
+            description: path.description,
+            estimated_duration_weeks: path.estimatedDurationWeeks,
+            difficulty_level: path.difficultyLevel,
+            target_role: path.targetRole,
+            total_modules: path.totalModules,
+            completion_rate: path.completionRate,
+            average_rating: path.averageRating,
+            is_featured: path.isFeatured,
+            skills: path.skills
+          }))
+        };
+      }
+      return this.getFallbackLearningPaths();
+    } catch (error) {
+      console.warn('❌ GraphQL available learning paths failed, using fallback:', error);
+      return this.getFallbackLearningPaths();
+    }
+  }
+
+  // Validation
+  validateSkillData(skillData) {
+    const errors = [];
     
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
-
-    const endpoint = `/assessments/${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await this.makeRequest(endpoint);
-    return await response.json();
-  }
-
-  /**
-   * Get user's skill assessments
-   */
-  async getUserSkillAssessments(filters = {}) {
-    const queryParams = new URLSearchParams();
+    if (!skillData.skill && !skillData.skill_name) {
+      errors.push('Skill is required');
+    }
     
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value);
-    });
-
-    const endpoint = `/user-assessments/${queryParams.toString() ? `?${queryParams}` : ''}`;
-    const response = await this.makeRequest(endpoint);
-    return await response.json();
+    if (!skillData.proficiency_level) {
+      errors.push('Proficiency level is required');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
-  /**
-   * Take a skill assessment
-   */
-  async takeSkillAssessment(assessmentId, assessmentData) {
-    const response = await this.makeRequest(`/user-assessments/${assessmentId}/take_assessment/`, {
-      method: 'POST',
-      body: JSON.stringify(assessmentData),
-    });
-    return await response.json();
+  validateCertificationData(certificationData) {
+    const errors = [];
+    
+    if (!certificationData.certification) {
+      errors.push('Certification is required');
+    }
+    
+    if (!certificationData.status) {
+      errors.push('Status is required');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
-  /**
-   * Create a user assessment (for tracking purposes)
-   */
-  async createUserAssessment(assessmentData) {
-    const response = await this.makeRequest('/user-assessments/', {
-      method: 'POST',
-      body: JSON.stringify(assessmentData),
-    });
-    return await response.json();
+  // Fallback Data Methods
+  getFallbackUserSkills() {
+    const skillsData = FallbackService.getMockSkills();
+    return {
+      results: skillsData.userSkills.map((skill, index) => ({
+        id: `user-skill-${index + 1}`,
+        skill: { 
+          id: `skill-${index + 1}`,
+          name: skill.name,
+          category: this.getSkillCategory(skill.name)
+        },
+        skill_name: skill.name,
+        proficiency_level: skill.level,
+        years_experience: skill.years,
+        self_assessed_level: skill.level,
+        target_proficiency: 'expert',
+        frequency_of_use: 'daily',
+        is_verified: Math.random() > 0.5,
+        last_used: new Date().toISOString()
+      }))
+    };
   }
 
-  // Utility Methods
+  getFallbackUserCertifications() {
+    return {
+      results: [
+        {
+          id: 'user-cert-1',
+          certification: {
+            id: 'cert-1',
+            name: 'AWS Certified Developer',
+            issuing_organization: 'Amazon Web Services'
+          },
+          status: 'active',
+          earned_date: '2024-06-15',
+          expiry_date: '2027-06-15',
+          credential_id: 'AWS-DEV-123456',
+          is_verified: true
+        },
+        {
+          id: 'user-cert-2',
+          certification: {
+            id: 'cert-2',
+            name: 'React Developer Certification',
+            issuing_organization: 'Meta'
+          },
+          status: 'active',
+          earned_date: '2024-03-20',
+          expiry_date: '2026-03-20',
+          credential_id: 'META-REACT-789012',
+          is_verified: true
+        }
+      ]
+    };
+  }
 
-  /**
-   * Get proficiency level display
-   */
+  getFallbackUserLearningPaths() {
+    return {
+      results: [
+        {
+          id: 'user-path-1',
+          learning_path: {
+            id: 'path-1',
+            name: 'Full Stack JavaScript Developer',
+            description: 'Master modern JavaScript development',
+            estimated_duration_weeks: 12,
+            difficulty_level: 'intermediate'
+          },
+          status: 'in_progress',
+          progress_percentage: 65,
+          started_date: '2024-05-01',
+          target_completion_date: '2024-08-01',
+          total_study_hours: 78
+        }
+      ]
+    };
+  }
+
+  getFallbackSkills() {
+    return {
+      results: [
+        { id: 'skill-1', name: 'React', description: 'JavaScript library for building user interfaces', category: 'frontend', market_demand: 'high', average_salary: 95000, is_trending: true },
+        { id: 'skill-2', name: 'Node.js', description: 'JavaScript runtime for server-side development', category: 'backend', market_demand: 'high', average_salary: 90000, is_trending: true },
+        { id: 'skill-3', name: 'Python', description: 'High-level programming language', category: 'programming', market_demand: 'high', average_salary: 85000, is_trending: false },
+        { id: 'skill-4', name: 'TypeScript', description: 'Typed superset of JavaScript', category: 'programming', market_demand: 'high', average_salary: 100000, is_trending: true },
+        { id: 'skill-5', name: 'AWS', description: 'Amazon Web Services cloud platform', category: 'cloud', market_demand: 'high', average_salary: 110000, is_trending: true }
+      ]
+    };
+  }
+
+  getFallbackSkillCategories() {
+    return {
+      results: [
+        { id: 'frontend', name: 'Frontend Development' },
+        { id: 'backend', name: 'Backend Development' },
+        { id: 'programming', name: 'Programming Languages' },
+        { id: 'cloud', name: 'Cloud Services' },
+        { id: 'database', name: 'Database Management' }
+      ]
+    };
+  }
+
+  getFallbackCertifications() {
+    return {
+      results: [
+        { id: 'cert-1', name: 'AWS Certified Developer', issuing_organization: 'Amazon Web Services', description: 'Associate-level certification for AWS developers' },
+        { id: 'cert-2', name: 'React Developer Certification', issuing_organization: 'Meta', description: 'Official React certification from Meta' },
+        { id: 'cert-3', name: 'Google Cloud Professional', issuing_organization: 'Google Cloud', description: 'Professional cloud architect certification' }
+      ]
+    };
+  }
+
+  getFallbackLearningPaths() {
+    return {
+      results: [
+        {
+          id: 'path-1',
+          name: 'Full Stack JavaScript Developer',
+          description: 'Master modern JavaScript development from frontend to backend',
+          estimated_duration_weeks: 12,
+          difficulty_level: 'intermediate',
+          target_role: 'Full Stack Developer',
+          is_featured: true
+        },
+        {
+          id: 'path-2',
+          name: 'React Mastery',
+          description: 'Become an expert in React and its ecosystem',
+          estimated_duration_weeks: 8,
+          difficulty_level: 'beginner',
+          target_role: 'Frontend Developer',
+          is_featured: true
+        }
+      ]
+    };
+  }
+
+  // Helper methods
+  getMockUserSkill(skillData, id = null) {
+    return {
+      id: id || `user-skill-${Date.now()}`,
+      skill: skillData.skill ? { id: skillData.skill, name: skillData.skill_name } : null,
+      skill_name: skillData.skill_name,
+      proficiency_level: skillData.proficiency_level,
+      years_experience: skillData.years_experience || 0,
+      self_assessed_level: skillData.self_assessed_level,
+      target_proficiency: skillData.target_proficiency,
+      frequency_of_use: skillData.frequency_of_use,
+      evidence_url: skillData.evidence_url,
+      is_verified: false,
+      last_used: skillData.last_used || new Date().toISOString()
+    };
+  }
+
+  getMockUserCertification(certificationData, id = null) {
+    return {
+      id: id || `user-cert-${Date.now()}`,
+      certification: certificationData.certification ? { id: certificationData.certification } : null,
+      status: certificationData.status,
+      earned_date: certificationData.earned_date,
+      expiry_date: certificationData.expiry_date,
+      credential_id: certificationData.credential_id,
+      credential_url: certificationData.credential_url,
+      target_completion_date: certificationData.target_completion_date,
+      study_progress: certificationData.study_progress || 0,
+      notes: certificationData.notes,
+      is_verified: false
+    };
+  }
+
+  getMockLearningPathEnrollment(enrollmentData) {
+    return {
+      id: `enrollment-${Date.now()}`,
+      learning_path: { id: enrollmentData.learning_path },
+      status: enrollmentData.status || 'not_started',
+      progress_percentage: 0,
+      started_date: new Date().toISOString(),
+      total_study_hours: 0
+    };
+  }
+
+  getSkillCategory(skillName) {
+    const categoryMap = {
+      'React': 'frontend',
+      'JavaScript': 'programming', 
+      'CSS': 'frontend',
+      'Python': 'programming',
+      'Django': 'backend',
+      'Node.js': 'backend',
+      'TypeScript': 'programming',
+      'AWS': 'cloud'
+    };
+    return categoryMap[skillName] || 'programming';
+  }
+
+  // Display helper methods (used in components)
+  getProficiencyColor(level) {
+    const colors = {
+      'beginner': '#ff6b6b',
+      'intermediate': '#4ecdc4', 
+      'advanced': '#45b7d1',
+      'expert': '#96ceb4'
+    };
+    return colors[level] || '#gray';
+  }
+
   getProficiencyDisplay(level) {
-    const levelMap = {
+    const displays = {
       'beginner': 'Beginner',
-      'intermediate': 'Intermediate', 
-      'advanced': 'Advanced',
+      'intermediate': 'Intermediate',
+      'advanced': 'Advanced', 
       'expert': 'Expert'
     };
-    return levelMap[level] || level;
+    return displays[level] || level;
   }
 
-  /**
-   * Get proficiency level color
-   */
-  getProficiencyColor(level) {
-    const colorMap = {
-      'beginner': '#ffc107',
-      'intermediate': '#17a2b8',
-      'advanced': '#28a745',
-      'expert': '#6f42c1'
-    };
-    return colorMap[level] || '#6c757d';
-  }
-
-  /**
-   * Get certification status display
-   */
-  getCertificationStatusDisplay(status) {
-    const statusMap = {
-      'active': 'Active',
-      'expired': 'Expired',
-      'in_progress': 'In Progress',
-      'planned': 'Planned'
-    };
-    return statusMap[status] || status;
-  }
-
-  /**
-   * Get certification status color
-   */
   getCertificationStatusColor(status) {
-    const colorMap = {
-      'active': '#28a745',
-      'expired': '#dc3545',
-      'in_progress': '#ffc107',
-      'planned': '#6c757d'
+    const colors = {
+      'planned': '#feca57',
+      'in_progress': '#48dbfb',
+      'active': '#1dd1a1',
+      'expired': '#ff6b6b'
     };
-    return colorMap[status] || '#6c757d';
+    return colors[status] || '#gray';
   }
 
-  /**
-   * Get market demand display
-   */
-  getMarketDemandDisplay(demand) {
-    const demandMap = {
-      'very_low': 'Very Low',
-      'low': 'Low',
-      'moderate': 'Moderate',
-      'high': 'High',
-      'very_high': 'Very High'
+  getCertificationStatusDisplay(status) {
+    const displays = {
+      'planned': 'Planned',
+      'in_progress': 'In Progress',
+      'active': 'Active',
+      'expired': 'Expired'
     };
-    return demandMap[demand] || demand;
+    return displays[status] || status;
   }
 
-  /**
-   * Get market demand color
-   */
+  getLearningPathStatusColor(status) {
+    const colors = {
+      'not_started': '#feca57',
+      'in_progress': '#48dbfb',
+      'completed': '#1dd1a1',
+      'paused': '#ff9ff3'
+    };
+    return colors[status] || '#gray';
+  }
+
   getMarketDemandColor(demand) {
-    const colorMap = {
-      'very_low': '#dc3545',
-      'low': '#fd7e14',
-      'moderate': '#ffc107',
-      'high': '#28a745',
-      'very_high': '#007bff'
+    const colors = {
+      'low': '#ff6b6b',
+      'medium': '#feca57',
+      'high': '#1dd1a1'
     };
-    return colorMap[demand] || '#6c757d';
+    return colors[demand] || '#gray';
   }
 
-  /**
-   * Calculate skill completion percentage
-   */
-  calculateSkillCompletion(userSkill) {
-    const weights = {
-      'beginner': 25,
-      'intermediate': 50,
-      'advanced': 75,
-      'expert': 100
+  getMarketDemandDisplay(demand) {
+    const displays = {
+      'low': 'Low',
+      'medium': 'Medium', 
+      'high': 'High'
     };
-    
-    const currentLevel = weights[userSkill.proficiency_level] || 0;
-    const targetLevel = weights[userSkill.target_proficiency] || 100;
-    
-    return Math.min(100, Math.round((currentLevel / targetLevel) * 100));
+    return displays[demand] || demand;
   }
 
-  /**
-   * Format salary range
-   */
-  formatSalary(amount) {
-    if (!amount) return 'Not specified';
+  formatSalary(salary) {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }
-
-  /**
-   * Calculate learning path progress
-   */
-  calculateLearningPathProgress(userLearningPath) {
-    if (!userLearningPath) return 0;
-    return userLearningPath.progress_percentage || 0;
-  }
-
-  /**
-   * Get learning path status color
-   */
-  getLearningPathStatusColor(status) {
-    const colorMap = {
-      'not_started': '#6c757d',
-      'in_progress': '#ffc107',
-      'completed': '#28a745',
-      'paused': '#fd7e14'
-    };
-    return colorMap[status] || '#6c757d';
-  }
-
-  /**
-   * Validate skill data
-   */
-  validateSkillData(skillData) {
-    const errors = [];
-
-    if (!skillData.skill && !skillData.skill_name) {
-      errors.push('Skill is required');
-    }
-
-    if (!skillData.proficiency_level) {
-      errors.push('Proficiency level is required');
-    }
-
-    const validProficiencyLevels = ['beginner', 'intermediate', 'advanced', 'expert'];
-    if (skillData.proficiency_level && !validProficiencyLevels.includes(skillData.proficiency_level)) {
-      errors.push('Invalid proficiency level');
-    }
-
-    if (skillData.years_experience && skillData.years_experience < 0) {
-      errors.push('Years of experience cannot be negative');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-
-  /**
-   * Validate certification data
-   */
-  validateCertificationData(certificationData) {
-    const errors = [];
-
-    if (!certificationData.certification) {
-      errors.push('Certification is required');
-    }
-
-    if (!certificationData.status) {
-      errors.push('Status is required');
-    }
-
-    const validStatuses = ['active', 'expired', 'in_progress', 'planned'];
-    if (certificationData.status && !validStatuses.includes(certificationData.status)) {
-      errors.push('Invalid certification status');
-    }
-
-    if (certificationData.earned_date && certificationData.expiry_date) {
-      const earnedDate = new Date(certificationData.earned_date);
-      const expiryDate = new Date(certificationData.expiry_date);
-      if (earnedDate >= expiryDate) {
-        errors.push('Expiry date must be after earned date');
-      }
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-
-  // ViewSets-specific methods for enhanced functionality
-
-  /**
-   * Get trending skills
-   */
-  async getTrendingSkills() {
-    const response = await this.makeRequest('/skills/trending/');
-    return await response.json();
-  }
-
-  /**
-   * Get market demand data for skills
-   */
-  async getSkillMarketDemand() {
-    const response = await this.makeRequest('/skills/market_demand/');
-    return await response.json();
-  }
-
-  /**
-   * Extract skills from text (resume or job description)
-   */
-  async extractSkillsFromText(extractionData) {
-    const response = await this.makeRequest('/skills/extract_from_text/', {
-      method: 'POST',
-      body: JSON.stringify(extractionData),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Get skill gap analysis for a target role
-   */
-  async getSkillGapAnalysis(targetRole) {
-    const response = await this.makeRequest(`/user-skills/gap_analysis/?role=${encodeURIComponent(targetRole)}`);
-    return await response.json();
-  }
-
-  /**
-   * Get personalized skill recommendations
-   */
-  async getSkillRecommendations() {
-    // Development bypass: return mock skill recommendations
-    if (FallbackService.isDevBypass()) {
-      console.log('🔧 SkillsService: Using mock skill recommendations (dev bypass)');
-      const mockSkills = FallbackService.getMockSkills();
-      return {
-        count: mockSkills.recommendedSkills.length,
-        next: null,
-        previous: null,
-        results: mockSkills.recommendedSkills.map((skill, index) => ({
-          id: `rec-skill-${index + 1}`,
-          skill: {
-            id: index + 10,
-            name: skill.name,
-            category: skill.name === 'AWS' ? 'Cloud Computing' : 'Programming Languages'
-          },
-          market_demand: skill.demand,
-          average_salary_increase: skill.avgSalaryIncrease,
-          match_score: 0.85 - (index * 0.05),
-          priority: skill.demand === 'high' ? 'high' : 'medium',
-          reasons: [`High market demand for ${skill.name}`, `Potential salary increase of $${skill.avgSalaryIncrease.toLocaleString()}`]
-        }))
-      };
-    }
-
-    const response = await this.makeRequest('/user-skills/recommendations/');
-    return await response.json();
-  }
-
-  /**
-   * Get user skills analytics
-   */
-  async getUserSkillsAnalytics() {
-    const response = await this.makeRequest('/user-skills/analytics/');
-    return await response.json();
-  }
-
-  /**
-   * Get popular skill categories
-   */
-  async getPopularSkillCategories() {
-    const response = await this.makeRequest('/categories/popular/');
-    return await response.json();
-  }
-
-  /**
-   * Get popular certifications
-   */
-  async getPopularCertifications() {
-    const response = await this.makeRequest('/certifications/popular/');
-    return await response.json();
-  }
-
-  /**
-   * Generate certification plan
-   */
-  async generateCertificationPlan(planData) {
-    const response = await this.makeRequest('/certifications/generate_plan/', {
-      method: 'POST',
-      body: JSON.stringify(planData),
-    });
-    return await response.json();
-  }
-
-  /**
-   * Get user certification progress
-   */
-  async getUserCertificationProgress() {
-    const response = await this.makeRequest('/user-certifications/progress/');
-    return await response.json();
-  }
-
-  /**
-   * Get user assessment analytics
-   */
-  async getUserAssessmentAnalytics() {
-    const response = await this.makeRequest('/user-assessments/analytics/');
-    return await response.json();
+      maximumFractionDigits: 0
+    }).format(salary);
   }
 }
 

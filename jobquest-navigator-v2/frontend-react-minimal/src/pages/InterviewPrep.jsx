@@ -61,10 +61,7 @@ const InterviewPrep = () => {
   const handleGenerateQuestions = async () => {
     setLoading(true);
     try {
-      const questions = await companyResearchService.generateInterviewQuestions(
-        selectedCategory,
-        'medium'
-      );
+      const questions = await companyResearchService.generateInterviewQuestions(selectedCategory, 'medium');
       setInterviewQuestions(prev => [...prev, ...questions]);
       setError(null);
     } catch (err) {

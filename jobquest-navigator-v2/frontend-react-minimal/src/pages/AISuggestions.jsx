@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import aiSuggestionService from '../services/aiSuggestionService';
-import resumeService from '../services/resumeService';
+import graphqlResumeService from '../services/graphqlResumeService';
+import aiSuggestionsService from '../services/aiSuggestionsService';
 import './AISuggestions.css';
 
 const AISuggestions = () => {
@@ -27,10 +27,10 @@ const AISuggestions = () => {
     
     try {
       const [suggestionsData, recommendationsData, analyticsData, resumesData] = await Promise.all([
-        aiSuggestionService.getSuggestions({ limit: 20 }),
-        aiSuggestionService.getJobRecommendations(10),
-        aiSuggestionService.getAnalytics(),
-        resumeService.getResumes({ limit: 10 })
+        aiSuggestionsService.getAISuggestions({ resumeId: selectedResumeId }),
+        aiSuggestionsService.getJobRecommendations({ userId: user?.id }),
+        aiSuggestionsService.getAIAnalytics(),
+        graphqlResumeService.getResumes()
       ]);
       
       setSuggestions(suggestionsData.suggestions || []);
@@ -61,8 +61,8 @@ const AISuggestions = () => {
     
     setLoading(true);
     try {
-      const result = await aiSuggestionService.generateResumeSuggestions(selectedResumeId);
-      setSuggestions(prev => [...result.suggestions, ...prev]);
+      const result = await aiSuggestionsService.generateAISuggestions(selectedResumeId);
+      setSuggestions(prev => [...(result.suggestions || []), ...prev]);
       setError(null);
     } catch (err) {
       console.error('Error generating suggestions:', err);
@@ -75,7 +75,7 @@ const AISuggestions = () => {
   const handleGenerateRecommendations = async () => {
     setLoading(true);
     try {
-      await aiSuggestionService.generateJobRecommendations();
+      await aiSuggestionsService.generateJobRecommendations(user?.id);
       await loadData(); // Reload all data
       setError(null);
     } catch (err) {
@@ -88,12 +88,13 @@ const AISuggestions = () => {
 
   const handleSuggestionAction = async (suggestionId, action) => {
     try {
-      await aiSuggestionService.suggestionAction(suggestionId, action);
+      const status = action === 'accept' ? 'accepted' : action === 'reject' ? 'rejected' : action;
+      await aiSuggestionsService.updateSuggestionStatus(suggestionId, status);
       
       // Update suggestion in state
       setSuggestions(prev => prev.map(s => 
         s.id === suggestionId 
-          ? { ...s, status: action === 'accept' ? 'accepted' : action === 'reject' ? 'rejected' : s.status, viewed: true }
+          ? { ...s, status, viewed: true }
           : s
       ));
     } catch (err) {
@@ -104,7 +105,7 @@ const AISuggestions = () => {
 
   const handleRecommendationAction = async (recommendationId, action) => {
     try {
-      await aiSuggestionService.recommendationAction(recommendationId, action);
+      await aiSuggestionsService.updateRecommendationStatus(recommendationId, action);
       
       // Update recommendation in state
       setRecommendations(prev => prev.map(r => 
