@@ -59,7 +59,7 @@ const NavBar = () => {
       basePath: '/interview-prep',
       items: [
         { path: '/interview-prep', label: 'Interview Prep', description: 'Practice and improve' },
-        { path: '/company/demo', label: 'Company Research', description: 'Research potential employers' }
+        { path: '/company-search', label: 'Company Research', description: 'Search and manage company information' }
       ]
     }
   };

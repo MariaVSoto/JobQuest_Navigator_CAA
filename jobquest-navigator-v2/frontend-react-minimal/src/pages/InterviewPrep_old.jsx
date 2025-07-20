@@ -28,108 +28,108 @@ const InterviewPrep = () => {
   const loadUserData = async () => {
     setLoading(true);
     try {
-      // Structured Question Bank - Three Main Categories
+      // 结构化问题库 - 三大类型
       const mockQuestions = [
-        // Behavioral Questions
+        // 行为问题 (Behavioral Questions)
         {
           id: 'b1',
-          question_text: 'Tell me about a time when you had to work with a difficult team member.',
+          question_text: '请讲述一次你在团队合作中遇到分歧的经历。',
           question_type: 'behavioral',
-          answer_points: 'Key points: 1) Specific situation and conflict details 2) Your listening and understanding efforts 3) Finding common ground approach 4) Final solution and positive outcomes',
-          star_guidance: 'Situation: Team background and conflict origin; Task: Your role and objectives; Action: Communication, understanding, coordination steps; Result: Positive outcomes after conflict resolution',
-          common_mistakes: 'Avoid: Criticizing team members, only describing problems without solutions, lacking specific details'
+          answer_points: '回答要点：1)具体情况和分歧内容 2)你的倾听和理解努力 3)寻找共同点的做法 4)最终的解决方案和结果',
+          star_guidance: 'Situation:团队背景和分歧原因；Task:你的角色和目标；Action:沟通、理解、协调的具体步骤；Result:分歧解决后的积极成果',
+          common_mistakes: '避免：批评团队成员、只描述问题不说解决方案、缺乏具体细节'
         },
         {
           id: 'b2',
-          question_text: 'Describe a project where you faced a tight deadline.',
+          question_text: '描述一个你面临紧急截止日期的项目。',
           question_type: 'behavioral',
-          answer_points: 'Key points: 1) Project background and time pressure 2) Priority assessment and task breakdown 3) Resource coordination and team communication 4) Results delivery and lessons learned',
-          star_guidance: 'Situation: Project urgency and importance; Task: Your specific responsibilities; Action: Time management, team coordination, efficiency improvements; Result: Project outcomes and personal growth',
-          common_mistakes: 'Avoid: Emphasizing overtime work over smart work, only mentioning difficulties without solutions'
+          answer_points: '回答要点：1)项目背景和时间压力 2)优先级判断和任务分解 3)资源协调和团队沟通 4)结果交付和经验总结',
+          star_guidance: 'Situation:项目紧急程度和重要性；Task:你的具体责任；Action:时间管理、团队协调、效率提升措施；Result:项目成果和个人成长',
+          common_mistakes: '避免：强调密集加班而非智能工作、只说困难不说解决方案'
         },
         {
           id: 'b3',
-          question_text: 'Share an experience where you had to learn a new skill or knowledge area.',
+          question_text: '请分享一次你学习新技能或知识的经历。',
           question_type: 'behavioral',
-          answer_points: 'Key points: 1) Learning motivation and background 2) Learning methods and resources 3) Practical application and feedback 4) Learning outcomes and value demonstration',
-          star_guidance: 'Situation: Why this skill was needed; Task: Learning goals and requirements; Action: Learning plan, resource acquisition, practice process; Result: Skill mastery level and practical application',
-          common_mistakes: 'Avoid: Choosing overly simple or work-unrelated learning content, only describing process without results'
+          answer_points: '回答要点：1)学习动机和背景 2)学习方法和资源 3)实践应用和反馈 4)学习成果和价值体现',
+          star_guidance: 'Situation:为什么需要学习这项技能；Task:学习目标和要求；Action:学习计划、资源获取、实践过程；Result:技能掌握程度和实际应用',
+          common_mistakes: '避免：选择过于简单或与工作无关的学习内容、只说过程不说结果'
         },
         {
           id: 'b4',
-          question_text: 'Tell me about a time when you had to influence or persuade someone.',
+          question_text: '讲述一次你需要影响或说服他人的经历。',
           question_type: 'behavioral',
-          answer_points: 'Key points: 1) Background and necessity 2) Other party\'s concerns and objections 3) Communication strategy and persuasion logic 4) Final results and relationship impact',
-          star_guidance: 'Situation: Background requiring persuasion; Task: Your goals and their position; Action: Listen, understand, find common ground, gradual persuasion; Result: Final outcome and relationship effect',
-          common_mistakes: 'Avoid: Using forceful or manipulative approaches, ignoring the other party\'s feelings and needs'
+          answer_points: '回答要点：1)背景和必要性 2)对方的关切和须抗 3)沟通策略和说服逻辑 4)最终结果和关系影响',
+          star_guidance: 'Situation:需要说服的背景和原因；Task:你的目标和对方的立场；Action:倾听、理解、找共同点、逐步说服；Result:最终结果和双方关系',
+          common_mistakes: '避免：使用强制或操纵的方式、忽略对方的感受和需求'
         },
         
-        // Technical Questions
+        // 技术问题 (Technical Questions)
         {
           id: 't1',
-          question_text: 'Describe a technical project you led, including technology choices and architecture decisions.',
+          question_text: '请介绍一个你负责的技术项目，包括技术选型和架构决策。',
           question_type: 'technical',
-          answer_points: 'Key points: 1) Project background and technical requirements 2) Technology comparison and selection rationale 3) Architecture design and key decisions 4) Implementation challenges and solutions',
-          star_guidance: 'Non-linear structure: Project overview → Technical architecture → Key implementation → Results and reflection, emphasizing technical judgment',
-          common_mistakes: 'Avoid: Excessive technical details while ignoring business value, only saying what was done without explaining why'
+          answer_points: '回答要点：1)项目背景和技术要求 2)技本方案对比和选择理由 3)架构设计和关键决策 4)实现挑战和解决方案',
+          star_guidance: '非线性描述：项目概述→技术架构→关键实现→结果与反思，重点展示技术判断力',
+          common_mistakes: '避免：过度技术细节而忽略业务价值、只说做了什么不说为什么这么做'
         },
         {
           id: 't2',
-          question_text: 'How do you handle system performance issues? Please provide a specific example.',
+          question_text: '如何处理系统性能问题？请结合具体例子说明。',
           question_type: 'technical',
-          answer_points: 'Key points: 1) Performance issue identification and analysis methods 2) Common optimization strategies (caching, indexing, architecture optimization) 3) Monitoring and measurement approaches 4) Specific cases and results',
-          star_guidance: 'Problem analysis → Solution design → Implementation process → Effect verification, demonstrating systematic thinking and problem-solving ability',
-          common_mistakes: 'Avoid: Only theoretical discussion without practical examples, ignoring business impact and user experience'
+          answer_points: '回答要点：1)性能问题识别和分析方法 2)常见优化策略(缓存、索引、架构优化) 3)监控和测量方法 4)具体案例和效果',
+          star_guidance: '问题分析→解决方案→实现过程→效果验证，体现系统性思维和问题解决能力',
+          common_mistakes: '避免：只说理论不说实践、忽略业务影响和用户体验'
         },
         {
           id: 't3',
-          question_text: 'How do you ensure code quality? How do you promote best practices in your team?',
+          question_text: '如何保证代码质量？你在团队中如何推动最佳实践？',
           question_type: 'technical',
-          answer_points: 'Key points: 1) Basic practices like code review, unit testing, documentation 2) Team standards and toolchain 3) Technical sharing and knowledge transfer 4) Continuous improvement and effectiveness measurement',
-          star_guidance: 'Current state analysis → Improvement plan → Implementation process → Effect validation, showing leadership and team influence',
-          common_mistakes: 'Avoid: Only considering personal experience without team context, lacking specific measures and results'
+          answer_points: '回答要点：1)代码审查、单元测试、文档等基础实践 2)团队规范和工具链 3)技术分享和知识传承 4)持续改进和效果衡量',
+          star_guidance: '现状分析→改进方案→推动过程→效果验证，展示领导力和团队影响力',
+          common_mistakes: '避免：只按个人经验而不考虑团队现状、缺乏具体措施和效果'
         },
         {
           id: 't4',
-          question_text: 'Describe a time when you had to learn a new technology or framework to solve a problem.',
+          question_text: '描述一次你需要学习新技术或框架来解决问题的经历。',
           question_type: 'technical',
-          answer_points: 'Key points: 1) Problem background and technology selection reasons 2) Learning process and methods 3) Practical application and lessons learned 4) Technical outcomes and business value',
-          star_guidance: 'Problem identification → Technology research → Learning practice → Outcome delivery, demonstrating learning ability and technical awareness',
-          common_mistakes: 'Avoid: Only describing learning process without application results, choosing overly simple technical examples'
+          answer_points: '回答要点：1)问题背景和技术选型原因 2)学习过程和方法 3)实践应用和踩坑经验 4)技术成果和业务价值',
+          star_guidance: '问题识别→技术调研→学习实践→成果交付，体现学习能力和技术敏感度',
+          common_mistakes: '避免：只说学习过程不说应用效果、选择过于简单的技术案例'
         },
         
-        // Culture Fit Questions
+        // 公司文化问题 (Culture Fit Questions)
         {
           id: 'c1',
-          question_text: 'Why do you want to work for our company? What do you know about us?',
+          question_text: '为什么选择我们公司？你对我们公司有什么了解？',
           question_type: 'culture_fit',
-          answer_points: 'Key points: 1) Understanding of company business and mission 2) Alignment with company culture and values 3) Career development fit 4) Value you can bring to the company',
-          star_guidance: 'Non-standard structure: Company attractions → Personal match → Value contribution → Future development, showing rational choice and thorough research',
-          common_mistakes: 'Avoid: Generic responses, only focusing on salary and benefits, showing lack of business understanding'
+          answer_points: '回答要点：1)对公司业务和使命的理解 2)公司文化和价值观的认同 3)职业发展的匹配度 4)个人能为公司带来的价值',
+          star_guidance: '非常变结构：公司吸引点→个人匹配→价值贡献→未来发展，显示理性选择和深度研究',
+          common_mistakes: '避免：只说空话套话、只关注薪资福利、表现出对公司业务不了解'
         },
         {
           id: 'c2',
-          question_text: 'What is your ideal work environment and team atmosphere?',
+          question_text: '你理想的工作环境和团队氛围是怎样的？',
           question_type: 'culture_fit',
-          answer_points: 'Key points: 1) Work style preferences (collaboration, independence, communication style) 2) Learning and growth opportunities 3) Team culture expectations 4) Match with target company culture',
-          star_guidance: 'Structured response: Work style → Team collaboration → Growth opportunities → Value alignment, showing mature thinking about work environment',
-          common_mistakes: 'Avoid: Overly specific requirements (like must be remote work), negative comments about previous company environment'
+          answer_points: '回答要点：1)工作方式偏好(协作、独立、沟通风格) 2)学习成长机会 3)团队文化期望 4)与目标公司文化的匹配',
+          star_guidance: '结构化回答：工作方式→团队协作→成长机会→价值匹配，展示对工作环境的成熟思考',
+          common_mistakes: '避免：过于具体的要求(如必须远程工作)、负面评价前公司环境'
         },
         {
           id: 'c3',
-          question_text: 'What are your career goals? Where do you see yourself in 5 years?',
+          question_text: '你的职业规划是什么？5年后你希望在哪里？',
           question_type: 'culture_fit',
-          answer_points: 'Key points: 1) Short-term goals and skill development plans 2) Medium-term career direction and growth path 3) Alignment with company development 4) Long-term commitment to industry and field',
-          star_guidance: 'Progressive structure: Present → Short-term (1-2 years) → Medium-term (3-5 years) → Long-term vision, showing clear goals and planning ability',
-          common_mistakes: 'Avoid: Vague or unrealistic goals, only considering personal development without company value'
+          answer_points: '回答要点：1)短期目标和技能发展计划 2)中期职业方向和成长路径 3)与公司发展的匹配度 4)对行业和领域的长期承诺',
+          star_guidance: '递进式结构：现在→短期(1-2年)→中期(3-5年)→长期愿景，展示目标清晰和规划能力',
+          common_mistakes: '避免：目标过于模糊或不切实际、只说个人发展不考虑公司价值'
         },
         {
           id: 'c4',
-          question_text: 'What motivates you most in your work?',
+          question_text: '在工作中什么最能激发你的工作热情？',
           question_type: 'culture_fit',
-          answer_points: 'Key points: 1) Specific work content or challenges 2) Team collaboration and sense of achievement 3) Learning growth and skill improvement 4) Impact on industry and users',
-          star_guidance: 'Intrinsic motivation analysis: Work content → Team environment → Growth opportunities → Value realization, showing deep understanding of work',
-          common_mistakes: 'Avoid: Only mentioning salary or promotion opportunities, overly generic answers, content not matching target position'
+          answer_points: '回答要点：1)具体的工作内容或挑战 2)团队协作和成就感 3)学习成长和能力提升 4)对行业和用户的影响',
+          star_guidance: '内在动机分析：工作内容→团队环境→成长机会→价值实现，体现对工作的深度理解',
+          common_mistakes: '避免：只说薪资或升职机会、过于笛统的回答、与目标职位不匹配的内容'
         }
       ];
       setInterviewQuestions(mockQuestions);
@@ -198,7 +198,7 @@ const InterviewPrep = () => {
   const handleGenerateQuestions = async () => {
     setLoading(true);
     try {
-      const questions = await companyResearchService.generateInterviewQuestions(selectedQuestionCategory, 'medium');
+      const questions = await companyResearchService.generateInterviewQuestions(selectedCategory, 'medium');
       setInterviewQuestions(prev => [...prev, ...questions]);
       setError(null);
     } catch (err) {
@@ -314,19 +314,19 @@ const InterviewPrep = () => {
                     className={selectedQuestionCategory === 'behavioral' ? 'active' : ''}
                     onClick={() => setSelectedQuestionCategory('behavioral')}
                   >
-                    Behavioral Questions
+                    行为问题
                   </button>
                   <button
                     className={selectedQuestionCategory === 'technical' ? 'active' : ''}
                     onClick={() => setSelectedQuestionCategory('technical')}
                   >
-                    Technical Questions
+                    技术问题
                   </button>
                   <button
                     className={selectedQuestionCategory === 'culture_fit' ? 'active' : ''}
                     onClick={() => setSelectedQuestionCategory('culture_fit')}
                   >
-                    Culture Fit
+                    文化匹配
                   </button>
                 </div>
                 
@@ -336,7 +336,7 @@ const InterviewPrep = () => {
                     onClick={handleGenerateQuestions}
                     disabled={loading}
                   >
-                    {loading ? 'Generating...' : `Generate ${selectedQuestionCategory === 'behavioral' ? 'Behavioral' : selectedQuestionCategory === 'technical' ? 'Technical' : 'Culture Fit'} Questions`}
+                    {loading ? '生成中...' : `生成${selectedQuestionCategory === 'behavioral' ? '行为' : selectedQuestionCategory === 'technical' ? '技术' : '文化匹配'}问题`}
                   </button>
                 )}
               </div>
@@ -351,21 +351,21 @@ const InterviewPrep = () => {
                         
                         {question.answer_points && (
                           <div className="answer-points">
-                            <h4>🎯 Answer Points:</h4>
+                            <h4>🎯 回答要点：</h4>
                             <p>{question.answer_points}</p>
                           </div>
                         )}
                         
                         {question.star_guidance && (
                           <div className="star-guidance">
-                            <h4>⭐ STAR Framework Guidance:</h4>
+                            <h4>⭐ STAR框架指导：</h4>
                             <p>{question.star_guidance}</p>
                           </div>
                         )}
                         
                         {question.common_mistakes && (
                           <div className="common-mistakes">
-                            <h4>⚠️ Common Mistakes:</h4>
+                            <h4>⚠️ 常见错误：</h4>
                             <p>{question.common_mistakes}</p>
                           </div>
                         )}
@@ -373,8 +373,8 @@ const InterviewPrep = () => {
                     ))
                 ) : (
                   <div className="no-questions">
-                    <p>No {selectedQuestionCategory === 'behavioral' ? 'behavioral' : selectedQuestionCategory === 'technical' ? 'technical' : 'culture fit'} questions available yet.</p>
-                    <p>Click "Generate {selectedQuestionCategory === 'behavioral' ? 'Behavioral' : selectedQuestionCategory === 'technical' ? 'Technical' : 'Culture Fit'} Questions" to get personalized questions!</p>
+                    <p>暂无{selectedQuestionCategory === 'behavioral' ? '行为' : selectedQuestionCategory === 'technical' ? '技术' : '文化匹配'}问题。</p>
+                    <p>点击“生成{selectedQuestionCategory === 'behavioral' ? '行为' : selectedQuestionCategory === 'technical' ? '技术' : '文化匹配'}问题”获取个性化问题！</p>
                   </div>
                 )}
               </div>
@@ -387,4 +387,4 @@ const InterviewPrep = () => {
   );
 };
 
-export default InterviewPrep;
+export default InterviewPrep; 

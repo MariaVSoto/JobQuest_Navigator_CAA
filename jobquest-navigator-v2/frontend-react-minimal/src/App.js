@@ -29,6 +29,8 @@ import UploadJob from './pages/UploadJob';
 import ResumeVersions from './pages/ResumeVersions';
 import MyJobs from './pages/MyJobs';
 import SkillJobMapping from './pages/SkillJobMapping';
+import EditJob from './pages/EditJob';
+import CompanySearch from './pages/CompanySearch';
 import NotFound from './pages/NotFound';
 import AuthTest from './pages/AuthTest';
 import ServicesTest from './pages/ServicesTest';
@@ -145,6 +147,16 @@ function App() {
             <Route path="/skill-job-mapping" element={
               <ProtectedRoute>
                 <SkillJobMapping />
+              </ProtectedRoute>
+            } />
+            <Route path="/edit-job/:jobId" element={
+              <ProtectedRoute>
+                <EditJob />
+              </ProtectedRoute>
+            } />
+            <Route path="/company-search" element={
+              <ProtectedRoute>
+                <CompanySearch />
               </ProtectedRoute>
             } />
             

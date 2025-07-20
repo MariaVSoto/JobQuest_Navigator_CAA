@@ -74,9 +74,16 @@ class UnifiedJobService {
   }
 
   /**
-   * Get a specific job by ID with fallback
+   * Get a specific job by ID with fallback (alias for getJobById)
    */
   async getJob(jobId) {
+    return this.getJobById(jobId);
+  }
+
+  /**
+   * Get a specific job by ID with fallback
+   */
+  async getJobById(jobId) {
     if (this.useGraphQL) {
       try {
         console.log('🚀 Attempting to fetch job via GraphQL...');
