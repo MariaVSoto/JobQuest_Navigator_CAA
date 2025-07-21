@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import useResponsive from '../hooks/useResponsive';
+import useMobileMenu from '../hooks/useMobileMenu';
+import HamburgerMenu from './HamburgerMenu';
 import './NavBar.css';
 // import logo from '../assets/logo.png'; // Uncomment and use if you have a logo
 
@@ -8,6 +11,8 @@ const NavBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
+  const { isMobile } = useResponsive();
+  const { toggleMenu } = useMobileMenu();
   const [activeDropdown, setActiveDropdown] = useState(null);
   const timeoutRef = useRef(null);
   
@@ -104,25 +109,41 @@ const NavBar = () => {
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <div className="navbar-brand">
-          {/* <img src={logo} alt="JobQuest Logo" className="navbar-logo" /> */}
-          <Link to="/dashboard" className="navbar-title">
-            <span className="brand-icon">🎯</span>
-            JobQuest Navigator
-          </Link>
-        </div>
-        
-        {isAuthenticated ? (
-          <div className="navbar-nav">
-            {/* Dashboard Link */}
-            <Link 
-              to="/dashboard" 
-              className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
-            >
-              Dashboard
+    <>
+      <nav className={`navbar ${isMobile ? 'navbar--mobile' : ''}`}>
+        <div className="navbar-container">
+          <div className="navbar-brand">
+            {/* Mobile hamburger menu button */}
+            {isMobile && isAuthenticated && (
+              <button 
+                className="mobile-menu-trigger"
+                onClick={toggleMenu}
+                aria-label="Open navigation menu"
+              >
+                <svg className="hamburger-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+            )}
+            
+            {/* <img src={logo} alt="JobQuest Logo" className="navbar-logo" /> */}
+            <Link to="/dashboard" className="navbar-title">
+              <span className="brand-icon">🎯</span>
+              <span className={`brand-text ${isMobile ? 'mobile-hide-text' : ''}`}>JobQuest Navigator</span>
             </Link>
+          </div>
+          
+          {isAuthenticated ? (
+            <div className={`navbar-nav ${isMobile ? 'mobile-hide' : ''}`}>
+              {/* Dashboard Link - Desktop only */}
+              <Link 
+                to="/dashboard" 
+                className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+              >
+                Dashboard
+              </Link>
 
             {/* Grouped Navigation with Dropdowns */}
             {Object.entries(navigationGroups).map(([key, group]) => (
@@ -228,6 +249,21 @@ const NavBar = () => {
               )}
             </div>
           </div>
+          
+          {/* Mobile User Avatar - Shown on mobile when authenticated */}
+          {isMobile && (
+            <div className="mobile-user-section">
+              {user && (
+                <Link to="/profile" className="mobile-user-avatar">
+                  {user?.profile_picture ? (
+                    <img src={user.profile_picture} alt="Profile" />
+                  ) : (
+                    <span>{user?.first_name?.[0] || user?.email?.[0] || 'U'}</span>
+                  )}
+                </Link>
+              )}
+            </div>
+          )}
         ) : (
           <div className="navbar-nav">
             <Link to="/login" className="btn btn-outline btn-sm">Sign In</Link>
@@ -236,6 +272,10 @@ const NavBar = () => {
         )}
       </div>
     </nav>
+    
+    {/* Hamburger Menu */}
+    <HamburgerMenu />
+  </>
   );
 };
 

@@ -35,6 +35,7 @@ import NotFound from './pages/NotFound';
 import AuthTest from './pages/AuthTest';
 import ServicesTest from './pages/ServicesTest';
 import './App.css';
+import './styles/mobile.css';
 
 function App() {
   return (

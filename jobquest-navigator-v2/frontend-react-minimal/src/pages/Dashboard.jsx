@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import graphqlApplicationService from '../services/graphqlApplicationService';
+import MobileLayout from '../components/MobileLayout';
+import useResponsive from '../hooks/useResponsive';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isMobile, getGridColumns } = useResponsive();
   const [appliedJobs, setAppliedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -63,8 +66,8 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="page-container">
-      <div className="container">
+    <MobileLayout>
+      <div className={`dashboard-container ${isMobile ? 'dashboard--mobile' : ''}`}>
         {/* Header Section */}
         <div className="dashboard-header">
           <div className="welcome-section">
@@ -77,17 +80,27 @@ const Dashboard = () => {
             </div>
             <div className="welcome-content">
               <h1>Welcome back, {user?.first_name || 'User'}!</h1>
-              <p className="text-neutral-600">Ready to take the next step in your career?</p>
+              <p className="welcome-subtitle">Ready to take the next step in your career?</p>
             </div>
           </div>
-          <div className="header-actions">
-            <Link to="/profile" className="btn btn-outline">Edit Profile</Link>
-            <Link to="/jobs" className="btn btn-primary">Browse Jobs</Link>
-          </div>
+          {!isMobile && (
+            <div className="header-actions">
+              <Link to="/profile" className="btn btn-outline">Edit Profile</Link>
+              <Link to="/jobs" className="btn btn-primary">Browse Jobs</Link>
+            </div>
+          )}
         </div>
 
+        {/* Mobile Action Buttons */}
+        {isMobile && (
+          <div className="mobile-actions">
+            <Link to="/profile" className="btn btn-outline btn-mobile-full">Edit Profile</Link>
+            <Link to="/jobs" className="btn btn-primary btn-mobile-full">Browse Jobs</Link>
+          </div>
+        )}
+
         {/* Stats Grid */}
-        <div className="stats-grid grid grid-cols-2 md:grid-cols-4 mb-8">
+        <div className={`stats-grid ${isMobile ? 'mobile-stats-grid' : ''}`}>
           <div className="stat-card card">
             <div className="card-body">
               <div className="stat-content">
@@ -127,7 +140,7 @@ const Dashboard = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="dashboard-content grid lg:grid-cols-3 gap-6">
+        <div className={`dashboard-content ${isMobile ? 'mobile-dashboard-content' : ''}`}>
           
           {/* Quick Actions */}
           <div className="quick-actions-section">
@@ -228,7 +241,7 @@ const Dashboard = () => {
 
         </div>
       </div>
-    </div>
+    </MobileLayout>
   );
 };
 
