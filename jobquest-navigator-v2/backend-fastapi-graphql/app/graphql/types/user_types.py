@@ -100,3 +100,27 @@ class UpdateUserProfileInput:
     preferred_work_type: Optional[str] = None
     salary_expectation_min: Optional[float] = None
     salary_expectation_max: Optional[float] = None
+
+
+@strawberry.type
+class SecureAuthPayload:
+    """
+    Secure authentication response payload for HttpOnly cookie authentication
+    Does not expose tokens to prevent XSS attacks
+    """
+    success: bool
+    user: Optional[UserType] = None
+    message: Optional[str] = None
+    errors: Optional[List[str]] = None
+
+
+@strawberry.type
+class SessionValidationPayload:
+    """Session validation response for HttpOnly cookie authentication"""
+    valid: bool
+    user: Optional[UserType] = None
+    message: Optional[str] = None
+
+
+# Alias for backward compatibility with auth mutations
+User = UserType

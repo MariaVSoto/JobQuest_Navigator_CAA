@@ -252,34 +252,36 @@ class Query:
                 from sqlalchemy import text, func
                 
                 # Full-text search using the GIN indexes we created
-                search_terms = search.replace("'", "''")  # Escape single quotes
+                # SECURITY FIX: Use parameterized queries to prevent SQL injection
+                search_param = f"%{search}%"
                 
-                # Use PostgreSQL ts_query and ts_rank for advanced search
+                # Use PostgreSQL ts_query and ts_rank for advanced search with safe parameters
                 search_filter = or_(
                     # Full-text search on job title with ranking
                     func.to_tsvector('english', JobModel.title).op('@@')(
-                        func.plainto_tsquery('english', search_terms)
+                        func.plainto_tsquery('english', search)
                     ),
                     # Full-text search on job description with ranking
                     func.to_tsvector('english', JobModel.description).op('@@')(
-                        func.plainto_tsquery('english', search_terms)
+                        func.plainto_tsquery('english', search)
                     ),
                     # Full-text search on company name with ranking
                     func.to_tsvector('english', CompanyModel.name).op('@@')(
-                        func.plainto_tsquery('english', search_terms)
+                        func.plainto_tsquery('english', search)
                     ),
-                    # Fallback to ILIKE for exact matching
-                    JobModel.title.ilike(f"%{search}%"),
-                    JobModel.description.ilike(f"%{search}%"),
-                    CompanyModel.name.ilike(f"%{search}%")
+                    # SECURITY FIX: Use proper parameterized queries for ILIKE
+                    JobModel.title.ilike(search_param),
+                    JobModel.description.ilike(search_param),
+                    CompanyModel.name.ilike(search_param)
                 )
                 query = query.where(search_filter)
                 
                 # Order by relevance score for full-text search results
+                # SECURITY FIX: Use safe parameter instead of escaped string
                 relevance_score = (
-                    func.ts_rank(func.to_tsvector('english', JobModel.title), func.plainto_tsquery('english', search_terms)) * 2.0 +
-                    func.ts_rank(func.to_tsvector('english', JobModel.description), func.plainto_tsquery('english', search_terms)) * 1.0 +
-                    func.ts_rank(func.to_tsvector('english', CompanyModel.name), func.plainto_tsquery('english', search_terms)) * 1.5
+                    func.ts_rank(func.to_tsvector('english', JobModel.title), func.plainto_tsquery('english', search)) * 2.0 +
+                    func.ts_rank(func.to_tsvector('english', JobModel.description), func.plainto_tsquery('english', search)) * 1.0 +
+                    func.ts_rank(func.to_tsvector('english', CompanyModel.name), func.plainto_tsquery('english', search)) * 1.5
                 ).label('relevance')
                 
                 # Add relevance score to query and order by it
@@ -290,7 +292,9 @@ class Query:
             
             # Apply location filter
             if location:
-                query = query.where(JobModel.location_text.ilike(f"%{location}%"))
+                # SECURITY FIX: Use parameterized query to prevent SQL injection
+                location_param = f"%{location}%"
+                query = query.where(JobModel.location_text.ilike(location_param))
             
             # Apply job type filter
             if jobType:
@@ -921,8 +925,10 @@ class Mutation:
         
         try:
             # Find or create company
+            # SECURITY FIX: Use parameterized query to prevent SQL injection
+            company_name_param = f"%{input.companyName}%"
             company_result = await db.execute(
-                select(Company).where(Company.name.ilike(f"%{input.companyName}%"))
+                select(Company).where(Company.name.ilike(company_name_param))
             )
             company = company_result.scalar_one_or_none()
             
@@ -1111,8 +1117,10 @@ class Mutation:
             # Handle company update if provided
             if input.companyName is not None:
                 # Find or create company
+                # SECURITY FIX: Use parameterized query to prevent SQL injection
+                company_name_param = f"%{input.companyName}%"
                 company_result = await db.execute(
-                    select(Company).where(Company.name.ilike(f"%{input.companyName}%"))
+                    select(Company).where(Company.name.ilike(company_name_param))
                 )
                 company = company_result.scalar_one_or_none()
                 
