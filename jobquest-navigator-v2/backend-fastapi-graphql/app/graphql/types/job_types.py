@@ -6,140 +6,125 @@ Strawberry type definitions for simplified job management (user input based)
 import strawberry
 from typing import Optional, List
 from datetime import datetime
+from .common_types import Company
 
 
 @strawberry.type
-class CompanyType:
+class Job:
     """
-    Company GraphQL type - simplified version without location complexity
-    """
-    id: str
-    name: str
-    description: Optional[str] = None
-    website: Optional[str] = None
-    industry: Optional[str] = None
-    company_size: Optional[str] = None
-    
-    # AI research data
-    ai_research_status: str = "NONE"
-    ai_research_data: Optional[str] = None  # JSON string
-    ai_research_generated_at: Optional[datetime] = None
-
-
-@strawberry.type
-class JobType:
-    """
-    Job GraphQL type - simplified for user input model
+    Job GraphQL type - consistent naming with main schema
     """
     id: str
     title: str
-    company: CompanyType
     description: str
     requirements: Optional[str] = None
+    benefits: Optional[str] = None
+    locationText: Optional[str] = None
     
     # Salary information
-    salary_min: Optional[float] = None
-    salary_max: Optional[float] = None
-    salary_currency: str = "USD"
+    salaryMin: Optional[float] = None
+    salaryMax: Optional[float] = None
+    salaryCurrency: str = "USD"
+    salaryPeriod: str = "yearly"
     
     # Job details
-    job_type: str = "full_time"
-    experience_level: Optional[str] = None
-    remote_type: str = "on_site"
+    jobType: str = "full_time"
+    contractType: str = "permanent"
+    experienceLevel: Optional[str] = None
+    remoteType: str = "on_site"
     
     # User input fields
-    user_input: bool = True
-    created_at: datetime
-    updated_at: datetime
+    userInput: bool = True
+    source: str = "user_input"
+    postedDate: datetime
+    expiresDate: Optional[datetime] = None
+    
+    # Relationships
+    company: Optional[Company] = None
+    isSaved: bool = False
+    isApplied: bool = False
+
+
+# Backward compatibility
+JobType = Job
+CompanyType = Company
 
 
 @strawberry.type
-class SkillType:
-    """Skill GraphQL type"""
-    id: str
-    name: str
-    category: str
-    description: Optional[str] = None
-    is_technical: bool = True
-
-
-@strawberry.type
-class JobApplicationType:
+class JobApplication:
     """Job application tracking type"""
     id: str
-    job: JobType
+    userId: str
+    jobId: str
     status: str = "applied"
-    applied_date: datetime
+    appliedDate: datetime
+    lastUpdated: datetime
+    coverLetter: Optional[str] = None
     notes: Optional[str] = None
-    
-    # Resume optimization data
-    optimized_resume_data: Optional[str] = None  # JSON string
-    ai_suggestions: Optional[str] = None  # JSON string
+    optimizedResumeData: Optional[str] = None
+    aiSuggestions: Optional[str] = None
+    skillsAnalysis: Optional[str] = None
+    job: Optional[Job] = None
+
+
+@strawberry.type
+class SavedJob:
+    """Saved job GraphQL type"""
+    id: str
+    userId: str
+    jobId: str
+    savedDate: datetime
+    notes: Optional[str] = None
+    job: Optional[Job] = None
 
 
 @strawberry.input
 class JobInput:
     """Input type for creating/updating jobs (user input)"""
     title: str
-    company_name: str
+    companyName: str
     description: str
     requirements: Optional[str] = None
-    salary_min: Optional[float] = None
-    salary_max: Optional[float] = None
-    job_type: Optional[str] = "full_time"
-    experience_level: Optional[str] = None
-    remote_type: Optional[str] = "on_site"
+    benefits: Optional[str] = None
+    locationText: Optional[str] = None
+    salaryMin: Optional[float] = None
+    salaryMax: Optional[float] = None
+    salaryCurrency: Optional[str] = "USD"
+    salaryPeriod: Optional[str] = "yearly"
+    jobType: Optional[str] = "full_time"
+    contractType: Optional[str] = "permanent"
+    experienceLevel: Optional[str] = None
+    remoteType: Optional[str] = "on_site"
 
 
 @strawberry.input
 class JobApplicationInput:
     """Input type for job applications"""
-    job_id: str
+    jobId: str
+    coverLetter: Optional[str] = None
+    notes: Optional[str] = None
+
+
+@strawberry.input
+class SavedJobInput:
+    """Input type for saving jobs"""
+    jobId: str
     notes: Optional[str] = None
 
 
 @strawberry.type
-class SavedJobType:
-    """Saved job GraphQL type"""
-    id: str
-    job: JobType
-    user_id: str
-    saved_date: datetime
-    notes: Optional[str] = None
-
-
-@strawberry.type
-class CategoryType:
-    """Category GraphQL type for job categorization"""
-    id: str
-    name: str
-    description: Optional[str] = None
-    parent_category_id: Optional[str] = None
-
-
-@strawberry.type
-class JobSkillType:
-    """Job-Skill relationship type"""
-    id: str
-    job: JobType
-    skill: SkillType
-    importance_level: str = "nice_to_have"  # required, preferred, nice_to_have
-    experience_level: Optional[str] = None
+class JobResponse:
+    """Job operation response"""
+    success: bool
+    job: Optional[Job] = None
+    errors: Optional[List[str]] = None
 
 
 @strawberry.type
 class JobApplicationResponse:
     """Job application operation response"""
     success: bool
-    job_application: Optional[JobApplicationType] = None
-    errors: Optional[List[str]] = None
-
-
-@strawberry.type  
-class JobResponse:
-    """Job operation response"""
-    success: bool
-    job: Optional[JobType] = None
+    jobApplication: Optional[JobApplication] = None
     errors: Optional[List[str]] = None
 
 
@@ -147,28 +132,13 @@ class JobResponse:
 class SavedJobResponse:
     """Saved job operation response"""
     success: bool
-    saved_job: Optional[SavedJobType] = None
+    savedJob: Optional[SavedJob] = None
     errors: Optional[List[str]] = None
-
-
-@strawberry.type
-class GeneralResponse:
-    """General operation response"""
-    success: bool
-    message: Optional[str] = None
-    errors: Optional[List[str]] = None
-
-
-@strawberry.input
-class ApplyToJobInput:
-    """Input for applying to a job"""
-    job_id: str
-    notes: Optional[str] = None
 
 
 @strawberry.input
 class UpdateApplicationStatusInput:
     """Input for updating application status"""
-    application_id: str
+    applicationId: str
     status: str
     notes: Optional[str] = None

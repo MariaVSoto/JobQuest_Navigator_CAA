@@ -9,47 +9,50 @@ from datetime import datetime, date
 
 
 @strawberry.type
-class UserType:
+class User:
     """
-    User GraphQL type maintaining compatibility with Django User model
+    User GraphQL type - simplified and consistent naming
     """
     id: str
     email: str
     username: str
     
     # Profile information
-    full_name: Optional[str] = None
-    date_of_birth: Optional[date] = None
+    fullName: Optional[str] = None
     bio: Optional[str] = None
-    current_job_title: Optional[str] = None
-    years_of_experience: Optional[int] = None
+    currentJobTitle: Optional[str] = None
+    yearsOfExperience: Optional[int] = None
     industry: Optional[str] = None
-    career_level: Optional[str] = None
-    job_search_status: str = "not_looking"
-    preferred_work_type: Optional[str] = None
+    careerLevel: Optional[str] = None
+    jobSearchStatus: Optional[str] = None
+    preferredWorkType: Optional[str] = None
     
     # Timestamps
-    date_joined: datetime
-    last_login: Optional[datetime] = None
+    dateJoined: Optional[datetime] = None
+    lastLogin: Optional[datetime] = None
     
     # Salary expectations
-    salary_expectation_min: Optional[float] = None
-    salary_expectation_max: Optional[float] = None
+    salaryExpectationMin: Optional[float] = None
+    salaryExpectationMax: Optional[float] = None
+
+
+# Backward compatibility alias
+UserType = User
 
 
 @strawberry.input
 class UserUpdateInput:
     """Input type for updating user profile"""
-    full_name: Optional[str] = None
+    fullName: Optional[str] = None
     bio: Optional[str] = None
-    current_job_title: Optional[str] = None
-    years_of_experience: Optional[int] = None
+    currentJobTitle: Optional[str] = None
+    yearsOfExperience: Optional[int] = None
     industry: Optional[str] = None
-    career_level: Optional[str] = None
-    job_search_status: Optional[str] = None
-    preferred_work_type: Optional[str] = None
-    salary_expectation_min: Optional[float] = None
-    salary_expectation_max: Optional[float] = None
+    careerLevel: Optional[str] = None
+    jobSearchStatus: Optional[str] = None
+    preferredWorkType: Optional[str] = None
+    salaryExpectationMin: Optional[float] = None
+    salaryExpectationMax: Optional[float] = None
 
 
 @strawberry.input
@@ -58,69 +61,29 @@ class UserRegistrationInput:
     email: str
     username: str
     password: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-
-
-@strawberry.type
-class AuthPayload:
-    """Authentication response payload"""
-    success: bool
-    user: Optional[UserType] = None
-    token: Optional[str] = None
-    errors: Optional[List[str]] = None
+    fullName: Optional[str] = None
 
 
 @strawberry.type
 class UserResponse:
     """Standard user operation response"""
     success: bool
-    user: Optional[UserType] = None
+    user: Optional[User] = None
     errors: Optional[List[str]] = None
 
 
 @strawberry.input
-class RegisterUserInput:
-    """Input type for user registration via Cognito"""
+class LoginInput:
+    """Input type for user login"""
     email: str
     password: str
-    full_name: Optional[str] = None
-
-
-@strawberry.input
-class UpdateUserProfileInput:
-    """Input type for updating user profile"""
-    full_name: Optional[str] = None
-    bio: Optional[str] = None
-    current_job_title: Optional[str] = None
-    years_of_experience: Optional[int] = None
-    industry: Optional[str] = None
-    career_level: Optional[str] = None
-    job_search_status: Optional[str] = None
-    preferred_work_type: Optional[str] = None
-    salary_expectation_min: Optional[float] = None
-    salary_expectation_max: Optional[float] = None
 
 
 @strawberry.type
-class SecureAuthPayload:
-    """
-    Secure authentication response payload for HttpOnly cookie authentication
-    Does not expose tokens to prevent XSS attacks
-    """
+class AuthResponse:
+    """Authentication response payload"""
     success: bool
-    user: Optional[UserType] = None
+    user: Optional[User] = None
+    token: Optional[str] = None
     message: Optional[str] = None
     errors: Optional[List[str]] = None
-
-
-@strawberry.type
-class SessionValidationPayload:
-    """Session validation response for HttpOnly cookie authentication"""
-    valid: bool
-    user: Optional[UserType] = None
-    message: Optional[str] = None
-
-
-# Alias for backward compatibility with auth mutations
-User = UserType

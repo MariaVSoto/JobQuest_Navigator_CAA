@@ -1,41 +1,73 @@
 """
-GraphQL types module exports
+GraphQL types module - centralized exports for all GraphQL types
 """
 
-from .user_types import (
-    UserType, UserUpdateInput, UserRegistrationInput, AuthPayload, UserResponse,
-    RegisterUserInput, UpdateUserProfileInput
+# Common types
+from .common_types import (
+    Company,
+    CompanyInput,
+    SecureAuthResponse,
+    SessionValidationResponse,
+    StandardResponse,
+    PaginationInfo
 )
+
+# User types
+from .user_types import (
+    User,
+    UserType,  # Backward compatibility
+    UserUpdateInput,
+    UserRegistrationInput,
+    UserResponse,
+    LoginInput,
+    AuthResponse
+)
+
+# Job types
 from .job_types import (
-    JobType, CompanyType, SkillType, JobApplicationType, JobInput, JobApplicationInput,
-    SavedJobType, CategoryType, JobSkillType, JobApplicationResponse, JobResponse,
-    SavedJobResponse, GeneralResponse, ApplyToJobInput, UpdateApplicationStatusInput
+    Job,
+    JobType,  # Backward compatibility
+    CompanyType,  # Backward compatibility
+    JobApplication,
+    SavedJob,
+    JobInput,
+    JobApplicationInput,
+    SavedJobInput,
+    JobResponse,
+    JobApplicationResponse,
+    SavedJobResponse,
+    UpdateApplicationStatusInput
 )
 
 __all__ = [
+    # Common types
+    "Company",
+    "CompanyInput", 
+    "SecureAuthResponse",
+    "SessionValidationResponse",
+    "StandardResponse",
+    "PaginationInfo",
+    
     # User types
+    "User",
     "UserType",
-    "UserUpdateInput", 
+    "UserUpdateInput",
     "UserRegistrationInput",
-    "AuthPayload",
     "UserResponse",
-    "RegisterUserInput",
-    "UpdateUserProfileInput",
+    "LoginInput",
+    "AuthResponse",
     
     # Job types
+    "Job",
     "JobType",
-    "CompanyType", 
-    "SkillType",
-    "JobApplicationType",
+    "CompanyType",
+    "JobApplication",
+    "SavedJob",
     "JobInput",
     "JobApplicationInput",
-    "SavedJobType",
-    "CategoryType", 
-    "JobSkillType",
-    "JobApplicationResponse",
+    "SavedJobInput",
     "JobResponse",
+    "JobApplicationResponse",
     "SavedJobResponse",
-    "GeneralResponse",
-    "ApplyToJobInput",
-    "UpdateApplicationStatusInput",
+    "UpdateApplicationStatusInput"
 ]
