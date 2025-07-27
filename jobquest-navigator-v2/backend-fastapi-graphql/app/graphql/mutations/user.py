@@ -13,7 +13,7 @@ from botocore.exceptions import ClientError
 from app.core.database import get_db
 from app.core.config import settings
 from app.graphql.types import (
-    UserResponse, RegisterUserInput, UpdateUserProfileInput,
+    UserResponse, UserRegistrationInput, UserUpdateInput,
     UserType
 )
 from app.models import User
@@ -28,7 +28,7 @@ class UserMutation:
     async def register_user(
         self,
         info,
-        input: RegisterUserInput,
+        input: UserRegistrationInput,
         db: AsyncSession = Depends(get_db)
     ) -> UserResponse:
         """Register a new user with AWS Cognito."""
@@ -142,7 +142,7 @@ class UserMutation:
     async def update_user_profile(
         self,
         info,
-        input: UpdateUserProfileInput,
+        input: UserUpdateInput,
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db)
     ) -> UserResponse:

@@ -39,6 +39,15 @@ from .job_types import (
     UpdateApplicationStatusInput
 )
 
+# Dashboard types
+from .dashboard_types import (
+    DashboardStats,
+    DashboardActivity,
+    DashboardData,
+    ApplicationStatusStats,
+    DashboardFilters
+)
+
 __all__ = [
     # Common types
     "Company",
@@ -69,5 +78,12 @@ __all__ = [
     "JobResponse",
     "JobApplicationResponse",
     "SavedJobResponse",
-    "UpdateApplicationStatusInput"
+    "UpdateApplicationStatusInput",
+    
+    # Dashboard types
+    "DashboardStats",
+    "DashboardActivity", 
+    "DashboardData",
+    "ApplicationStatusStats",
+    "DashboardFilters"
 ]

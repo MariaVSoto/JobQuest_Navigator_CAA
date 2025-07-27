@@ -248,22 +248,21 @@ const NavBar = () => {
                 </div>
               )}
             </div>
+            
+            {isMobile && (
+              <div className="mobile-user-section">
+                {user && (
+                  <Link to="/profile" className="mobile-user-avatar">
+                    {user?.profile_picture ? (
+                      <img src={user.profile_picture} alt="Profile" />
+                    ) : (
+                      <span>{user?.first_name?.[0] || user?.email?.[0] || 'U'}</span>
+                    )}
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
-          
-          {/* Mobile User Avatar - Shown on mobile when authenticated */}
-          {isMobile && (
-            <div className="mobile-user-section">
-              {user && (
-                <Link to="/profile" className="mobile-user-avatar">
-                  {user?.profile_picture ? (
-                    <img src={user.profile_picture} alt="Profile" />
-                  ) : (
-                    <span>{user?.first_name?.[0] || user?.email?.[0] || 'U'}</span>
-                  )}
-                </Link>
-              )}
-            </div>
-          )}
         ) : (
           <div className="navbar-nav">
             <Link to="/login" className="btn btn-outline btn-sm">Sign In</Link>

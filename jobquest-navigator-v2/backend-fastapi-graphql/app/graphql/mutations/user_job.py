@@ -12,7 +12,7 @@ from datetime import datetime
 import uuid
 
 from app.core.database import get_db
-from app.graphql.types import JobType, CompanyType, GeneralResponse
+from app.graphql.types import Job as JobType, Company as CompanyType, StandardResponse
 from app.models import Job, Company, User
 from app.graphql.auth import get_current_user
 
@@ -344,7 +344,7 @@ class UserJobMutation:
         job_id: strawberry.ID,
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db)
-    ) -> GeneralResponse:
+    ) -> StandardResponse:
         """Delete a user-created job position."""
         try:
             # Find job and verify it's user input
@@ -358,7 +358,7 @@ class UserJobMutation:
             job = job_result.scalar_one_or_none()
             
             if not job:
-                return GeneralResponse(
+                return StandardResponse(
                     success=False,
                     errors=["Job not found or not user-created."]
                 )
@@ -368,7 +368,7 @@ class UserJobMutation:
             
             await db.commit()
             
-            return GeneralResponse(
+            return StandardResponse(
                 success=True,
                 message="Job position deleted successfully.",
                 errors=[]
@@ -376,7 +376,7 @@ class UserJobMutation:
             
         except Exception as e:
             await db.rollback()
-            return GeneralResponse(
+            return StandardResponse(
                 success=False,
                 errors=[f"Failed to delete job: {str(e)}"]
             )

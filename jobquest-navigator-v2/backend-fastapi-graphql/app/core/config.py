@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     
     # Basic app settings - CONFIGURED VIA ENVIRONMENT VARIABLES
     debug: bool = os.getenv("DEBUG", "true").lower() == "true"
+    environment: str = os.getenv("ENVIRONMENT", "development")
     project_name: str = os.getenv("PROJECT_NAME", "JobQuest Navigator v2")
     version: str = os.getenv("VERSION", "2.0.0")
     

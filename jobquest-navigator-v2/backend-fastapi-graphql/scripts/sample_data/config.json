@@ -1,0 +1,345 @@
+{
+  "sample_data_config": {
+    "version": "1.0",
+    "description": "Sample data configuration for JobQuest Navigator v2 demo",
+    "user_personas": [
+      {
+        "id": "persona_recent_graduate",
+        "email_template": "graduate{index}@demo.jobquest.com",
+        "full_name_templates": ["Alex {surname}", "Jordan {surname}", "Casey {surname}"],
+        "bio_template": "Recent graduate with a passion for technology and innovation. Eager to start my career in {industry}.",
+        "current_job_title": null,
+        "years_of_experience": 0,
+        "industry": "Technology",
+        "career_level": "entry",
+        "job_search_status": "actively_looking",
+        "preferred_work_type": "hybrid",
+        "skills": ["JavaScript", "Python", "React", "Git", "Problem Solving"],
+        "application_behavior": {
+          "applications_per_month": 15,
+          "response_rate": 0.12,
+          "typical_statuses": {
+            "pending": 0.5,
+            "rejected": 0.35,
+            "interview": 0.10,
+            "offer": 0.03,
+            "withdrawn": 0.02
+          }
+        }
+      },
+      {
+        "id": "persona_experienced_developer",
+        "email_template": "dev{index}@demo.jobquest.com",
+        "full_name_templates": ["Sam {surname}", "Taylor {surname}", "Morgan {surname}"],
+        "bio_template": "Experienced software developer with {years_of_experience} years of experience in full-stack development. Looking for senior opportunities.",
+        "current_job_title": "Software Developer",
+        "years_of_experience": 5,
+        "industry": "Technology",
+        "career_level": "mid",
+        "job_search_status": "casually_looking",
+        "preferred_work_type": "remote",
+        "skills": ["JavaScript", "Python", "React", "Node.js", "Docker", "AWS", "PostgreSQL"],
+        "application_behavior": {
+          "applications_per_month": 8,
+          "response_rate": 0.25,
+          "typical_statuses": {
+            "pending": 0.4,
+            "rejected": 0.3,
+            "interview": 0.2,
+            "offer": 0.08,
+            "withdrawn": 0.02
+          }
+        }
+      },
+      {
+        "id": "persona_senior_engineer",
+        "email_template": "senior{index}@demo.jobquest.com",
+        "full_name_templates": ["Adrian {surname}", "Riley {surname}", "Quinn {surname}"],
+        "bio_template": "Senior software engineer with extensive experience in system architecture and team leadership. Seeking principal or staff engineer roles.",
+        "current_job_title": "Senior Software Engineer",
+        "years_of_experience": 8,
+        "industry": "Technology",
+        "career_level": "senior",
+        "job_search_status": "not_looking",
+        "preferred_work_type": "remote",
+        "skills": ["Python", "Java", "Kubernetes", "Microservices", "System Design", "Team Leadership", "PostgreSQL", "Redis"],
+        "application_behavior": {
+          "applications_per_month": 3,
+          "response_rate": 0.4,
+          "typical_statuses": {
+            "pending": 0.3,
+            "rejected": 0.25,
+            "interview": 0.3,
+            "offer": 0.12,
+            "withdrawn": 0.03
+          }
+        }
+      },
+      {
+        "id": "persona_product_manager",
+        "email_template": "pm{index}@demo.jobquest.com",
+        "full_name_templates": ["Parker {surname}", "Avery {surname}", "Sage {surname}"],
+        "bio_template": "Product manager with a background in technology and user experience. Passionate about building products that make a difference.",
+        "current_job_title": "Product Manager",
+        "years_of_experience": 6,
+        "industry": "Technology",
+        "career_level": "mid",
+        "job_search_status": "actively_looking",
+        "preferred_work_type": "hybrid",
+        "skills": ["Product Strategy", "User Research", "Agile", "Data Analysis", "Wireframing", "Stakeholder Management"],
+        "application_behavior": {
+          "applications_per_month": 10,
+          "response_rate": 0.2,
+          "typical_statuses": {
+            "pending": 0.4,
+            "rejected": 0.35,
+            "interview": 0.18,
+            "offer": 0.05,
+            "withdrawn": 0.02
+          }
+        }
+      },
+      {
+        "id": "persona_career_changer",
+        "email_template": "changer{index}@demo.jobquest.com",
+        "full_name_templates": ["Drew {surname}", "Emery {surname}", "Reese {surname}"],
+        "bio_template": "Career changer transitioning into technology from {previous_industry}. Completed coding bootcamp and eager to apply new skills.",
+        "current_job_title": "Marketing Specialist",
+        "years_of_experience": 3,
+        "industry": "Technology",
+        "career_level": "entry",
+        "job_search_status": "actively_looking",
+        "preferred_work_type": "hybrid",
+        "skills": ["HTML", "CSS", "JavaScript", "React", "Communication", "Project Management"],
+        "application_behavior": {
+          "applications_per_month": 20,
+          "response_rate": 0.08,
+          "typical_statuses": {
+            "pending": 0.55,
+            "rejected": 0.4,
+            "interview": 0.04,
+            "offer": 0.005,
+            "withdrawn": 0.005
+          }
+        },
+        "previous_industry": "Marketing"
+      }
+    ],
+    "companies": [
+      {
+        "name": "TechForward Inc",
+        "slug": "techforward",
+        "description": "Leading technology company focused on innovative solutions for modern businesses.",
+        "website": "https://techforward.com",
+        "industry": "Technology",
+        "company_size": "500-1000",
+        "founded_year": 2015,
+        "job_types": ["Software Engineer", "Senior Software Engineer", "Product Manager", "DevOps Engineer"],
+        "location_preferences": ["San Francisco, CA", "Remote", "New York, NY"]
+      },
+      {
+        "name": "StartupVenture",
+        "slug": "startupventure",
+        "description": "Fast-growing startup disrupting the fintech industry with cutting-edge mobile solutions.",
+        "website": "https://startupventure.io",
+        "industry": "Fintech",
+        "company_size": "50-100",
+        "founded_year": 2020,
+        "job_types": ["Full Stack Developer", "Frontend Developer", "Product Manager", "UX Designer"],
+        "location_preferences": ["Austin, TX", "Remote", "San Francisco, CA"]
+      },
+      {
+        "name": "GlobalTech Solutions",
+        "slug": "globaltech",
+        "description": "Enterprise technology solutions provider serving Fortune 500 companies worldwide.",
+        "website": "https://globaltechsolutions.com",
+        "industry": "Enterprise Software",
+        "company_size": "1000-5000",
+        "founded_year": 2008,
+        "job_types": ["Senior Software Engineer", "Principal Engineer", "Technical Lead", "Solutions Architect"],
+        "location_preferences": ["Seattle, WA", "Boston, MA", "Remote"]
+      },
+      {
+        "name": "DataDriven Analytics",
+        "slug": "datadriven",
+        "description": "Data analytics and machine learning company helping businesses make informed decisions.",
+        "website": "https://datadriven.ai",
+        "industry": "Data Analytics",
+        "company_size": "100-500",
+        "founded_year": 2017,
+        "job_types": ["Data Engineer", "Machine Learning Engineer", "Data Scientist", "Software Engineer"],
+        "location_preferences": ["Chicago, IL", "Remote", "Denver, CO"]
+      },
+      {
+        "name": "CloudNative Systems",
+        "slug": "cloudnative",
+        "description": "Cloud infrastructure and DevOps solutions for modern applications.",
+        "website": "https://cloudnative.dev",
+        "industry": "Cloud Computing",
+        "company_size": "200-500",
+        "founded_year": 2018,
+        "job_types": ["DevOps Engineer", "Site Reliability Engineer", "Cloud Architect", "Backend Developer"],
+        "location_preferences": ["Portland, OR", "Remote", "Atlanta, GA"]
+      },
+      {
+        "name": "MobileFirst Apps",
+        "slug": "mobilefirst",
+        "description": "Mobile app development company creating innovative consumer applications.",
+        "website": "https://mobilefirst.app",
+        "industry": "Mobile Development",
+        "company_size": "25-50",
+        "founded_year": 2019,
+        "job_types": ["Mobile Developer", "iOS Developer", "Android Developer", "UI/UX Designer"],
+        "location_preferences": ["Los Angeles, CA", "Remote", "Miami, FL"]
+      },
+      {
+        "name": "EcoTech Innovations",
+        "slug": "ecotech",
+        "description": "Sustainable technology company developing solutions for environmental challenges.",
+        "website": "https://ecotech.green",
+        "industry": "GreenTech",
+        "company_size": "100-200",
+        "founded_year": 2016,
+        "job_types": ["Software Engineer", "Research Engineer", "Product Manager", "Data Analyst"],
+        "location_preferences": ["San Diego, CA", "Boulder, CO", "Remote"]
+      },
+      {
+        "name": "HealthTech Dynamics",
+        "slug": "healthtech",
+        "description": "Healthcare technology company improving patient outcomes through innovative software.",
+        "website": "https://healthtechdynamics.com",
+        "industry": "HealthTech",
+        "company_size": "300-500",
+        "founded_year": 2014,
+        "job_types": ["Software Engineer", "Senior Software Engineer", "Product Manager", "Quality Assurance Engineer"],
+        "location_preferences": ["Boston, MA", "Remote", "Research Triangle, NC"]
+      },
+      {
+        "name": "AIFuture Labs",
+        "slug": "aifuture",
+        "description": "Artificial intelligence research and development company pushing the boundaries of machine learning.",
+        "website": "https://aifuture.labs",
+        "industry": "Artificial Intelligence",
+        "company_size": "75-150",
+        "founded_year": 2021,
+        "job_types": ["Machine Learning Engineer", "AI Researcher", "Software Engineer", "Data Scientist"],
+        "location_preferences": ["Palo Alto, CA", "Remote", "Cambridge, MA"]
+      },
+      {
+        "name": "CyberSafe Security",
+        "slug": "cybersafe",
+        "description": "Cybersecurity company providing enterprise-grade security solutions and consulting.",
+        "website": "https://cybersafe.security",
+        "industry": "Cybersecurity",
+        "company_size": "150-300",
+        "founded_year": 2013,
+        "job_types": ["Security Engineer", "Senior Security Engineer", "Penetration Tester", "Security Consultant"],
+        "location_preferences": ["Washington, DC", "Remote", "Austin, TX"]
+      },
+      {
+        "name": "EdTech Revolution",
+        "slug": "edtech",
+        "description": "Educational technology platform transforming how people learn and develop skills.",
+        "website": "https://edtechrevolution.edu",
+        "industry": "EdTech",
+        "company_size": "200-400",
+        "founded_year": 2012,
+        "job_types": ["Software Engineer", "Product Manager", "UX Designer", "Content Developer"],
+        "location_preferences": ["New York, NY", "Remote", "Philadelphia, PA"]
+      },
+      {
+        "name": "GameDev Studios",
+        "slug": "gamedev",
+        "description": "Independent game development studio creating immersive gaming experiences.",
+        "website": "https://gamedevstudios.game",
+        "industry": "Gaming",
+        "company_size": "50-100",
+        "founded_year": 2017,
+        "job_types": ["Game Developer", "Unity Developer", "Game Designer", "3D Artist"],
+        "location_preferences": ["Los Angeles, CA", "Remote", "Montreal, QC"]
+      },
+      {
+        "name": "FinanceFlow Tech",
+        "slug": "financeflow",
+        "description": "Financial technology company streamlining banking and payment solutions.",
+        "website": "https://financeflow.tech",
+        "industry": "Fintech",
+        "company_size": "400-600",
+        "founded_year": 2011,
+        "job_types": ["Backend Developer", "Senior Software Engineer", "Technical Lead", "Risk Engineer"],
+        "location_preferences": ["New York, NY", "Remote", "San Francisco, CA"]
+      },
+      {
+        "name": "RetailTech Innovations",
+        "slug": "retailtech",
+        "description": "Retail technology solutions helping businesses optimize their operations and customer experience.",
+        "website": "https://retailtech.shop",
+        "industry": "Retail Technology",
+        "company_size": "300-500",
+        "founded_year": 2015,
+        "job_types": ["Software Engineer", "Frontend Developer", "Product Manager", "System Architect"],
+        "location_preferences": ["Chicago, IL", "Remote", "Dallas, TX"]
+      },
+      {
+        "name": "AutoTech Dynamics",
+        "slug": "autotech",
+        "description": "Automotive technology company developing software for connected and autonomous vehicles.",
+        "website": "https://autotech.drive",
+        "industry": "Automotive",
+        "company_size": "800-1000",
+        "founded_year": 2009,
+        "job_types": ["Embedded Software Engineer", "Senior Software Engineer", "Systems Engineer", "Test Engineer"],
+        "location_preferences": ["Detroit, MI", "Remote", "San Jose, CA"]
+      }
+    ],
+    "job_templates": {
+      "Software Engineer": {
+        "description_template": "We are seeking a talented Software Engineer to join our dynamic team. You will be responsible for developing and maintaining {product_type} applications using modern technologies and best practices.",
+        "requirements_template": "• {experience_level} experience in software development\n• Proficiency in {primary_language} and {secondary_language}\n• Experience with {framework} and related technologies\n• Strong problem-solving and communication skills\n• {additional_requirement}",
+        "benefits_template": "• Competitive salary and equity\n• Comprehensive health insurance\n• Flexible work arrangements\n• Professional development opportunities\n• {company_specific_benefit}",
+        "salary_ranges": {
+          "entry": {"min": 70000, "max": 95000},
+          "mid": {"min": 95000, "max": 130000},
+          "senior": {"min": 130000, "max": 180000}
+        }
+      },
+      "Product Manager": {
+        "description_template": "Join our product team as a Product Manager to drive the strategy and execution of our {product_area} initiatives. You will work closely with engineering, design, and business stakeholders to deliver exceptional user experiences.",
+        "requirements_template": "• {experience_level} experience in product management\n• Strong analytical and strategic thinking skills\n• Experience with agile development methodologies\n• Excellent communication and leadership abilities\n• {domain_specific_requirement}",
+        "benefits_template": "• Competitive compensation package\n• Stock options\n• Health, dental, and vision insurance\n• Flexible PTO policy\n• {company_specific_benefit}",
+        "salary_ranges": {
+          "entry": {"min": 85000, "max": 110000},
+          "mid": {"min": 110000, "max": 150000},
+          "senior": {"min": 150000, "max": 200000}
+        }
+      },
+      "Frontend Developer": {
+        "description_template": "We are looking for a skilled Frontend Developer to create beautiful and responsive user interfaces for our {product_type} platform. You will collaborate with designers and backend developers to deliver exceptional user experiences.",
+        "requirements_template": "• {experience_level} experience in frontend development\n• Proficiency in JavaScript, HTML, and CSS\n• Experience with {frontend_framework} (React, Vue, Angular)\n• Knowledge of responsive design principles\n• {additional_frontend_skill}",
+        "benefits_template": "• Competitive salary\n• Health and wellness benefits\n• Remote work flexibility\n• Learning and development budget\n• {company_specific_benefit}",
+        "salary_ranges": {
+          "entry": {"min": 65000, "max": 85000},
+          "mid": {"min": 85000, "max": 120000},
+          "senior": {"min": 120000, "max": 160000}
+        }
+      }
+    },
+    "skills_database": [
+      "JavaScript", "Python", "Java", "TypeScript", "React", "Node.js", "Angular", "Vue.js",
+      "HTML", "CSS", "PostgreSQL", "MySQL", "MongoDB", "Redis", "Docker", "Kubernetes",
+      "AWS", "Azure", "GCP", "Git", "CI/CD", "Agile", "Scrum", "Problem Solving",
+      "Communication", "Leadership", "Team Management", "System Design", "Microservices",
+      "REST APIs", "GraphQL", "Machine Learning", "Data Analysis", "UI/UX Design"
+    ],
+    "locations": [
+      "San Francisco, CA", "New York, NY", "Seattle, WA", "Austin, TX", "Boston, MA",
+      "Chicago, IL", "Los Angeles, CA", "Denver, CO", "Portland, OR", "Atlanta, GA",
+      "Remote", "Washington, DC", "San Diego, CA", "Phoenix, AZ", "Dallas, TX"
+    ],
+    "surnames": [
+      "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez",
+      "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas",
+      "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White"
+    ]
+  }
+}

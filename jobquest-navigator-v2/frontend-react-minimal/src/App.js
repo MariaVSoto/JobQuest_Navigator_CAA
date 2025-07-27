@@ -20,12 +20,12 @@ import { JobProvider } from './context/JobContext';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import CompanyProfile from './pages/CompanyProfile';
-import InterviewPrep from './pages/InterviewPrep';
+import InterviewPrepEnhanced from './pages/InterviewPrepEnhanced';
 import ResumeBuilder from './pages/ResumeBuilder';
 import AISuggestions from './pages/AISuggestions';
-import SkillsAndCertifications from './pages/SkillsAndCertifications';
+import SkillsAndCertificationsEnhanced from './pages/SkillsAndCertificationsEnhanced';
 import LearningPaths from './pages/LearningPaths';
-import UploadJob from './pages/UploadJob';
+import UploadJobEnhanced from './pages/UploadJobEnhanced';
 import ResumeVersions from './pages/ResumeVersions';
 import MyJobs from './pages/MyJobs';
 import SkillJobMapping from './pages/SkillJobMapping';
@@ -102,7 +102,7 @@ function App() {
             } />
             <Route path="/interview-prep" element={
               <ProtectedRoute>
-                <InterviewPrep />
+                <InterviewPrepEnhanced />
               </ProtectedRoute>
             } />
             <Route path="/resume-builder" element={
@@ -117,7 +117,7 @@ function App() {
             } />
             <Route path="/skills" element={
               <ProtectedRoute>
-                <SkillsAndCertifications />
+                <SkillsAndCertificationsEnhanced />
               </ProtectedRoute>
             } />
             <Route path="/learning-paths" element={
@@ -127,7 +127,7 @@ function App() {
             } />
             <Route path="/upload-job" element={
               <ProtectedRoute>
-                <UploadJob />
+                <UploadJobEnhanced />
               </ProtectedRoute>
             } />
             <Route path="/resume-versions" element={

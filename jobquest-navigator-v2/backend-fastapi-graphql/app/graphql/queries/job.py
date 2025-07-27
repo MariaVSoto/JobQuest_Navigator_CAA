@@ -59,93 +59,99 @@ class JobQuery:
                     select(SavedJob).where(
                         and_(SavedJob.user_id == current_user.id, SavedJob.job_id == job.id)
                     )
-            )
-            is_saved = saved_result.scalar_one_or_none() is not None
-            
-            applied_result = await db.execute(
-                select(JobApplication).where(
-                    and_(JobApplication.user_id == current_user.id, JobApplication.job_id == job.id)
                 )
-            )
-            is_applied = applied_result.scalar_one_or_none() is not None
-        
-        # Convert required skills
-        required_skills = [
-            JobSkillType(
-                job_id=str(js.job_id),
-                skill_id=str(js.skill_id),
-                skill=SkillType(
-                    id=str(js.skill.id),
-                    name=js.skill.name,
-                    slug=js.skill.slug,
-                    category=js.skill.category,
-                    description=js.skill.description,
-                    is_technical=js.skill.is_technical,
-                    popularity_score=js.skill.popularity_score,
-                    created_at=js.skill.created_at,
+                is_saved = saved_result.scalar_one_or_none() is not None
+            
+                applied_result = await db.execute(
+                    select(JobApplication).where(
+                        and_(JobApplication.user_id == current_user.id, JobApplication.job_id == job.id)
+                    )
+                )
+                is_applied = applied_result.scalar_one_or_none() is not None
+            
+            # Convert required skills
+            required_skills = [
+                JobSkillType(
+                    job_id=str(js.job_id),
+                    skill_id=str(js.skill_id),
+                    skill=SkillType(
+                        id=str(js.skill.id),
+                        name=js.skill.name,
+                        slug=js.skill.slug,
+                        category=js.skill.category,
+                        description=js.skill.description,
+                        is_technical=js.skill.is_technical,
+                        popularity_score=js.skill.popularity_score,
+                        created_at=js.skill.created_at,
+                    ),
+                    is_required=js.is_required,
+                    proficiency_level=js.proficiency_level,
+                )
+                for js in job.required_skills
+            ]
+            
+            return JobType(
+                id=str(job.id),
+                title=job.title,
+                company_id=str(job.company_id),
+                category_id=str(job.category_id) if job.category_id else None,
+                company=CompanyType(
+                    id=str(job.company.id),
+                    name=job.company.name,
+                    slug=job.company.slug,
+                    description=job.company.description,
+                    website=job.company.website,
+                    logo_url=job.company.logo_url,
+                    industry=job.company.industry,
+                    company_size=job.company.company_size,
+                    founded_year=job.company.founded_year,
+                    email=job.company.email,
+                    phone=job.company.phone,
+                    linkedin_url=job.company.linkedin_url,
+                    twitter_handle=job.company.twitter_handle,
+                    glassdoor_id=job.company.glassdoor_id,
+                    glassdoor_rating=job.company.glassdoor_rating,
+                    glassdoor_review_count=job.company.glassdoor_review_count,
+                    ai_research_data=job.company.ai_research_data,
+                    ai_research_model=job.company.ai_research_model,
+                    ai_research_status=job.company.ai_research_status,
+                    ai_research_generated_at=job.company.ai_research_generated_at,
+                    created_at=job.company.created_at,
                 ),
-                is_required=js.is_required,
-                proficiency_level=js.proficiency_level,
+                category=CategoryType(
+                    id=str(job.category.id),
+                    name=job.category.name,
+                    created_at=job.category.created_at,
+                ) if job.category else None,
+                description=job.description,
+                requirements=job.requirements,
+                benefits=job.benefits,
+                location_text=job.location_text,
+                salary_min=job.salary_min,
+                salary_max=job.salary_max,
+                salary_currency=job.salary_currency,
+                salary_period=job.salary_period,
+                job_type=job.job_type,
+                contract_type=job.contract_type,
+                experience_level=job.experience_level,
+                remote_type=job.remote_type,
+                user_input=job.user_input,
+                external_id=job.external_id,
+                external_url=job.external_url,
+                source=job.source,
+                posted_date=job.posted_date,
+                expires_date=job.expires_date,
+                created_at=job.created_at,
+                required_skills=required_skills,
+                is_saved=is_saved,
+                is_applied=is_applied,
             )
-            for js in job.required_skills
-        ]
         
-        return JobType(
-            id=str(job.id),
-            title=job.title,
-            company_id=str(job.company_id),
-            category_id=str(job.category_id) if job.category_id else None,
-            company=CompanyType(
-                id=str(job.company.id),
-                name=job.company.name,
-                slug=job.company.slug,
-                description=job.company.description,
-                website=job.company.website,
-                logo_url=job.company.logo_url,
-                industry=job.company.industry,
-                company_size=job.company.company_size,
-                founded_year=job.company.founded_year,
-                email=job.company.email,
-                phone=job.company.phone,
-                linkedin_url=job.company.linkedin_url,
-                twitter_handle=job.company.twitter_handle,
-                glassdoor_id=job.company.glassdoor_id,
-                glassdoor_rating=job.company.glassdoor_rating,
-                glassdoor_review_count=job.company.glassdoor_review_count,
-                ai_research_data=job.company.ai_research_data,
-                ai_research_model=job.company.ai_research_model,
-                ai_research_status=job.company.ai_research_status,
-                ai_research_generated_at=job.company.ai_research_generated_at,
-                created_at=job.company.created_at,
-            ),
-            category=CategoryType(
-                id=str(job.category.id),
-                name=job.category.name,
-                created_at=job.category.created_at,
-            ) if job.category else None,
-            description=job.description,
-            requirements=job.requirements,
-            benefits=job.benefits,
-            location_text=job.location_text,
-            salary_min=job.salary_min,
-            salary_max=job.salary_max,
-            salary_currency=job.salary_currency,
-            salary_period=job.salary_period,
-            job_type=job.job_type,
-            contract_type=job.contract_type,
-            experience_level=job.experience_level,
-            remote_type=job.remote_type,
-            user_input=job.user_input,
-            external_id=job.external_id,
-            external_url=job.external_url,
-            source=job.source,
-            posted_date=job.posted_date,
-            expires_date=job.expires_date,
-            created_at=job.created_at,
-            required_skills=required_skills,
-            is_saved=is_saved,
-            is_applied=is_applied,
-        )
+        except Exception as e:
+            print(f"Error fetching job {id}: {e}")
+            return None
+        finally:
+            await db.close()
 
     @strawberry.field
     async def jobs(

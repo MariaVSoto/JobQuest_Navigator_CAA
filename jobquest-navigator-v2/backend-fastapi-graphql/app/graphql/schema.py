@@ -10,14 +10,23 @@ from datetime import datetime
 # Import types from modular structure
 from .types import (
     User, Job, Company, JobApplication, SavedJob,
-    SecureAuthResponse, SessionValidationResponse
+    SecureAuthResponse, SessionValidationResponse,
+    DashboardStats, DashboardData, ApplicationStatusStats, DashboardFilters,
+    UserRegistrationInput, AuthResponse
 )
 
-# Import queries (we'll implement these in the existing query modules)
-# from .queries import UserQuery, JobQuery
+# Import queries and dashboard functionality
+try:
+    from .queries.dashboard_queries import DashboardQuery
+except ImportError as e:
+    print(f"Warning: Could not import DashboardQuery: {e}")
+    # Create a dummy DashboardQuery class
+    class DashboardQuery:
+        pass
 
-# Import mutations (we'll implement these in the existing mutation modules)  
-# from .mutations import UserMutation, JobMutation
+# Import mutations
+from .mutations.auth_mutations import AuthMutation
+from .mutations.user_mutations import UserMutation
 
 
 @strawberry.type
@@ -137,6 +146,36 @@ class Query:
         start = offset or 0
         end = start + (limit or 20)
         return filtered_jobs[start:end]
+    
+    # Dashboard queries
+    @strawberry.field
+    async def dashboard_stats(
+        self, 
+        user_id: str,
+        date_range_days: Optional[int] = 30
+    ) -> DashboardStats:
+        """Get dashboard statistics for a user"""
+        dashboard_query = DashboardQuery()
+        return await dashboard_query.dashboard_stats(user_id, date_range_days)
+    
+    @strawberry.field
+    async def dashboard_data(
+        self,
+        user_id: str,
+        filters: Optional[DashboardFilters] = None
+    ) -> DashboardData:
+        """Get complete dashboard data"""
+        dashboard_query = DashboardQuery()
+        return await dashboard_query.dashboard_data(user_id, filters)
+    
+    @strawberry.field 
+    async def application_status_stats(
+        self,
+        user_id: str
+    ) -> ApplicationStatusStats:
+        """Get application statistics grouped by status"""
+        dashboard_query = DashboardQuery()
+        return await dashboard_query.application_status_stats(user_id)
 
 
 @strawberry.type
@@ -149,6 +188,68 @@ class Mutation:
     async def test_mutation(self, message: str) -> str:
         """Test mutation for schema validation"""
         return f"Echo: {message}"
+    
+    # Authentication mutations
+    @strawberry.field
+    async def login(self, username: str, password: str) -> AuthResponse:
+        """User login"""
+        auth_mutation = AuthMutation()
+        return await auth_mutation.login(username, password)
+    
+    @strawberry.field
+    async def register(self, input: UserRegistrationInput) -> AuthResponse:
+        """User registration using AuthMutation"""
+        auth_mutation = AuthMutation()
+        return await auth_mutation.register(input)
+    
+    @strawberry.field
+    async def registerUser(
+        self, 
+        email: str, 
+        username: str, 
+        password: str, 
+        firstName: Optional[str] = None, 
+        lastName: Optional[str] = None
+    ) -> AuthResponse:
+        """User registration - matches frontend expectations"""
+        try:
+            # For development, return success with mock user creation
+            # TODO: Implement actual user creation in database
+            
+            # Use already imported types
+            
+            # Mock user creation
+            mock_user = User(
+                id=f"user-{email.replace('@', '-').replace('.', '-')}",
+                email=email,
+                username=username,
+                fullName=f"{firstName or ''} {lastName or ''}".strip() or username,
+                bio="New user",
+                currentJobTitle="",
+                yearsOfExperience=0,
+                industry="",
+                careerLevel="entry",
+                jobSearchStatus="not_looking",
+                preferredWorkType="office"
+            )
+            
+            return AuthResponse(
+                success=True,
+                user=mock_user,
+                token="mock-registration-token",
+                message="Registration successful",
+                errors=None
+            )
+            
+        except Exception as e:
+            print(f"Registration error: {e}")
+            return AuthResponse(
+                success=False,
+                user=None,
+                token=None,
+                message="Registration failed",
+                errors=[str(e)]
+            )
 
 
 # Create the schema

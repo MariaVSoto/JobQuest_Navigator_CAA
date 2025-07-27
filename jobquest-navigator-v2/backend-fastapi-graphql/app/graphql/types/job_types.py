@@ -7,6 +7,7 @@ import strawberry
 from typing import Optional, List
 from datetime import datetime
 from .common_types import Company
+from app.core.dataloaders import get_dataloaders
 
 
 @strawberry.type
@@ -39,10 +40,44 @@ class Job:
     postedDate: datetime
     expiresDate: Optional[datetime] = None
     
-    # Relationships
-    company: Optional[Company] = None
-    isSaved: bool = False
-    isApplied: bool = False
+    # Optimized relationships using DataLoaders
+    @strawberry.field
+    async def company(self, info) -> Optional[Company]:
+        """Load company using DataLoader to prevent N+1 queries."""
+        if not hasattr(self, '_company_id') or self._company_id is None:
+            return None
+        
+        dataloaders = get_dataloaders(info)
+        company_loader = dataloaders.get_company_loader()
+        return await company_loader.load(self._company_id)
+    
+    @strawberry.field
+    async def isSaved(self, info) -> bool:
+        """Check if job is saved by current user using DataLoader."""
+        current_user = getattr(info.context, 'user', None)
+        if not current_user:
+            return False
+        
+        dataloaders = get_dataloaders(info)
+        application_loader = dataloaders.get_job_application_loader()
+        # This would need a separate SavedJobDataLoader implementation
+        # For now, return False as placeholder
+        return False
+    
+    @strawberry.field
+    async def isApplied(self, info) -> bool:
+        """Check if user has applied to this job using DataLoader."""
+        current_user = getattr(info.context, 'user', None)
+        if not current_user:
+            return False
+        
+        dataloaders = get_dataloaders(info)
+        application_loader = dataloaders.get_job_application_loader()
+        application = await application_loader.load_user_application_for_job(
+            current_user.id, 
+            self.id
+        )
+        return application is not None
 
 
 # Backward compatibility

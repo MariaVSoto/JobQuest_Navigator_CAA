@@ -11,9 +11,10 @@ from datetime import datetime
 
 from app.core.database import get_db
 from app.graphql.types import (
-    JobApplicationResponse, SavedJobResponse, GeneralResponse,
-    ApplyToJobInput, UpdateApplicationStatusInput,
-    JobApplicationType, SavedJobType, JobType, CompanyType
+    JobApplicationResponse, SavedJobResponse, StandardResponse,
+    JobApplicationInput, UpdateApplicationStatusInput,
+    JobApplication as JobApplicationType, SavedJob as SavedJobType, 
+    Job as JobType, Company as CompanyType
 )
 from app.models import Job, JobApplication, SavedJob, User, Company
 from app.graphql.auth import get_current_user
@@ -27,7 +28,7 @@ class JobMutation:
     async def apply_to_job(
         self,
         info,
-        input: ApplyToJobInput,
+        input: JobApplicationInput,
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db)
     ) -> JobApplicationResponse:
@@ -418,7 +419,7 @@ class JobMutation:
         job_id: strawberry.ID,
         current_user: User = Depends(get_current_user),
         db: AsyncSession = Depends(get_db)
-    ) -> GeneralResponse:
+    ) -> StandardResponse:
         """Remove a job from saved jobs."""
         try:
             # Find and delete saved job record
@@ -433,7 +434,7 @@ class JobMutation:
             saved_job = result.scalar_one_or_none()
             
             if not saved_job:
-                return GeneralResponse(
+                return StandardResponse(
                     success=False,
                     errors=["Saved job not found."]
                 )
@@ -441,7 +442,7 @@ class JobMutation:
             await db.delete(saved_job)
             await db.commit()
             
-            return GeneralResponse(
+            return StandardResponse(
                 success=True,
                 message="Job removed from saved jobs.",
                 errors=[]
@@ -449,7 +450,7 @@ class JobMutation:
             
         except Exception as e:
             await db.rollback()
-            return GeneralResponse(
+            return StandardResponse(
                 success=False,
                 errors=[f"Unsave job failed: {str(e)}"]
             )

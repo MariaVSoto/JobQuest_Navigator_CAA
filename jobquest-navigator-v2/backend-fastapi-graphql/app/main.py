@@ -47,14 +47,62 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {
+    """
+    Comprehensive health check endpoint for load balancer and monitoring
+    """
+    import time
+    from sqlalchemy import text
+    from app.core.database import get_db
+    
+    start_time = time.time()
+    health_status = {
         "status": "healthy",
+        "timestamp": int(time.time()),
         "version": "2.0.0",
-        "services": {
-            "database": "connected",
-            "authentication": "configured" if settings.cognito_user_pool_id else "development_mode"
-        }
+        "environment": settings.environment,
+        "services": {}
     }
+    
+    # Database connectivity check
+    try:
+        async for db in get_db():
+            result = await db.execute(text("SELECT 1"))
+            if result.scalar() == 1:
+                health_status["services"]["database"] = "connected"
+            else:
+                health_status["services"]["database"] = "error"
+                health_status["status"] = "degraded"
+            break
+    except Exception as e:
+        health_status["services"]["database"] = f"error: {str(e)[:50]}"
+        health_status["status"] = "unhealthy"
+    
+    # Authentication service check
+    if settings.cognito_user_pool_id and settings.cognito_client_id:
+        health_status["services"]["authentication"] = "configured"
+    else:
+        health_status["services"]["authentication"] = "development_mode"
+    
+    # Redis connectivity check (if configured)
+    if hasattr(settings, 'redis_url') and settings.redis_url:
+        try:
+            import redis.asyncio as redis
+            redis_client = redis.from_url(settings.redis_url)
+            await redis_client.ping()
+            health_status["services"]["cache"] = "connected"
+            await redis_client.close()
+        except Exception as e:
+            health_status["services"]["cache"] = f"error: {str(e)[:50]}"
+            if health_status["status"] == "healthy":
+                health_status["status"] = "degraded"
+    
+    # GraphQL service
+    health_status["services"]["graphql"] = "available"
+    
+    # Response time
+    health_status["response_time_ms"] = round((time.time() - start_time) * 1000, 2)
+    
+    return health_status
 
 @app.get("/auth/status")
 async def auth_status():

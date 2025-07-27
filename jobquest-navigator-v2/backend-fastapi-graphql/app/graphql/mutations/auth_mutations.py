@@ -8,7 +8,8 @@ from typing import Optional
 from fastapi import Response, Request
 from strawberry.fastapi import BaseContext
 
-from app.graphql.types.user_types import AuthPayload, UserRegistrationInput, User, SecureAuthPayload
+from app.graphql.types.user_types import AuthResponse, UserRegistrationInput, User
+from app.graphql.types.common_types import SecureAuthResponse
 
 
 @strawberry.type
@@ -16,7 +17,47 @@ class AuthMutation:
     """Authentication mutations"""
     
     @strawberry.mutation
-    async def login(self, username: str, password: str) -> AuthPayload:
+    async def register(self, input: UserRegistrationInput) -> AuthResponse:
+        """
+        User registration mutation - matches frontend expectations
+        Will integrate with AWS Cognito
+        """
+        # TODO: Implement Cognito registration
+        # For now, return mock success for development
+        try:
+            # Placeholder for Cognito registration logic
+            mock_user = User(
+                id=f"user-{input.email.replace('@', '-').replace('.', '-')}",
+                email=input.email,
+                username=input.username,
+                fullName=input.fullName or input.username,
+                bio="New user",
+                currentJobTitle="",
+                yearsOfExperience=0,
+                industry="",
+                careerLevel="entry",
+                jobSearchStatus="not_looking",
+                preferredWorkType="office"
+            )
+            
+            return AuthResponse(
+                success=True,
+                user=mock_user,
+                token="dev-registration-token",
+                message="Registration successful",
+                errors=None
+            )
+        except Exception as e:
+            return AuthResponse(
+                success=False,
+                user=None,
+                token=None,
+                message="Registration failed",
+                errors=[str(e)]
+            )
+    
+    @strawberry.mutation
+    async def login(self, username: str, password: str) -> AuthResponse:
         """
         User login mutation
         Will integrate with AWS Cognito
@@ -25,42 +66,20 @@ class AuthMutation:
         # For now, return mock success for development
         try:
             # Placeholder for Cognito login logic
-            return AuthPayload(
+            return AuthResponse(
                 success=True,
                 user=None,  # Will be populated with actual user data
                 token="dev-token-placeholder",
                 errors=None
             )
         except Exception as e:
-            return AuthPayload(
+            return AuthResponse(
                 success=False,
                 user=None,
                 token=None,
                 errors=[str(e)]
             )
     
-    @strawberry.mutation
-    async def register(self, input: UserRegistrationInput) -> AuthPayload:
-        """
-        User registration mutation
-        Will integrate with AWS Cognito
-        """
-        # TODO: Implement Cognito user registration
-        try:
-            # Placeholder for Cognito registration logic
-            return AuthPayload(
-                success=True,
-                user=None,  # Will be populated with created user data
-                token="dev-token-placeholder",
-                errors=None
-            )
-        except Exception as e:
-            return AuthPayload(
-                success=False,
-                user=None,
-                token=None,
-                errors=[str(e)]
-            )
     
     @strawberry.mutation
     async def logout(self) -> bool:
@@ -71,12 +90,12 @@ class AuthMutation:
         return True
     
     @strawberry.mutation
-    async def refresh_token(self, refresh_token: str) -> AuthPayload:
+    async def refresh_token(self, refresh_token: str) -> AuthResponse:
         """
         Refresh authentication token
         """
         # TODO: Implement Cognito token refresh
-        return AuthPayload(
+        return AuthResponse(
             success=True,
             user=None,
             token="new-dev-token-placeholder",
@@ -84,7 +103,7 @@ class AuthMutation:
         )
     
     @strawberry.mutation
-    async def secure_login(self, info: strawberry.Info, username: str, password: str) -> SecureAuthPayload:
+    async def secure_login(self, info: strawberry.Info, username: str, password: str) -> SecureAuthResponse:
         """
         Secure login with HttpOnly cookie authentication
         Prevents XSS attacks by storing JWT token in secure HttpOnly cookies
@@ -134,7 +153,7 @@ class AuthMutation:
                 path="/auth"            # Restrict to auth endpoints
             )
             
-            return SecureAuthPayload(
+            return SecureAuthResponse(
                 success=True,
                 user=mock_user,
                 message="Secure login successful",
@@ -142,7 +161,7 @@ class AuthMutation:
             )
             
         except Exception as e:
-            return SecureAuthPayload(
+            return SecureAuthResponse(
                 success=False,
                 user=None,
                 message="Login failed",
@@ -150,7 +169,7 @@ class AuthMutation:
             )
     
     @strawberry.mutation
-    async def secure_logout(self, info: strawberry.Info) -> SecureAuthPayload:
+    async def secure_logout(self, info: strawberry.Info) -> SecureAuthResponse:
         """
         Secure logout with HttpOnly cookie cleanup
         """
@@ -175,7 +194,7 @@ class AuthMutation:
                 samesite="strict"
             )
             
-            return SecureAuthPayload(
+            return SecureAuthResponse(
                 success=True,
                 user=None,
                 message="Secure logout successful",
@@ -183,7 +202,7 @@ class AuthMutation:
             )
             
         except Exception as e:
-            return SecureAuthPayload(
+            return SecureAuthResponse(
                 success=False,
                 user=None,
                 message="Logout failed",
@@ -191,7 +210,7 @@ class AuthMutation:
             )
     
     @strawberry.mutation
-    async def refresh_secure_token(self, info: strawberry.Info) -> SecureAuthPayload:
+    async def refresh_secure_token(self, info: strawberry.Info) -> SecureAuthResponse:
         """
         Refresh authentication token using HttpOnly cookies
         """
@@ -204,7 +223,7 @@ class AuthMutation:
             refresh_token = request.cookies.get("refresh_token")
             
             if not refresh_token:
-                return SecureAuthPayload(
+                return SecureAuthResponse(
                     success=False,
                     user=None,
                     message="No refresh token found",
@@ -240,7 +259,7 @@ class AuthMutation:
                 path="/"
             )
             
-            return SecureAuthPayload(
+            return SecureAuthResponse(
                 success=True,
                 user=mock_user,
                 message="Token refreshed successfully",
@@ -248,7 +267,7 @@ class AuthMutation:
             )
             
         except Exception as e:
-            return SecureAuthPayload(
+            return SecureAuthResponse(
                 success=False,
                 user=None,
                 message="Token refresh failed",

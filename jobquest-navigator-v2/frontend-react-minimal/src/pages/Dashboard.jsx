@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import graphqlApplicationService from '../services/graphqlApplicationService';
+import graphqlDashboardService from '../services/graphqlDashboardService';
 import MobileLayout from '../components/MobileLayout';
 import useResponsive from '../hooks/useResponsive';
 import './Dashboard.css';
@@ -26,21 +27,40 @@ const Dashboard = () => {
       try {
         setLoading(true);
         
+        // Use user ID for GraphQL queries (fallback to demo user ID)
+        const userId = user.id || user.userId || 'demo-user-id';
+        
+        // Fetch dashboard statistics via GraphQL
+        const dashboardStatsResult = await graphqlDashboardService.getDashboardStats(userId);
+        if (dashboardStatsResult.success) {
+          setStats({
+            totalApplications: dashboardStatsResult.data.totalApplications,
+            interviewsScheduled: dashboardStatsResult.data.interviewsScheduled,
+            savedJobs: dashboardStatsResult.data.savedJobs,
+            profileViews: dashboardStatsResult.data.profileViews
+          });
+          
+          // Log if using mock data
+          if (dashboardStatsResult.isMockData) {
+            console.log('🔄 Dashboard using mock data - backend may not be fully connected');
+          }
+        }
+        
         // Fetch recent applications
         const applications = await graphqlApplicationService.getApplications({ limit: 5 });
         setAppliedJobs(applications.results || applications || []);
         
-        // Mock stats for demonstration
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data');
+        
+        // Fall back to mock stats on error
         setStats({
           totalApplications: 12,
           interviewsScheduled: 3,
           savedJobs: 8,
           profileViews: 47
         });
-        
-      } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
-        setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }

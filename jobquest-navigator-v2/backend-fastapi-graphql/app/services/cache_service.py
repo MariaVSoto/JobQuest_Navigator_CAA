@@ -1,24 +1,46 @@
 """
-Redis Cache Service for JobQuest Navigator
-Provides caching functionality for job searches and company data
+Enhanced Redis Cache Service for JobQuest Navigator
+Provides comprehensive caching functionality with invalidation strategies
 """
 
 import json
 import hashlib
-from typing import Any, Optional, Dict, List
+import logging
+from typing import Any, Optional, Dict, List, Union, Callable
 from datetime import datetime, timedelta
 import redis.asyncio as redis_async
 from app.core.config import settings
 
+logger = logging.getLogger(__name__)
+
 
 class CacheService:
-    """Async Redis cache service for job search optimization"""
+    """Enhanced async Redis cache service with comprehensive caching strategies"""
     
     def __init__(self):
         self.redis_client: Optional[redis_async.Redis] = None
-        self.default_ttl = 300  # 5 minutes default TTL
-        self.search_ttl = 180   # 3 minutes for search results
-        self.company_ttl = 3600 # 1 hour for company data
+        
+        # TTL configurations for different data types
+        self.ttl_config = {
+            "default": 300,         # 5 minutes default TTL
+            "search": 180,          # 3 minutes for search results
+            "company": 3600,        # 1 hour for company data
+            "user": 1800,           # 30 minutes for user data
+            "job_detail": 600,      # 10 minutes for individual job details
+            "graphql_query": 300,   # 5 minutes for GraphQL query results
+            "application": 900,     # 15 minutes for application data
+            "session": 86400,       # 24 hours for session data
+        }
+        
+        # Cache key patterns for organized invalidation
+        self.key_patterns = {
+            "jobs": "jobquest:jobs:*",
+            "companies": "jobquest:company:*",
+            "users": "jobquest:user:*",
+            "applications": "jobquest:application:*",
+            "search": "jobquest:search:*",
+            "graphql": "jobquest:graphql:*",
+        }
     
     async def connect(self):
         """Initialize Redis connection"""
