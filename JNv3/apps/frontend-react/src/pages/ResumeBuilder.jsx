@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 // Deprecated service removed - using graphqlResumeService
 import graphqlResumeService from '../services/graphqlResumeService';
+import PDFUploadComponent from '../components/PDFUploadComponent';
 import './ResumeBuilder.css';
 
 const ResumeBuilder = () => {
@@ -368,6 +369,75 @@ const ResumeBuilder = () => {
     }
   };
 
+  // PDF Upload handlers
+  const handlePDFUploadSuccess = (uploadData) => {
+    console.log('PDF uploaded successfully:', uploadData);
+    setSuccess(`PDF uploaded successfully! File: ${uploadData.filename}`);
+    
+    // Reload saved resumes to show the new PDF upload
+    loadData();
+  };
+
+  const handlePDFProcessSuccess = (processData) => {
+    console.log('PDF processed successfully:', processData);
+    setSuccess(`PDF processed successfully! Extracted data in ${processData.processingTime?.toFixed(2) || 'N/A'}s`);
+    
+    // If we have extracted data, populate the form
+    if (processData.extractedData) {
+      const extractedData = processData.extractedData;
+      
+      // Transform the data to match our resumeData structure
+      const newResumeData = {
+        title: extractedData.title || 'Extracted Resume',
+        personalInfo: {
+          fullName: extractedData.personal_info?.full_name || '',
+          email: extractedData.personal_info?.email || '',
+          phone: extractedData.personal_info?.phone || '',
+          location: extractedData.personal_info?.location || '',
+          linkedin: extractedData.personal_info?.linkedin || '',
+          website: extractedData.personal_info?.website || ''
+        },
+        summary: extractedData.summary || '',
+        experience: extractedData.experience?.map((exp, index) => ({
+          id: index + 1,
+          company: exp.company || '',
+          position: exp.position || '',
+          startDate: exp.start_date || '',
+          endDate: exp.end_date || '',
+          current: exp.current || false,
+          description: exp.description || ''
+        })) || [],
+        education: extractedData.education?.map((edu, index) => ({
+          id: index + 1,
+          school: edu.school || '',
+          degree: edu.degree || '',
+          field: edu.field || '',
+          startDate: edu.start_date || '',
+          endDate: edu.end_date || '',
+          current: edu.current || false,
+          gpa: edu.gpa || ''
+        })) || [],
+        skills: extractedData.skills || [],
+        projects: extractedData.projects?.map((proj, index) => ({
+          id: index + 1,
+          name: proj.name || '',
+          description: proj.description || '',
+          technologies: proj.technologies || '',
+          link: proj.link || ''
+        })) || []
+      };
+      
+      // Set the extracted data and switch to create tab
+      setResumeData(newResumeData);
+      setCurrentResumeId(processData.resumeId);
+      setActiveTab('create');
+      setSuccess(prev => prev + ' - Data has been populated in the form. Review and save when ready!');
+    }
+    
+    // Reload saved resumes to show updated status
+    loadData();
+  };
+
   // Authentication check
   if (!user) {
     return (
@@ -424,6 +494,12 @@ const ResumeBuilder = () => {
             onClick={() => setActiveTab('create')}
           >
             Create Resume
+          </button>
+          <button
+            className={activeTab === 'upload' ? 'active' : ''}
+            onClick={() => setActiveTab('upload')}
+          >
+            Upload PDF
           </button>
           <button
             className={activeTab === 'templates' ? 'active' : ''}
@@ -774,6 +850,26 @@ const ResumeBuilder = () => {
                     Save as New
                   </button>
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'upload' && (
+            <div className="upload-pdf-section">
+              <PDFUploadComponent
+                onUploadSuccess={handlePDFUploadSuccess}
+                onProcessSuccess={handlePDFProcessSuccess}
+              />
+              <div className="upload-help">
+                <h3>How it works:</h3>
+                <ol>
+                  <li>Enter a title for your resume</li>
+                  <li>Select and upload your PDF resume file (max 10MB)</li>
+                  <li>Click "Extract Resume Data" to automatically populate the form</li>
+                  <li>Review and edit the extracted data in the "Create Resume" tab</li>
+                  <li>Save your resume when you're satisfied</li>
+                </ol>
+                <p><strong>Note:</strong> PDF processing is currently in beta. You may need to review and correct the extracted information.</p>
               </div>
             </div>
           )}

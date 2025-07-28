@@ -31,10 +31,70 @@ const UPDATE_RESUME_MUTATION = gql`
 
 const DELETE_RESUME_MUTATION = gql`
   mutation DeleteResume($resumeId: String!) {
-    deleteResume(resumeId: $resumeId) {
+    delete_resume(resume_id: $resumeId) {
       success
       message
       errors
+    }
+  }
+`;
+
+const UPLOAD_RESUME_FILE_MUTATION = gql`
+  mutation UploadResumeFile($input: UploadResumeFileInput!) {
+    upload_resume_file(input: $input) {
+      success
+      message
+      errors
+      resume_id
+      processing_status
+      download_url
+    }
+  }
+`;
+
+const PROCESS_PDF_RESUME_MUTATION = gql`
+  mutation ProcessPDFResume($resumeId: String!) {
+    process_pdf_resume(resume_id: $resumeId) {
+      success
+      message
+      errors
+      extracted_data {
+        title
+        personal_info {
+          full_name
+          email
+          phone
+          location
+          linkedin
+          website
+        }
+        summary
+        experience {
+          company
+          position
+          start_date
+          end_date
+          current
+          description
+        }
+        education {
+          school
+          degree
+          field
+          start_date
+          end_date
+          current
+          gpa
+        }
+        skills
+        projects {
+          name
+          description
+          technologies
+          link
+        }
+      }
+      processing_time
     }
   }
 `;
@@ -43,18 +103,29 @@ const DELETE_RESUME_MUTATION = gql`
 const GET_RESUMES_QUERY = gql`
   query GetResumes($limit: Int, $offset: Int) {
     resumes(limit: $limit, offset: $offset) {
-      id
-      title
-      createdAt
-      updatedAt
-      personalInfo {
-        fullName
-        email
-        phone
-        location
+      success
+      message
+      resumes {
+        id
+        title
+        user_id
+        personal_info {
+          full_name
+          email
+          phone
+          location
+        }
+        target_role
+        target_industry
+        source_type
+        processing_status
+        status_display
+        is_default
+        view_count
+        created_at
+        updated_at
       }
-      targetRole
-      targetIndustry
+      total_count
     }
   }
 `;
@@ -244,24 +315,34 @@ class GraphQLResumeService {
         fetchPolicy: 'cache-and-network'
       });
 
-      const resumes = data.resumes || [];
-      console.log('✅ Resumes fetched successfully:', resumes.length, 'resumes');
-      
-      return {
-        results: resumes.map(resume => ({
-          id: resume.id,
-          title: resume.title,
-          full_name: resume.personalInfo?.fullName || 'Unknown',
-          email: resume.personalInfo?.email || '',
-          target_role: resume.targetRole,
-          target_industry: resume.targetIndustry,
-          created_at: resume.createdAt,
-          updated_at: resume.updatedAt,
-          last_modified: resume.updatedAt
-        })),
-        count: resumes.length,
-        message: 'Resumes loaded successfully'
-      };
+      const response = data.resumes;
+      if (response && response.success) {
+        const resumes = response.resumes || [];
+        console.log('✅ Resumes fetched successfully:', resumes.length, 'resumes');
+        
+        return {
+          results: resumes.map(resume => ({
+            id: resume.id,
+            title: resume.title,
+            full_name: resume.personal_info?.full_name || 'Unknown',
+            email: resume.personal_info?.email || '',
+            target_role: resume.target_role,
+            target_industry: resume.target_industry,
+            source_type: resume.source_type,
+            processing_status: resume.processing_status,
+            status_display: resume.status_display,
+            is_default: resume.is_default,
+            view_count: resume.view_count,
+            created_at: resume.created_at,
+            updated_at: resume.updated_at,
+            last_modified: resume.updated_at
+          })),
+          count: response.total_count || resumes.length,
+          message: response.message || 'Resumes loaded successfully'
+        };
+      } else {
+        throw new Error(response?.message || 'Failed to fetch resumes');
+      }
     } catch (error) {
       console.warn('❌ GraphQL getResumes failed, using fallback:', error);
       // Return mock data for demo purposes
@@ -339,7 +420,7 @@ class GraphQLResumeService {
         refetchQueries: [{ query: GET_RESUMES_QUERY }]
       });
 
-      const result = data.deleteResume;
+      const result = data.delete_resume;
       
       if (result.success) {
         console.log('✅ Resume deleted successfully:', result.message);
@@ -358,6 +439,78 @@ class GraphQLResumeService {
         success: true,
         message: 'Resume deletion simulated - GraphQL backend not available'
       };
+    }
+  }
+
+  /**
+   * Upload a PDF resume file
+   */
+  async uploadResumeFile(title, fileData, filename, contentType) {
+    try {
+      console.log('🚀 Uploading PDF resume via GraphQL:', filename);
+      
+      const { data } = await this.client.mutate({
+        mutation: UPLOAD_RESUME_FILE_MUTATION,
+        variables: {
+          input: {
+            title,
+            file_data: fileData,
+            filename,
+            content_type: contentType
+          }
+        }
+      });
+
+      const result = data.upload_resume_file;
+      
+      if (result.success) {
+        console.log('✅ PDF resume uploaded successfully:', result.message);
+        return {
+          success: true,
+          resumeId: result.resume_id,
+          processingStatus: result.processing_status,
+          downloadUrl: result.download_url,
+          message: result.message || 'PDF uploaded successfully'
+        };
+      } else {
+        console.error('❌ PDF upload failed:', result.errors);
+        throw new Error(result.errors?.join(', ') || 'PDF upload failed');
+      }
+    } catch (error) {
+      console.error('GraphQL uploadResumeFile error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process uploaded PDF to extract resume data
+   */
+  async processPDFResume(resumeId) {
+    try {
+      console.log('🚀 Processing PDF resume via GraphQL:', resumeId);
+      
+      const { data } = await this.client.mutate({
+        mutation: PROCESS_PDF_RESUME_MUTATION,
+        variables: { resumeId }
+      });
+
+      const result = data.process_pdf_resume;
+      
+      if (result.success) {
+        console.log('✅ PDF processed successfully:', result.message);
+        return {
+          success: true,
+          extractedData: result.extracted_data,
+          processingTime: result.processing_time,
+          message: result.message || 'PDF processed successfully'
+        };
+      } else {
+        console.error('❌ PDF processing failed:', result.errors);
+        throw new Error(result.errors?.join(', ') || 'PDF processing failed');
+      }
+    } catch (error) {
+      console.error('GraphQL processPDFResume error:', error);
+      throw error;
     }
   }
 

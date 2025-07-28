@@ -32,6 +32,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     # Timezone data
     tzdata \
+    # Magic library for file type detection
+    libmagic-dev \
     # Clean up in same layer to reduce image size
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \

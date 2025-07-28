@@ -4,12 +4,12 @@
  */
 
 import graphqlJobService from './graphqlJobService';
-import { FallbackService } from './fallbackService';
+// Removed fallbackService import - using mock data directly
 
 class UnifiedJobService {
   constructor() {
     this.primaryService = graphqlJobService;
-    this.fallbackService = FallbackService;
+    this.fallbackService = null; // FallbackService removed
     this.useGraphQL = process.env.REACT_APP_USE_FASTAPI_JOBS === 'true';
     
     console.log(`🔧 UnifiedJobService initialized with GraphQL: ${this.useGraphQL}`);

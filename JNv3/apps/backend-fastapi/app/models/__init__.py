@@ -8,6 +8,7 @@ from .job import (
     Company, Category, Skill, Job, JobSkill, 
     JobApplication, SavedJob, UserSkill
 )
+from .resume import Resume, ResumeVersion, ResumeProcessingLog
 
 __all__ = [
     # Base
@@ -28,4 +29,9 @@ __all__ = [
     "JobApplication",
     "SavedJob",
     "UserSkill",
+    
+    # Resume models
+    "Resume",
+    "ResumeVersion",
+    "ResumeProcessingLog",
 ]

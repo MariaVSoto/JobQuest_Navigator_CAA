@@ -42,6 +42,13 @@
   color: var(--neutral-900);
 }
 
+.welcome-subtitle {
+  font-size: var(--text-base, 16px);
+  color: #ffffff;
+  line-height: 1.4;
+  margin-bottom: var(--space-4);
+}
+
 .header-actions {
   display: flex;
   gap: var(--space-3);
@@ -435,7 +442,7 @@
 
   .welcome-subtitle {
     font-size: var(--mobile-font-small, 14px);
-    color: #6b7280;
+    color: #ffffff;
     line-height: 1.3;
   }
 

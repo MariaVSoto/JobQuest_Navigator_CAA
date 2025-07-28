@@ -3,7 +3,7 @@
  * Uses GraphQL when available, fallback to mock data for development
  */
 
-import { FallbackService } from './fallbackService';
+// Removed fallbackService import - using mock data directly
 import apolloClient from '../apolloClient';
 import {
   GET_USER_SKILLS,

@@ -187,7 +187,7 @@
   position: relative;
 }
 
-.dropdown-content {
+.certification-dropdown-content {
   position: absolute;
   right: 0;
   top: 100%;
@@ -203,13 +203,13 @@
   transition: all 0.2s ease;
 }
 
-.certification-dropdown-menu:hover .dropdown-content {
+.certification-dropdown-menu:hover .certification-dropdown-content {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
 
-.dropdown-item {
+.certification-dropdown-item {
   width: 100%;
   padding: 0.75rem 1rem;
   border: none;
@@ -225,19 +225,19 @@
   text-decoration: none;
 }
 
-.dropdown-item:hover {
+.certification-dropdown-item:hover {
   background: #f3f4f6;
 }
 
-.dropdown-item:first-child {
+.certification-dropdown-item:first-child {
   border-radius: 8px 8px 0 0;
 }
 
-.dropdown-item:last-child {
+.certification-dropdown-item:last-child {
   border-radius: 0 0 8px 8px;
 }
 
-.dropdown-item.delete-item:hover {
+.certification-dropdown-item.delete-item:hover {
   background: #fef2f2;
   color: #dc2626;
 }
@@ -450,7 +450,7 @@
   .certification-details,
   .chevron-icon,
   .action-btn,
-  .dropdown-content,
+  .certification-dropdown-content,
   .warning-badge {
     transition: none;
     animation: none;

@@ -12,7 +12,9 @@ from .types import (
     User, Job, Company, JobApplication, SavedJob,
     SecureAuthResponse, SessionValidationResponse,
     DashboardStats, DashboardData, ApplicationStatusStats, DashboardFilters,
-    UserRegistrationInput, AuthResponse
+    UserRegistrationInput, AuthResponse,
+    ResumeType, ResumeListResponse, CreateResumeInput, UploadResumeFileInput,
+    ResumeResponse, FileUploadResponse, ProcessPDFResponse
 )
 
 # Import queries and dashboard functionality
@@ -27,6 +29,10 @@ except ImportError as e:
 # Import mutations
 from .mutations.auth_mutations import AuthMutation
 from .mutations.user_mutations import UserMutation
+from .mutations.resume_mutations import ResumeMutations
+
+# Import queries
+from .queries.resume_queries import ResumeQueries
 
 
 @strawberry.type
@@ -176,6 +182,36 @@ class Query:
         """Get application statistics grouped by status"""
         dashboard_query = DashboardQuery()
         return await dashboard_query.application_status_stats(user_id)
+    
+    # Resume queries
+    @strawberry.field
+    async def resumes(
+        self, 
+        info,
+        limit: Optional[int] = 50,
+        offset: Optional[int] = 0
+    ) -> "ResumeListResponse":
+        """Get user's resumes"""
+        resume_query = ResumeQueries()
+        return await resume_query.resumes(info, limit, offset)
+    
+    @strawberry.field
+    async def resume(self, info, id: str) -> Optional["ResumeType"]:
+        """Get a specific resume by ID"""
+        resume_query = ResumeQueries()
+        return await resume_query.resume(info, id)
+    
+    @strawberry.field
+    async def resume_file_url(self, info, resume_id: str) -> Optional[str]:
+        """Get download URL for resume file"""
+        resume_query = ResumeQueries()
+        return await resume_query.resume_file_url(info, resume_id)
+    
+    # @strawberry.field
+    # async def storage_health(self, info) -> dict:
+    #     """Check storage service health"""
+    #     resume_query = ResumeQueries()
+    #     return await resume_query.storage_health(info)
 
 
 @strawberry.type
@@ -226,6 +262,37 @@ class Mutation:
         """User registration - delegates to AuthMutation"""
         auth_mutation = AuthMutation()
         return await auth_mutation.registerUser(email, username, password, firstName, lastName)
+    
+    # Resume mutations
+    @strawberry.field
+    async def create_resume(self, input: "CreateResumeInput", info) -> "ResumeResponse":
+        """Create a new resume from form data"""
+        resume_mutations = ResumeMutations()
+        return await resume_mutations.create_resume(input, info)
+    
+    @strawberry.field
+    async def update_resume(self, resume_id: str, input: "CreateResumeInput", info) -> "ResumeResponse":
+        """Update an existing resume"""
+        resume_mutations = ResumeMutations()
+        return await resume_mutations.update_resume(resume_id, input, info)
+    
+    @strawberry.field
+    async def upload_resume_file(self, input: "UploadResumeFileInput", info) -> "FileUploadResponse":
+        """Upload a PDF resume file"""
+        resume_mutations = ResumeMutations()
+        return await resume_mutations.upload_resume_file(input, info)
+    
+    @strawberry.field
+    async def process_pdf_resume(self, resume_id: str, info) -> "ProcessPDFResponse":
+        """Process uploaded PDF to extract resume data"""
+        resume_mutations = ResumeMutations()
+        return await resume_mutations.process_pdf_resume(resume_id, info)
+    
+    @strawberry.field
+    async def delete_resume(self, resume_id: str, info) -> "ResumeResponse":
+        """Delete a resume"""
+        resume_mutations = ResumeMutations()
+        return await resume_mutations.delete_resume(resume_id, info)
 
 
 # Create the schema

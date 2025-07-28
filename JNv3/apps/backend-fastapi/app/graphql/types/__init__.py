@@ -48,6 +48,27 @@ from .dashboard_types import (
     DashboardFilters
 )
 
+# Resume types
+from .resume_types import (
+    ResumeType,
+    ResumeListType,
+    PersonalInfoType,
+    ExperienceType,
+    EducationType,
+    ProjectType,
+    ResumeFileInfoType,
+    PersonalInfoInput,
+    ExperienceInput,
+    EducationInput,
+    ProjectInput,
+    CreateResumeInput,
+    UploadResumeFileInput,
+    ResumeResponse,
+    ResumeListResponse,
+    FileUploadResponse,
+    ProcessPDFResponse
+)
+
 __all__ = [
     # Common types
     "Company",
@@ -85,5 +106,24 @@ __all__ = [
     "DashboardActivity", 
     "DashboardData",
     "ApplicationStatusStats",
-    "DashboardFilters"
+    "DashboardFilters",
+    
+    # Resume types
+    "ResumeType",
+    "ResumeListType",
+    "PersonalInfoType",
+    "ExperienceType",
+    "EducationType",
+    "ProjectType",
+    "ResumeFileInfoType",
+    "PersonalInfoInput",
+    "ExperienceInput",
+    "EducationInput",
+    "ProjectInput",
+    "CreateResumeInput",
+    "UploadResumeFileInput",
+    "ResumeResponse",
+    "ResumeListResponse",
+    "FileUploadResponse",
+    "ProcessPDFResponse"
 ]

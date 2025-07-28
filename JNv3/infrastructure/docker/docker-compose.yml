@@ -68,6 +68,13 @@ services:
       
       # Legacy Django GraphQL endpoint (for migration)
       DJANGO_GRAPHQL_ENDPOINT: http://host.docker.internal:8000/graphql/
+      
+      # MinIO Storage Configuration
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_SECURE: false
+      MINIO_BUCKET_NAME: jobquest-resumes
     volumes:
       - ../../apps/backend-fastapi:/app
       - backend_logs:/app/logs
@@ -77,6 +84,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     networks:
       - jobquest_network
@@ -105,6 +114,7 @@ services:
       REACT_APP_ENV: development
       REACT_APP_DEBUG_MODE: true
       REACT_APP_BYPASS_AUTH: false
+      REACT_APP_DEV_AUTH_BYPASS: true
       
       # Build Configuration
       GENERATE_SOURCEMAP: false
@@ -159,6 +169,7 @@ services:
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_DEFAULT_BUCKETS: jobquest-resumes
     volumes:
       - minio_data:/data
     ports:
@@ -167,8 +178,11 @@ services:
     networks:
       - jobquest_network
     command: server /data --console-address ":9001"
-    profiles:
-      - storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
 volumes:
   postgres_data:

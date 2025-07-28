@@ -10,8 +10,8 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.graphql.types import (
-    JobType, SkillType, JobApplicationType, SavedJobType, 
-    CategoryType, CompanyType, JobSkillType
+    Job as JobGraphQLType, JobApplication, SavedJob, 
+    CompanyType
 )
 from app.models import (
     Job, Skill, JobApplication, SavedJob, Category, 
@@ -29,7 +29,7 @@ class JobQuery:
         self,
         info,
         id: strawberry.ID
-    ) -> Optional[JobType]:
+    ) -> Optional[JobGraphQLType]:
         """Get job by ID."""
         # Get database session and current user manually
         db: AsyncSession = await get_db().__anext__()
@@ -164,12 +164,15 @@ class JobQuery:
         experience_level: Optional[str] = None,
         remote_type: Optional[str] = None,
         limit: int = 20,
-        offset: int = 0,
-        current_user: Optional[User] = Depends(get_optional_current_user),
-        db: AsyncSession = Depends(get_db)
-    ) -> List[JobType]:
+        offset: int = 0
+    ) -> List[JobGraphQLType]:
         """Get jobs with various filters."""
-        query = select(Job).options(
+        # Get database session and current user manually
+        db: AsyncSession = await get_db().__anext__()
+        current_user = await get_optional_current_user(info.context.request)
+        
+        try:
+            query = select(Job).options(
             selectinload(Job.company),
             selectinload(Job.category),
             selectinload(Job.required_skills).selectinload(JobSkill.skill)

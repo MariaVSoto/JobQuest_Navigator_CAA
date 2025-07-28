@@ -185,12 +185,12 @@ const NavBar = () => {
                         <Link
                           key={item.path}
                           to={item.path}
-                          className={`dropdown-item ${location.pathname === item.path ? 'active' : ''}`}
+                          className={`navbar-dropdown-item ${location.pathname === item.path ? 'active' : ''}`}
                           onClick={handleDropdownClose}
                         >
-                          <div className="dropdown-item-content">
-                            <span className="dropdown-item-label">{item.label}</span>
-                            <span className="dropdown-item-description">{item.description}</span>
+                          <div className="navbar-dropdown-item-content">
+                            <span className="navbar-dropdown-item-label">{item.label}</span>
+                            <span className="navbar-dropdown-item-description">{item.description}</span>
                           </div>
                         </Link>
                       ))}
@@ -239,21 +239,21 @@ const NavBar = () => {
                     <div className="dropdown-divider"></div>
                     <Link
                       to="/profile"
-                      className={`dropdown-item ${location.pathname === '/profile' ? 'active' : ''}`}
+                      className={`navbar-dropdown-item ${location.pathname === '/profile' ? 'active' : ''}`}
                       onClick={handleDropdownClose}
                     >
-                      <span className="dropdown-item-label">Profile</span>
+                      <span className="navbar-dropdown-item-label">Profile</span>
                     </Link>
                     <Link
                       to="/settings"
-                      className={`dropdown-item ${location.pathname === '/settings' ? 'active' : ''}`}
+                      className={`navbar-dropdown-item ${location.pathname === '/settings' ? 'active' : ''}`}
                       onClick={handleDropdownClose}
                     >
-                      <span className="dropdown-item-label">Settings</span>
+                      <span className="navbar-dropdown-item-label">Settings</span>
                     </Link>
                     <div className="dropdown-divider"></div>
-                    <button onClick={handleLogout} className="dropdown-item logout-item">
-                      <span className="dropdown-item-label">Sign Out</span>
+                    <button onClick={handleLogout} className="navbar-dropdown-item logout-item">
+                      <span className="navbar-dropdown-item-label">Sign Out</span>
                     </button>
                   </div>
                 </div>

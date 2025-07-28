@@ -44,7 +44,7 @@
   gap: var(--space-2, 8px);
   font-size: var(--text-3xl, 30px);
   font-weight: var(--font-bold, 700);
-  color: #1f2937;
+  color: #000000;
   text-decoration: none;
   transition: color 0.2s ease;
   letter-spacing: -0.025em;
@@ -163,7 +163,7 @@
   flex-direction: column;
 }
 
-.dropdown-item {
+.navbar-dropdown-item {
   display: flex;
   align-items: center;
   padding: var(--space-3, 12px) var(--space-4, 16px);
@@ -178,29 +178,29 @@
   text-align: left;
 }
 
-.dropdown-item:hover {
+.navbar-dropdown-item:hover {
   background-color: var(--primary-50, #eff6ff);
   color: var(--primary-700, #1d4ed8);
 }
 
-.dropdown-item.active {
+.navbar-dropdown-item.active {
   background-color: var(--primary-100, #dbeafe);
   color: var(--primary-700, #1d4ed8);
 }
 
-.dropdown-item-content {
+.navbar-dropdown-item-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-1, 4px);
 }
 
-.dropdown-item-label {
+.navbar-dropdown-item-label {
   font-size: var(--text-sm, 14px);
   font-weight: var(--font-medium, 500);
   line-height: 1.2;
 }
 
-.dropdown-item-description {
+.navbar-dropdown-item-description {
   font-size: var(--text-xs, 12px);
   color: var(--neutral-500, #6b7280);
   line-height: 1.3;
