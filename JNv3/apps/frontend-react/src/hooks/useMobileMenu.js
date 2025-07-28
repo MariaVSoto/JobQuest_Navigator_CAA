@@ -8,7 +8,7 @@ import { useLocation } from 'react-router-dom';
 const useMobileMenu = () => {
   const location = useLocation();
   
-  // Menu state
+  // Menu state - ensure it starts closed
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeBottomTab, setActiveBottomTab] = useState('dashboard');
   const [showBottomNav, setShowBottomNav] = useState(true);
@@ -60,23 +60,42 @@ const useMobileMenu = () => {
     };
   }, [lastScrollY]);
 
-  // Prevent body scroll when menu is open
+  // Prevent body scroll when menu is open - only on mobile devices
   useEffect(() => {
-    if (isMenuOpen) {
+    // Only apply body scroll lock on actual mobile devices to avoid desktop interference
+    const isMobileDevice = window.innerWidth < 768;
+    
+    if (isMenuOpen && isMobileDevice) {
+      // Store original scroll position to restore later
+      const scrollY = window.scrollY;
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
+    } else if (!isMobileDevice) {
+      // Don't manipulate body styles on desktop at all
+      return;
     } else {
+      // Restore original scroll position on mobile only
+      const scrollY = document.body.style.top;
       document.body.style.overflow = '';
       document.body.style.position = '';
+      document.body.style.top = '';
       document.body.style.width = '';
+      
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
     }
 
-    // Cleanup on unmount
+    // Cleanup on unmount - only if we modified styles
     return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      if (isMobileDevice) {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+      }
     };
   }, [isMenuOpen]);
 
@@ -123,7 +142,7 @@ const useMobileMenu = () => {
 
   // Handle click outside menu to close
   const handleMenuBackdropClick = useCallback((event) => {
-    if (event.target.classList.contains('mobile-menu-backdrop')) {
+    if (event.target.classList.contains('hamburger-menu-backdrop')) {
       closeMenu();
     }
   }, [closeMenu]);

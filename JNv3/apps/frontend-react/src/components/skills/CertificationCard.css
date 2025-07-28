@@ -183,7 +183,7 @@
 }
 
 /* Dropdown Menu */
-.dropdown-menu {
+.certification-dropdown-menu {
   position: relative;
 }
 
@@ -203,7 +203,7 @@
   transition: all 0.2s ease;
 }
 
-.dropdown-menu:hover .dropdown-content {
+.certification-dropdown-menu:hover .dropdown-content {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);

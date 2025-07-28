@@ -82,25 +82,36 @@ const NavBar = () => {
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
     setActiveDropdown(groupKey);
   };
 
   const handleMouseLeave = () => {
-    // Set a timeout before closing
+    // Set a shorter timeout before closing to improve responsiveness
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     timeoutRef.current = setTimeout(() => {
       setActiveDropdown(null);
-    }, 200);
+      timeoutRef.current = null;
+    }, 150);
   };
 
   const handleDropdownMouseEnter = () => {
     // Cancel the timeout when mouse enters dropdown
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
   };
 
   const handleDropdownClose = () => {
+    // Clear any pending timeout and close immediately
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     setActiveDropdown(null);
   };
 
@@ -165,11 +176,11 @@ const NavBar = () => {
                 
                 {activeDropdown === key && (
                   <div 
-                    className="nav-dropdown-menu"
+                    className="navbar-dropdown-menu"
                     onMouseEnter={handleDropdownMouseEnter}
                     onMouseLeave={handleMouseLeave}
                   >
-                    <div className="dropdown-content">
+                    <div className="navbar-dropdown-content">
                       {group.items.map(item => (
                         <Link
                           key={item.path}
@@ -214,11 +225,11 @@ const NavBar = () => {
               
               {activeDropdown === 'user' && (
                 <div 
-                  className="nav-dropdown-menu user-dropdown"
+                  className="navbar-dropdown-menu user-dropdown"
                   onMouseEnter={handleDropdownMouseEnter}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <div className="dropdown-content">
+                  <div className="navbar-dropdown-content">
                     <div className="user-info">
                       <div className="user-details">
                         <span className="user-display-name">{user?.full_name || user?.first_name || 'User'}</span>

@@ -48,7 +48,10 @@ const JobListings = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
+      // Only handle clicks outside the country dropdown, don't interfere with navbar dropdowns
+      if (countryDropdownRef.current && 
+          !countryDropdownRef.current.contains(event.target) &&
+          !event.target.closest('.nav-dropdown, .navbar-dropdown-menu, .user-dropdown, .navbar-nav')) {
         setShowCountryDropdown(false);
       }
     };

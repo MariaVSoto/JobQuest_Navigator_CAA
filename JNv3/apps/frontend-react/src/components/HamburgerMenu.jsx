@@ -14,8 +14,9 @@ const HamburgerMenu = () => {
   const { isMenuOpen, closeMenu, getMainMenuItems, handleMenuBackdropClick } = useMobileMenu();
   const { isMobile } = useResponsive();
 
-  // Don't render on desktop
-  if (!isMobile || !isMenuOpen) {
+  // Don't render on desktop or when menu is closed
+  // Also ensure we're authenticated before showing menu
+  if (!isMobile || !isMenuOpen || !user) {
     return null;
   }
 
