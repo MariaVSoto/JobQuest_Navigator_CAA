@@ -1,0 +1,3 @@
+{
+  "query": "mutation { tokenAuth(username: \"kevinhust@gmail.com\", password: \"Kevin0348!\") { success token message errors user { id username email } } }"
+}
