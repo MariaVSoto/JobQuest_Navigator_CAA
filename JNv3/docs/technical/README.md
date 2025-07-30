@@ -1,25 +1,85 @@
-# JobQuest Navigator v2 - Complete Migration
+# JobQuest Navigator v3 - Technical Documentation
 
 ## 🎯 Project Overview
 
-JobQuest Navigator v2 is a **complete migration** from Django/GraphQL to FastAPI/Strawberry GraphQL architecture, featuring:
+JobQuest Navigator v3 is an enterprise-level reorganization featuring a comprehensive testing framework and modern architecture:
 
 - ✅ **Modern Stack**: FastAPI + Strawberry GraphQL + React 19
-- ✅ **Simplified Architecture**: User input-focused, no external APIs
+- ✅ **Enterprise Architecture**: Professional project organization
+- ✅ **Comprehensive Testing**: 230+ tests across unit, integration, E2E, performance, security
 - ✅ **Type Safety**: Full TypeScript integration with shared types
 - ✅ **Cloud Ready**: AWS Cognito + PostgreSQL + Redis
 - ✅ **Docker Environment**: Complete local development stack
 
 ## 🏗️ Architecture
 
+```text
+JNv3/
+├── apps/                       # Application Services
+│   ├── backend-fastapi/        # FastAPI + Strawberry GraphQL API
+│   ├── frontend-react/         # React 19 + Apollo Client
+│   └── shared/                 # TypeScript shared types & utils
+├── infrastructure/             # Deployment and Infrastructure
+│   ├── docker/                 # Docker compose and configurations
+│   ├── terraform/              # AWS infrastructure as code
+│   └── scripts/                # Deployment automation scripts
+├── config/                     # Environment Configurations
+├── docs/                       # Documentation
+│   ├── technical/              # Technical documentation
+│   ├── api/                    # API documentation
+│   └── deployment/             # Deployment guides
+├── tools/                      # Development and Build Tools
+├── project/                    # Project Management
+└── test/                       # Comprehensive Testing Framework
+    ├── backend/                # Backend tests (pytest)
+    ├── frontend/               # Frontend tests (Jest/Playwright)
+    ├── e2e/                    # End-to-end tests
+    ├── performance/            # Performance tests (Locust)
+    ├── security/               # Security tests
+    └── scripts/                # Test execution scripts
 ```
-jobquest-navigator-v2/
-├── backend-fastapi-graphql/    # FastAPI + Strawberry GraphQL API
-├── frontend-react-minimal/     # React 19 + Apollo Client
-├── infrastructure/             # Docker, deployment configs
-├── shared/                     # TypeScript shared types & utils
-└── docs/                       # Documentation
+
+## 🧪 Testing Framework
+
+### Comprehensive Test Coverage
+
+JobQuest Navigator v3 features a production-ready testing framework with:
+
+- **230+ Test Cases** - Exceeding the 200+ target across all modules
+- **Multi-Layer Testing** - Unit, Integration, E2E, Performance, Security
+- **Professional Tools** - pytest, Jest, Playwright, Locust, Bandit/Safety
+- **CI/CD Integration** - GitHub Actions with quality gates
+- **Coverage Reporting** - 85%+ backend, 80%+ frontend targets
+
+### Quick Testing Commands
+
+```bash
+# Navigate to test directory
+cd test
+
+# Setup test environment
+./scripts/setup-test-env.sh
+
+# Run all tests
+./scripts/run-all-tests.sh
+
+# Run specific test types
+./scripts/run-all-tests.sh --backend-only
+./scripts/run-all-tests.sh --frontend-only
+./scripts/run-all-tests.sh --e2e-only
+./scripts/run-all-tests.sh --quick
 ```
+
+### Test Categories
+
+| Test Category | Count | Coverage | Tools |
+|---------------|-------|----------|-------|
+| **Backend Unit Tests** | 60+ | 85%+ | pytest, Factory Boy |
+| **Frontend Unit Tests** | 60+ | 80%+ | Jest, React Testing Library |
+| **Integration Tests** | 60+ | - | pytest, MSW |
+| **E2E Tests** | 25+ | - | Playwright |
+| **Performance Tests** | 10+ | - | Locust |
+| **Security Tests** | 15+ | - | Bandit, Safety, Semgrep |
 
 ### Technology Stack
 
@@ -324,33 +384,84 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
 # TODO: Add Lambda deployment scripts
 ```
 
-## 🧪 Testing
+## 📚 Documentation Index
 
-### Backend Testing
+### Core Framework Documentation
+
+- **[TESTING_FRAMEWORK.md](TESTING_FRAMEWORK.md)** - Comprehensive testing framework documentation
+- **[TESTING_QUICK_START.md](TESTING_QUICK_START.md)** - Quick start guide for testing
+- **[INSTALLATION.md](INSTALLATION.md)** - Installation and setup instructions
+- **[DEPLOYMENT-STATUS.md](DEPLOYMENT-STATUS.md)** - Current deployment status
+
+### Development Guides
+
+- **[COGNITO_SETUP.md](COGNITO_SETUP.md)** - AWS Cognito authentication setup
+- **[GRAPHQL_SCHEMA_FIXES.md](GRAPHQL_SCHEMA_FIXES.md)** - GraphQL schema implementation details
+- **[FRONTEND_RESTRUCTURING_SUMMARY.md](FRONTEND_RESTRUCTURING_SUMMARY.md)** - Frontend architecture updates
+
+### Testing Infrastructure
+
+The project now includes a comprehensive testing framework with:
+
+- **230+ Test Cases** - Unit, integration, E2E, performance, and security tests
+- **Multi-Layer Testing** - Backend (pytest), Frontend (Jest), E2E (Playwright)
+- **Coverage Reporting** - 85%+ backend, 80%+ frontend coverage targets
+- **CI/CD Integration** - Automated testing with quality gates
+- **Professional Tools** - Locust (performance), Bandit/Safety (security)
+
+### Project Status Reports
+
+- **[test_results_summary.md](test_results_summary.md)** - Historical test results
+- **[PHASE3_PERFORMANCE_VALIDATION_REPORT.md](PHASE3_PERFORMANCE_VALIDATION_REPORT.md)** - Performance validation
+- **[DEPLOYMENT_ERRORS_LOG.md](DEPLOYMENT_ERRORS_LOG.md)** - Deployment troubleshooting
+
+## 🧪 Testing Framework Usage
+
+### Complete Test Suite
+
 ```bash
-# Unit tests
-pytest app/tests/
-
-# Integration tests
-pytest app/tests/integration/
-
-# Coverage
-pytest --cov=app --cov-report=html
+# Execute all tests
+cd test
+./scripts/run-all-tests.sh
 ```
 
-### Frontend Testing
-```bash
-# Unit tests
-npm test
+### Targeted Testing
 
-# E2E tests (future)
-# TODO: Add Cypress or Playwright
+```bash
+# Backend tests only
+./scripts/run-all-tests.sh --backend-only
+
+# Frontend tests only
+./scripts/run-all-tests.sh --frontend-only
+
+# End-to-end tests only
+./scripts/run-all-tests.sh --e2e-only
+
+# Performance tests
+./scripts/run-all-tests.sh --performance
+
+# Security tests
+./scripts/run-all-tests.sh --security
+
+# Quick validation (unit tests only)
+./scripts/run-all-tests.sh --quick
+
+# CI/CD optimized run
+./scripts/run-all-tests.sh --ci
 ```
 
-### End-to-End Verification
+### Test Environment Management
+
 ```bash
-# Run verification script
-python test_simple_functionality.py
+# Setup test environment
+./scripts/setup-test-env.sh
+
+# Cleanup test environment
+./scripts/cleanup-test-env.sh
+
+# View coverage reports
+open test/reports/coverage/backend/html/index.html
+open test/reports/coverage/frontend/html/index.html
 ```
 
 ## 📋 Migration Checklist

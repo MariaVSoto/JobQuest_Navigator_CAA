@@ -72,6 +72,9 @@ cors_origins = "http://localhost:3000,http://localhost:3001,http://localhost:300
 # SSL certificate (optional for development)
 ssl_certificate_arn = ""
 
+# S3 bucket configuration - use generated name for development
+s3_bucket_name = ""  # Empty means use generated name
+
 # ============================================================================
 # FEATURE FLAGS (Development-specific)
 # ============================================================================

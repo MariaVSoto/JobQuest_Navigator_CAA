@@ -109,53 +109,27 @@ class AISuggestionsService {
   constructor() {
     this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8001';
     this.useGraphQL = process.env.REACT_APP_USE_GRAPHQL === 'true';
+    console.log('🔧 AISuggestionsService initialized with GraphQL:', this.useGraphQL);
   }
 
   // AI Suggestions
   async getAISuggestions(params = {}) {
     try {
-      if (this.useGraphQL) {
-        console.log('🚀 Fetching AI suggestions via GraphQL...', params);
-        const { data } = await apolloClient.query({
-          query: GET_AI_SUGGESTIONS,
-          variables: {
-            resumeId: params.resumeId
-          },
-          fetchPolicy: 'cache-and-network'
-        });
-
-        const suggestions = data.aiSuggestions || [];
-        console.log('✅ AI suggestions fetched successfully:', suggestions.length, 'suggestions');
-        
-        return { suggestions };
-      }
+      // For now, always use fallback data since backend AI suggestions are not implemented
+      console.log('⚠️ AI Suggestions GraphQL not implemented in backend, using fallback data');
       return this.getFallbackAISuggestions();
     } catch (error) {
-      console.warn('❌ GraphQL AI suggestions failed, using fallback:', error);
+      console.warn('❌ Error in AI suggestions service, using fallback:', error);
       return this.getFallbackAISuggestions();
     }
   }
 
   async generateAISuggestions(resumeId) {
     try {
-      if (this.useGraphQL) {
-        console.log('🚀 Generating AI suggestions via GraphQL:', resumeId);
-        const { data } = await apolloClient.mutate({
-          mutation: GENERATE_AI_SUGGESTIONS,
-          variables: { resumeId },
-          refetchQueries: [{ query: GET_AI_SUGGESTIONS, variables: { resumeId } }]
-        });
-
-        if (data.generateAISuggestions.success) {
-          console.log('✅ AI suggestions generated successfully');
-          return { suggestions: data.generateAISuggestions.suggestions };
-        } else {
-          throw new Error(data.generateAISuggestions.errors?.join(', ') || 'Failed to generate suggestions');
-        }
-      }
+      console.log('⚠️ Generate AI Suggestions GraphQL not implemented in backend, using fallback data');
       return this.getFallbackGeneratedSuggestions(resumeId);
     } catch (error) {
-      console.warn('❌ GraphQL generate AI suggestions failed, using fallback:', error);
+      console.warn('❌ Error generating AI suggestions, using fallback:', error);
       return this.getFallbackGeneratedSuggestions(resumeId);
     }
   }
@@ -187,39 +161,20 @@ class AISuggestionsService {
   // Job Recommendations
   async getJobRecommendations(params = {}) {
     try {
-      if (this.useGraphQL) {
-        console.log('🚀 Fetching job recommendations via GraphQL...', params);
-        const { data } = await apolloClient.query({
-          query: GET_JOB_RECOMMENDATIONS,
-          variables: {
-            userId: params.userId
-          },
-          fetchPolicy: 'cache-and-network'
-        });
-
-        const recommendations = data.jobRecommendations || [];
-        console.log('✅ Job recommendations fetched successfully:', recommendations.length, 'recommendations');
-        
-        return { recommendations };
-      }
+      console.log('⚠️ Job Recommendations GraphQL not implemented in backend, using fallback data');
       return this.getFallbackJobRecommendations();
     } catch (error) {
-      console.warn('❌ GraphQL job recommendations failed, using fallback:', error);
+      console.warn('❌ Error in job recommendations service, using fallback:', error);
       return this.getFallbackJobRecommendations();
     }
   }
 
   async generateJobRecommendations(userId) {
     try {
-      if (this.useGraphQL) {
-        console.log('🚀 Generating job recommendations via GraphQL:', userId);
-        // This would use a generate recommendations mutation
-        console.log('⚠️ Generate recommendations not yet implemented in backend');
-        return this.getFallbackJobRecommendations();
-      }
+      console.log('⚠️ Generate Job Recommendations GraphQL not implemented in backend, using fallback data');
       return this.getFallbackJobRecommendations();
     } catch (error) {
-      console.warn('❌ GraphQL generate recommendations failed, using fallback:', error);
+      console.warn('❌ Error generating job recommendations, using fallback:', error);
       return this.getFallbackJobRecommendations();
     }
   }
@@ -251,28 +206,16 @@ class AISuggestionsService {
   // Analytics
   async getAIAnalytics(params = {}) {
     try {
-      if (this.useGraphQL) {
-        console.log('🚀 Fetching AI analytics via GraphQL...');
-        const { data } = await apolloClient.query({
-          query: GET_AI_ANALYTICS,
-          fetchPolicy: 'cache-and-network'
-        });
-
-        const analytics = data.aiAnalytics;
-        console.log('✅ AI analytics fetched successfully');
-        
-        return analytics;
-      }
+      console.log('⚠️ AI Analytics GraphQL not implemented in backend, using fallback data');
       return this.getFallbackAnalytics();
     } catch (error) {
-      console.warn('❌ GraphQL AI analytics failed, using fallback:', error);
+      console.warn('❌ Error in AI analytics service, using fallback:', error);
       return this.getFallbackAnalytics();
     }
   }
 
   // Fallback Data Methods
   getFallbackAISuggestions() {
-    const mockData = FallbackService.getMockAISuggestions();
     return {
       suggestions: [
         {

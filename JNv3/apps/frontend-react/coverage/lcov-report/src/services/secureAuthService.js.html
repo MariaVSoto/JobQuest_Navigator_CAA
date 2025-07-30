@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">7.96% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/113</span>
+                <span class='fraction'>9/113</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">10.52% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/19</span>
+                <span class='fraction'>2/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">7.96% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/113</span>
+                <span class='fraction'>9/113</span>
             </div>
         
             
@@ -529,7 +529,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -552,7 +552,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -561,7 +561,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -583,7 +583,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -606,12 +606,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -851,7 +851,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -985,7 +985,7 @@ import { gql } from '@apollo/client';
 import apolloClient from '../apolloClient';
 &nbsp;
 // GraphQL Mutations for secure authentication
-const SECURE_LOGIN_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const SECURE_LOGIN_MUTATION = gql`
   mutation SecureLogin($username: String!, $password: String!) {
     secureLogin(username: $username, password: $password) {
       success
@@ -1008,7 +1008,7 @@ const SECURE_LOGIN_MUTATION = <span class="cstat-no" title="statement not covere
   }
 `;
 &nbsp;
-const SECURE_LOGOUT_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const SECURE_LOGOUT_MUTATION = gql`
   mutation SecureLogout {
     secureLogout {
       success
@@ -1017,7 +1017,7 @@ const SECURE_LOGOUT_MUTATION = <span class="cstat-no" title="statement not cover
   }
 `;
 &nbsp;
-const REFRESH_TOKEN_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const REFRESH_TOKEN_MUTATION = gql`
   mutation RefreshToken {
     refreshToken {
       success
@@ -1039,7 +1039,7 @@ const REFRESH_TOKEN_MUTATION = <span class="cstat-no" title="statement not cover
   }
 `;
 &nbsp;
-const VALIDATE_SESSION_QUERY = <span class="cstat-no" title="statement not covered" >gql`</span>
+const VALIDATE_SESSION_QUERY = gql`
   query ValidateSession {
     validateSession {
       valid
@@ -1061,13 +1061,13 @@ const VALIDATE_SESSION_QUERY = <span class="cstat-no" title="statement not cover
 `;
 &nbsp;
 class SecureAuthService {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor() {
-<span class="cstat-no" title="statement not covered" >    this.userKey = 'jobquest_user_data';</span>
-<span class="cstat-no" title="statement not covered" >    this.sessionCheckInterval = null;</span>
-<span class="cstat-no" title="statement not covered" >    this.refreshTokenTimeout = null;</span>
+  constructor() {
+    this.userKey = 'jobquest_user_data';
+    this.sessionCheckInterval = null;
+    this.refreshTokenTimeout = null;
     
     // Set up automatic session validation
-<span class="cstat-no" title="statement not covered" >    this.startSessionValidation();</span>
+    this.startSessionValidation();
   }
 &nbsp;
   /**
@@ -1305,9 +1305,9 @@ class SecureAuthService {
   /**
    * Start automatic session validation
    */
-<span class="fstat-no" title="function not covered" >  st</span>artSessionValidation() {
+  startSessionValidation() {
     // Validate session every 5 minutes
-<span class="cstat-no" title="statement not covered" >    this.sessionCheckInterval = setInterval(<span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {</span>
+    this.sessionCheckInterval = setInterval(<span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {
 <span class="cstat-no" title="statement not covered" >      if (this.isAuthenticated()) {</span>
         const validation = <span class="cstat-no" title="statement not covered" >await this.validateSession();</span>
 <span class="cstat-no" title="statement not covered" >        if (!validation.valid) {</span>
@@ -1438,7 +1438,7 @@ export default new SecureAuthService();</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-26T23:20:10.560Z
+                at 2025-07-29T04:08:50.069Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

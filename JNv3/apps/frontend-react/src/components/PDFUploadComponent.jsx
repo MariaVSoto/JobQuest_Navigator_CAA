@@ -5,60 +5,24 @@ import './PDFUploadComponent.css';
 
 const UPLOAD_RESUME_FILE_MUTATION = gql`
   mutation UploadResumeFile($input: UploadResumeFileInput!) {
-    upload_resume_file(input: $input) {
+    uploadResumeFile(input: $input) {
       success
       message
       errors
-      resume_id
-      processing_status
-      download_url
+      resumeId
+      processingStatus
+      downloadUrl
     }
   }
 `;
 
 const PROCESS_PDF_RESUME_MUTATION = gql`
   mutation ProcessPDFResume($resumeId: String!) {
-    process_pdf_resume(resume_id: $resumeId) {
+    processPdfResume(resumeId: $resumeId) {
       success
       message
       errors
-      extracted_data {
-        title
-        personal_info {
-          full_name
-          email
-          phone
-          location
-          linkedin
-          website
-        }
-        summary
-        experience {
-          company
-          position
-          start_date
-          end_date
-          current
-          description
-        }
-        education {
-          school
-          degree
-          field
-          start_date
-          end_date
-          current
-          gpa
-        }
-        skills
-        projects {
-          name
-          description
-          technologies
-          link
-        }
-      }
-      processing_time
+      processingTime
     }
   }
 `;
@@ -145,25 +109,25 @@ const PDFUploadComponent = ({ onUploadSuccess, onProcessSuccess }) => {
         variables: {
           input: {
             title: title.trim(),
-            file_data: fileData,
+            fileData: fileData,
             filename: selectedFile.name,
-            content_type: selectedFile.type
+            contentType: selectedFile.type
           }
         }
       });
 
-      const result = data.upload_resume_file;
+      const result = data.uploadResumeFile;
 
       if (result.success) {
-        setUploadedResumeId(result.resume_id);
+        setUploadedResumeId(result.resumeId);
         setSuccess('PDF uploaded successfully! You can now process it to extract data.');
         
         // Notify parent component
         if (onUploadSuccess) {
           onUploadSuccess({
-            resumeId: result.resume_id,
+            resumeId: result.resumeId,
             filename: selectedFile.name,
-            downloadUrl: result.download_url
+            downloadUrl: result.downloadUrl
           });
         }
       } else {
@@ -193,17 +157,17 @@ const PDFUploadComponent = ({ onUploadSuccess, onProcessSuccess }) => {
         }
       });
 
-      const result = data.process_pdf_resume;
+      const result = data.processPdfResume;
 
       if (result.success) {
-        setSuccess(`PDF processed successfully in ${result.processing_time?.toFixed(2) || 'N/A'}s! Resume data has been extracted.`);
+        setSuccess(`PDF processed successfully in ${result.processingTime?.toFixed(2) || 'N/A'}s! Resume data has been extracted.`);
         
         // Notify parent component with extracted data
         if (onProcessSuccess) {
           onProcessSuccess({
             resumeId: uploadedResumeId,
-            extractedData: result.extracted_data,
-            processingTime: result.processing_time
+            extractedData: null, // Temporarily disabled
+            processingTime: result.processingTime
           });
         }
       } else {

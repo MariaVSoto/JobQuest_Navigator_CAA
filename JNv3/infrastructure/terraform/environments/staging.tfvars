@@ -72,6 +72,9 @@ cors_origins = "http://localhost:3000,http://localhost:3001,https://staging.jobq
 # SSL certificate for staging HTTPS
 ssl_certificate_arn = ""  # Set via environment variable or terraform apply
 
+# S3 bucket configuration - use generated name for staging
+s3_bucket_name = ""  # Empty means use generated name
+
 # ============================================================================
 # FEATURE FLAGS (Staging-enabled)
 # ============================================================================

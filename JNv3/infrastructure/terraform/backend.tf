@@ -3,17 +3,16 @@
 
 terraform {
   backend "s3" {
-    # These values will be provided via terraform init -backend-config
-    # or via backend config files
+    bucket         = "caa900resume"
+    key            = "terraform/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
     
-    # bucket         = "jobquest-navigator-v2-terraform-state"
-    # key            = "environments/${var.environment}/terraform.tfstate"
-    # region         = "us-east-1"
-    # encrypt        = true
-    # dynamodb_table = "jobquest-navigator-v2-terraform-locks"
+    # Optional: DynamoDB table for state locking
+    # dynamodb_table = "terraform-state-locks"
     
     # Workspace-specific state files
-    # workspace_key_prefix = "environments"
+    workspace_key_prefix = "environments"
   }
 }
 

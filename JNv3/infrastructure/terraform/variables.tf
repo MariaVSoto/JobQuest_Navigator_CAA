@@ -238,6 +238,12 @@ variable "ssl_certificate_arn" {
   default     = ""
 }
 
+variable "s3_bucket_name" {
+  description = "Name of the S3 bucket for file storage (production use)"
+  type        = string
+  default     = "caa900resume"
+}
+
 # ============================================================================
 # ENVIRONMENT-SPECIFIC OVERRIDES
 # ============================================================================

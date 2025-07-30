@@ -12,6 +12,7 @@ from datetime import datetime
 
 from app.models.resume import Resume, ResumeProcessingLog
 from app.services.storage import storage_service
+from app.services.pdf_service import pdf_service
 from app.core.database import AsyncSessionLocal
 from app.graphql.types.resume_types import (
     CreateResumeInput, UploadResumeFileInput, ResumeResponse, 
@@ -291,47 +292,26 @@ class ResumeMutations:
                 await session.commit()
                 
                 try:
-                    # TODO: Implement actual PDF processing
-                    # For now, return mock extracted data
+                    # Download PDF file from storage
+                    pdf_stream = storage_service.download_file(resume.file_path)
+                    pdf_data = pdf_stream.read()
+                    pdf_stream.close()
+                    
+                    # Extract text from PDF
+                    pdf_text = pdf_service.extract_text_from_pdf(pdf_data)
+                    
+                    # Parse resume data from text
+                    parsed_data = pdf_service.parse_resume_data(pdf_text)
+                    
+                    # Structure extracted data
                     extracted_data = {
                         'title': resume.title,
-                        'personal_info': {
-                            'full_name': 'John Doe',
-                            'email': 'john.doe@example.com',
-                            'phone': '+1-555-0123',
-                            'location': 'Los Angeles, CA'
-                        },
-                        'summary': 'Experienced professional with expertise in various technologies.',
-                        'experience': [
-                            {
-                                'company': 'Tech Company Inc.',
-                                'position': 'Senior Developer',
-                                'start_date': '2020-01-01',
-                                'end_date': '2024-01-01',
-                                'current': False,
-                                'description': 'Developed and maintained web applications.'
-                            }
-                        ],
-                        'education': [
-                            {
-                                'school': 'University of Technology',
-                                'degree': 'Bachelor of Science',
-                                'field': 'Computer Science',
-                                'start_date': '2016-09-01',
-                                'end_date': '2020-05-01',
-                                'current': False,
-                                'gpa': '3.8'
-                            }
-                        ],
-                        'skills': ['Python', 'JavaScript', 'React', 'FastAPI'],
-                        'projects': [
-                            {
-                                'name': 'Portfolio Website',
-                                'description': 'Personal portfolio built with modern technologies',
-                                'technologies': 'React, FastAPI, PostgreSQL',
-                                'link': 'https://github.com/johndoe/portfolio'
-                            }
-                        ]
+                        'personal_info': parsed_data.get('personal_info', {}),
+                        'summary': parsed_data.get('summary'),
+                        'experience': parsed_data.get('experience', []),
+                        'education': parsed_data.get('education', []),
+                        'skills': parsed_data.get('skills', []),
+                        'projects': parsed_data.get('projects', [])
                     }
                     
                     # Update resume with extracted data

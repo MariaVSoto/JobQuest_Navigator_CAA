@@ -72,6 +72,9 @@ cors_origins = "https://jobquest-navigator.com,https://www.jobquest-navigator.co
 # SSL certificate required for production HTTPS
 ssl_certificate_arn = ""  # Set via environment variable or terraform apply
 
+# S3 bucket configuration
+s3_bucket_name = "caa900resume"  # Manually created S3 bucket
+
 # ============================================================================
 # FEATURE FLAGS (Production-enabled)
 # ============================================================================

@@ -1,0 +1,658 @@
+name: JobQuest Navigator v3 - Comprehensive Test Suite
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**', 'fix/**' ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run full test suite daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - unit
+        - integration
+        - e2e
+        - performance
+        - security
+      environment:
+        description: 'Environment to test against'
+        required: false
+        default: 'test'
+        type: choice
+        options:
+        - test
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+  POSTGRES_VERSION: '15'
+  REDIS_VERSION: '7'
+
+jobs:
+  # Job to determine what tests should run
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      e2e: ${{ steps.changes.outputs.e2e }}
+      docker: ${{ steps.changes.outputs.docker }}
+      ci: ${{ steps.changes.outputs.ci }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'JNv3/apps/backend-fastapi/**'
+              - 'test/backend/**'
+              - 'test/fixtures/backend/**'
+              - 'test/config/pytest.ini'
+            frontend:
+              - 'JNv3/apps/frontend-react/**'
+              - 'test/frontend/**'
+              - 'test/fixtures/frontend/**'
+              - 'test/config/jest.config.js'
+            e2e:
+              - 'test/frontend/e2e/**'
+              - 'test/config/playwright.config.js'
+            docker:
+              - 'test/config/docker-compose.test.yml'
+              - 'JNv3/infrastructure/docker/**'
+            ci:
+              - 'test/ci/**'
+              - 'test/scripts/**'
+              - '.github/workflows/**'
+
+  # Backend Unit Tests
+  backend-unit-tests:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'unit'
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_jobquest
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          cd JNv3/apps/backend-fastapi
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Set up test environment
+        run: |
+          export DATABASE_URL=postgresql://test:test@localhost:5433/test_jobquest
+          export REDIS_URL=redis://localhost:6380/0
+          export JWT_SECRET=test-secret-key
+          export LOG_LEVEL=DEBUG
+
+      - name: Run database migrations
+        run: |
+          cd JNv3/apps/backend-fastapi
+          export DATABASE_URL=postgresql://test:test@localhost:5433/test_jobquest
+          alembic upgrade head
+
+      - name: Run unit tests
+        run: |
+          cd JNv3/apps/backend-fastapi
+          python -m pytest test/backend/unit \
+            --config-file=../../test/config/pytest.ini \
+            --cov=app \
+            --cov-report=xml:../../test/reports/coverage/backend/coverage.xml \
+            --cov-report=html:../../test/reports/coverage/backend/html \
+            --cov-report=term-missing \
+            --cov-fail-under=85 \
+            --junit-xml=../../test/reports/backend/junit.xml \
+            -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./test/reports/coverage/backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: backend-test-results
+          path: |
+            test/reports/backend/
+            test/reports/coverage/backend/
+
+  # Frontend Unit Tests
+  frontend-unit-tests:
+    name: Frontend Unit Tests
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'unit'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd JNv3/apps/frontend-react
+          npm ci
+
+      - name: Run unit tests
+        run: |
+          cd JNv3/apps/frontend-react
+          export JEST_CONFIG=../../test/config/jest.config.js
+          npm run test:ci -- --coverage --watchAll=false
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./test/reports/coverage/frontend/lcov.info
+          flags: frontend
+          name: frontend-coverage
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: frontend-test-results
+          path: |
+            test/reports/frontend/
+            test/reports/coverage/frontend/
+
+  # Backend Integration Tests
+  backend-integration-tests:
+    name: Backend Integration Tests
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'integration'
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_jobquest
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          cd JNv3/apps/backend-fastapi
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+
+      - name: Run database migrations
+        run: |
+          cd JNv3/apps/backend-fastapi
+          export DATABASE_URL=postgresql://test:test@localhost:5433/test_jobquest
+          alembic upgrade head
+
+      - name: Seed test data
+        run: |
+          cd JNv3/apps/backend-fastapi
+          python scripts/sample_data/populate_data.py --test-env
+
+      - name: Run integration tests
+        run: |
+          cd JNv3/apps/backend-fastapi
+          python -m pytest test/backend/integration \
+            --config-file=../../test/config/pytest.ini \
+            --junit-xml=../../test/reports/backend/integration-junit.xml \
+            -v
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5433/test_jobquest
+          REDIS_URL: redis://localhost:6380/0
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: backend-integration-results
+          path: test/reports/backend/
+
+  # Frontend Integration Tests
+  frontend-integration-tests:
+    name: Frontend Integration Tests
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'integration'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd JNv3/apps/frontend-react
+          npm ci
+
+      - name: Run integration tests
+        run: |
+          cd JNv3/apps/frontend-react
+          npm run test:integration
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: frontend-integration-results
+          path: test/reports/frontend/
+
+  # End-to-End Tests
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.e2e == 'true' || github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'e2e'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up test environment
+        run: |
+          cd test/config
+          docker-compose -f docker-compose.test.yml up -d
+          
+          # Wait for services to be ready
+          timeout 120 bash -c 'until curl -f http://localhost:8001/health >/dev/null 2>&1; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:3001 >/dev/null 2>&1; do sleep 2; done'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Playwright
+        run: |
+          npm install -g @playwright/test
+          npx playwright install --with-deps
+
+      - name: Run E2E tests
+        run: |
+          npx playwright test --config=test/config/playwright.config.js
+        env:
+          BASE_URL: http://localhost:3001
+          API_URL: http://localhost:8001
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            test/reports/e2e/
+            test-results/
+
+      - name: Upload E2E videos
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: e2e-videos
+          path: test-results/
+
+      - name: Clean up test environment
+        if: always()
+        run: |
+          cd test/config
+          docker-compose -f docker-compose.test.yml down -v
+
+  # Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'performance'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up test environment
+        run: |
+          cd test/config
+          docker-compose -f docker-compose.test.yml up -d test-backend test-db test-redis
+          timeout 120 bash -c 'until curl -f http://localhost:8001/health >/dev/null 2>&1; do sleep 2; done'
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install performance testing tools
+        run: |
+          pip install locust pytest-benchmark
+
+      - name: Run performance tests
+        run: |
+          python -m pytest test/backend/performance \
+            --benchmark-json=test/reports/performance/backend-benchmark.json \
+            -v
+
+      - name: Run load tests
+        run: |
+          cd test/backend/performance
+          locust --headless -u 10 -r 2 -t 60s --host=http://localhost:8001 \
+            --html=../../reports/performance/load-test-report.html
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-test-results
+          path: test/reports/performance/
+
+      - name: Clean up
+        if: always()
+        run: |
+          cd test/config
+          docker-compose -f docker-compose.test.yml down -v
+
+  # Security Tests
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'security'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install security testing tools
+        run: |
+          pip install bandit safety semgrep
+
+      - name: Run security linting (Bandit)
+        run: |
+          bandit -r JNv3/apps/backend-fastapi/app \
+            -f json -o test/reports/security/bandit-report.json
+
+      - name: Run dependency security scan (Safety)
+        run: |
+          safety check --json --output test/reports/security/safety-report.json \
+            -r JNv3/apps/backend-fastapi/requirements.txt
+
+      - name: Run SAST scan (Semgrep)
+        run: |
+          semgrep --config=auto --json --output=test/reports/security/semgrep-report.json \
+            JNv3/apps/backend-fastapi/app JNv3/apps/frontend-react/src
+
+      - name: Set up Node.js for frontend security
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run npm audit
+        run: |
+          cd JNv3/apps/frontend-react
+          npm audit --audit-level moderate --json > ../../test/reports/security/npm-audit.json
+
+      - name: Upload security results
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-test-results
+          path: test/reports/security/
+
+  # Code Quality Analysis
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install code quality tools
+        run: |
+          pip install flake8 black isort mypy
+
+      - name: Run Python code formatting check
+        run: |
+          black --check --diff JNv3/apps/backend-fastapi/app
+
+      - name: Run Python import sorting check
+        run: |
+          isort --check-only --diff JNv3/apps/backend-fastapi/app
+
+      - name: Run Python linting
+        run: |
+          flake8 JNv3/apps/backend-fastapi/app
+
+      - name: Run Python type checking
+        run: |
+          mypy JNv3/apps/backend-fastapi/app
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install frontend dependencies
+        run: |
+          cd JNv3/apps/frontend-react
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd JNv3/apps/frontend-react
+          npm run lint
+
+      - name: Run Prettier check
+        run: |
+          cd JNv3/apps/frontend-react
+          npm run format:check
+
+  # Test Results Summary
+  test-summary:
+    name: Test Results Summary
+    runs-on: ubuntu-latest
+    needs: [
+      backend-unit-tests,
+      frontend-unit-tests,
+      backend-integration-tests,
+      frontend-integration-tests,
+      e2e-tests
+    ]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate test summary
+        run: |
+          python test/scripts/generate-test-summary.py \
+            --backend-unit backend-test-results \
+            --frontend-unit frontend-test-results \
+            --backend-integration backend-integration-results \
+            --frontend-integration frontend-integration-results \
+            --e2e e2e-test-results \
+            --output test-summary.md
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('test-summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+      - name: Upload combined test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: combined-test-results
+          path: |
+            test-summary.md
+            */
+
+  # Quality Gates
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    needs: [test-summary]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download test results
+        uses: actions/download-artifact@v3
+        with:
+          name: combined-test-results
+
+      - name: Check quality gates
+        run: |
+          python test/scripts/check-quality-gates.py \
+            --coverage-threshold 80 \
+            --test-results-dir . \
+            --fail-on-error
+
+      - name: Update status checks
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { readFileSync } = require('fs');
+            
+            try {
+              const results = JSON.parse(readFileSync('quality-gates-results.json', 'utf8'));
+              
+              for (const [check, result] of Object.entries(results)) {
+                await github.rest.repos.createCommitStatus({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  sha: context.sha,
+                  state: result.passed ? 'success' : 'failure',
+                  target_url: `${context.payload.repository.html_url}/actions/runs/${context.runId}`,
+                  description: result.message,
+                  context: `Quality Gate: ${check}`
+                });
+              }
+            } catch (error) {
+              console.error('Failed to update status checks:', error);
+            }

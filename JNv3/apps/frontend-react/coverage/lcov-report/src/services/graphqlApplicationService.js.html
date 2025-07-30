@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">7.14% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/112</span>
+                <span class='fraction'>8/112</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">4.34% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/23</span>
+                <span class='fraction'>1/23</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">7.14% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/112</span>
+                <span class='fraction'>8/112</span>
             </div>
         
             
@@ -777,7 +777,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -822,7 +822,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -857,7 +857,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -895,7 +895,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -919,7 +919,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -943,7 +943,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -965,7 +965,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -976,7 +976,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1482,7 +1482,7 @@ import { gql } from '@apollo/client';
 import apolloClient from '../apolloClient';
 &nbsp;
 // GraphQL Queries
-const GET_APPLICATIONS_QUERY = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_APPLICATIONS_QUERY = gql`
   query GetApplications(
     $userId: String
     $status: String
@@ -1527,7 +1527,7 @@ const GET_APPLICATIONS_QUERY = <span class="cstat-no" title="statement not cover
   }
 `;
 &nbsp;
-const GET_APPLICATION_QUERY = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_APPLICATION_QUERY = gql`
   query GetApplication($id: String!) {
     application(id: $id) {
       id
@@ -1562,7 +1562,7 @@ const GET_APPLICATION_QUERY = <span class="cstat-no" title="statement not covere
   }
 `;
 &nbsp;
-const GET_SAVED_JOBS_QUERY = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_SAVED_JOBS_QUERY = gql`
   query GetSavedJobs(
     $userId: String
     $limit: Int
@@ -1600,7 +1600,7 @@ const GET_SAVED_JOBS_QUERY = <span class="cstat-no" title="statement not covered
 `;
 &nbsp;
 // GraphQL Mutations
-const CREATE_APPLICATION_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const CREATE_APPLICATION_MUTATION = gql`
   mutation CreateApplication($input: CreateApplicationInput!) {
     createApplication(input: $input) {
       success
@@ -1624,7 +1624,7 @@ const CREATE_APPLICATION_MUTATION = <span class="cstat-no" title="statement not 
   }
 `;
 &nbsp;
-const UPDATE_APPLICATION_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const UPDATE_APPLICATION_MUTATION = gql`
   mutation UpdateApplication($applicationId: String!, $input: UpdateApplicationInput!) {
     updateApplication(applicationId: $applicationId, input: $input) {
       success
@@ -1648,7 +1648,7 @@ const UPDATE_APPLICATION_MUTATION = <span class="cstat-no" title="statement not 
   }
 `;
 &nbsp;
-const SAVE_JOB_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const SAVE_JOB_MUTATION = gql`
   mutation SaveJob($input: SaveJobInput!) {
     saveJob(input: $input) {
       success
@@ -1670,7 +1670,7 @@ const SAVE_JOB_MUTATION = <span class="cstat-no" title="statement not covered" >
   }
 `;
 &nbsp;
-const UNSAVE_JOB_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const UNSAVE_JOB_MUTATION = gql`
   mutation UnsaveJob($jobId: String!) {
     unsaveJob(jobId: $jobId) {
       success
@@ -1680,8 +1680,8 @@ const UNSAVE_JOB_MUTATION = <span class="cstat-no" title="statement not covered"
 `;
 &nbsp;
 class GraphQLApplicationService {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor() {
-<span class="cstat-no" title="statement not covered" >    this.client = apolloClient;</span>
+  constructor() {
+    this.client = apolloClient;
   }
 &nbsp;
   /**
@@ -2185,7 +2185,7 @@ export default new GraphQLApplicationService();</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-26T23:20:10.560Z
+                at 2025-07-29T04:08:50.069Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

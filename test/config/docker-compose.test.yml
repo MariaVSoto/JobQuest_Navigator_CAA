@@ -1,0 +1,294 @@
+version: '3.8'
+
+services:
+  # Test Database
+  test-db:
+    image: postgres:15-alpine
+    container_name: jobquest-test-db
+    environment:
+      POSTGRES_DB: test_jobquest
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5433:5432"
+    volumes:
+      - test_postgres_data:/var/lib/postgresql/data
+      - ../fixtures/backend/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d test_jobquest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+
+  # Test Redis Cache
+  test-redis:
+    image: redis:7-alpine
+    container_name: jobquest-test-redis
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes --requirepass testpass
+    volumes:
+      - test_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "testpass", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - test-network
+
+  # Test Backend API
+  test-backend:
+    build:
+      context: ../../JNv3/apps/backend-fastapi
+      dockerfile: Dockerfile
+      target: test
+    container_name: jobquest-test-backend
+    environment:
+      - NODE_ENV=test
+      - DATABASE_URL=postgresql://test:test@test-db:5432/test_jobquest
+      - REDIS_URL=redis://:testpass@test-redis:6379/0
+      - JWT_SECRET=test-jwt-secret-key-for-testing-only
+      - CORS_ORIGINS=http://localhost:3000,http://test-frontend:3000
+      - LOG_LEVEL=DEBUG
+      - OPENAI_API_KEY=test-openai-key
+      - GOOGLE_MAPS_API_KEY=test-google-maps-key
+    ports:
+      - "8001:8000"
+    depends_on:
+      test-db:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    volumes:
+      - ../../JNv3/apps/backend-fastapi:/app
+      - test_backend_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+    command: ["python", "run_dev.py", "--host", "0.0.0.0", "--port", "8000"]
+
+  # Test Frontend
+  test-frontend:
+    build:
+      context: ../../JNv3/apps/frontend-react
+      dockerfile: Dockerfile
+      target: test
+    container_name: jobquest-test-frontend
+    environment:
+      - NODE_ENV=test
+      - REACT_APP_API_URL=http://test-backend:8000
+      - REACT_APP_GRAPHQL_URL=http://test-backend:8000/graphql
+      - CI=true
+      - GENERATE_SOURCEMAP=false
+    ports:
+      - "3001:3000"
+    depends_on:
+      test-backend:
+        condition: service_healthy
+    volumes:
+      - ../../JNv3/apps/frontend-react:/app
+      - /app/node_modules
+      - test_frontend_coverage:/app/coverage
+    networks:
+      - test-network
+    command: ["npm", "start"]
+
+  # Test Mock Services
+  test-mocks:
+    image: mockserver/mockserver:5.15.0
+    container_name: jobquest-test-mocks
+    environment:
+      MOCKSERVER_PROPERTY_FILE: /config/mockserver.properties
+    ports:
+      - "1080:1080"
+    volumes:
+      - ../fixtures/mocks:/config
+    networks:
+      - test-network
+
+  # Test Email Service (MailHog)
+  test-mailhog:
+    image: mailhog/mailhog:latest
+    container_name: jobquest-test-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - test-network
+
+  # Test File Storage (MinIO)
+  test-minio:
+    image: minio/minio:latest
+    container_name: jobquest-test-minio
+    environment:
+      MINIO_ROOT_USER: testminio
+      MINIO_ROOT_PASSWORD: testminio123
+    ports:
+      - "9001:9000"  # API
+      - "9002:9001"  # Console
+    volumes:
+      - test_minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - test-network
+
+  # Test Load Balancer (Nginx)
+  test-nginx:
+    image: nginx:alpine
+    container_name: jobquest-test-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ../config/nginx-test.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - test-backend
+      - test-frontend
+    networks:
+      - test-network
+
+  # Test Monitoring (for performance tests)
+  test-prometheus:
+    image: prom/prometheus:latest
+    container_name: jobquest-test-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ../config/prometheus-test.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - test-network
+
+  # Test Grafana (for performance monitoring)
+  test-grafana:
+    image: grafana/grafana:latest
+    container_name: jobquest-test-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=testpass
+    ports:
+      - "3001:3000"
+    volumes:
+      - test_grafana_data:/var/lib/grafana
+    networks:
+      - test-network
+
+  # Test Database Migration Runner
+  test-migrations:
+    build:
+      context: ../../JNv3/apps/backend-fastapi
+      dockerfile: Dockerfile
+      target: test
+    container_name: jobquest-test-migrations
+    environment:
+      - DATABASE_URL=postgresql://test:test@test-db:5432/test_jobquest
+    depends_on:
+      test-db:
+        condition: service_healthy
+    volumes:
+      - ../../JNv3/apps/backend-fastapi:/app
+    networks:
+      - test-network
+    command: ["alembic", "upgrade", "head"]
+    profiles:
+      - migration
+
+  # Test Data Seeder
+  test-seeder:
+    build:
+      context: ../../JNv3/apps/backend-fastapi
+      dockerfile: Dockerfile
+      target: test
+    container_name: jobquest-test-seeder
+    environment:
+      - DATABASE_URL=postgresql://test:test@test-db:5432/test_jobquest
+      - REDIS_URL=redis://:testpass@test-redis:6379/0
+    depends_on:
+      test-db:
+        condition: service_healthy
+      test-redis:
+        condition: service_healthy
+    volumes:
+      - ../../JNv3/apps/backend-fastapi:/app
+      - ../fixtures:/fixtures
+    networks:
+      - test-network
+    command: ["python", "scripts/sample_data/populate_data.py", "--test-env"]
+    profiles:
+      - seeder
+
+  # E2E Test Runner
+  test-e2e:
+    build:
+      context: ../frontend/e2e
+      dockerfile: Dockerfile
+    container_name: jobquest-test-e2e
+    environment:
+      - NODE_ENV=test
+      - BASE_URL=http://test-nginx
+      - API_URL=http://test-backend:8000
+    depends_on:
+      test-nginx:
+        condition: service_started
+      test-backend:
+        condition: service_healthy
+    volumes:
+      - ../frontend/e2e:/tests
+      - ../reports/e2e:/reports
+    networks:
+      - test-network
+    profiles:
+      - e2e
+
+  # Performance Test Runner
+  test-performance:
+    build:
+      context: ../backend/performance
+      dockerfile: Dockerfile
+    container_name: jobquest-test-performance
+    environment:
+      - TARGET_URL=http://test-backend:8000
+      - USERS=10
+      - SPAWN_RATE=2
+      - RUN_TIME=60
+    depends_on:
+      test-backend:
+        condition: service_healthy
+    volumes:
+      - ../backend/performance:/tests
+      - ../reports/performance:/reports
+    networks:
+      - test-network
+    profiles:
+      - performance
+
+volumes:
+  test_postgres_data:
+    driver: local
+  test_redis_data:
+    driver: local
+  test_minio_data:
+    driver: local
+  test_grafana_data:
+    driver: local
+  test_backend_logs:
+    driver: local
+  test_frontend_coverage:
+    driver: local
+
+networks:
+  test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">6.74% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/89</span>
+                <span class='fraction'>6/89</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">4.54% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/22</span>
+                <span class='fraction'>1/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">6.74% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/89</span>
+                <span class='fraction'>6/89</span>
             </div>
         
             
@@ -610,7 +610,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -665,7 +665,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -703,7 +703,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -714,7 +714,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -724,7 +724,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -736,7 +736,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1148,7 +1148,7 @@ import { gql } from '@apollo/client';
 import apolloClient from '../apolloClient';
 &nbsp;
 // GraphQL Queries
-const GET_JOBS_QUERY = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_JOBS_QUERY = gql`
   query GetJobs(
     $limit: Int
     $offset: Int
@@ -1203,7 +1203,7 @@ const GET_JOBS_QUERY = <span class="cstat-no" title="statement not covered" >gql
   }
 `;
 &nbsp;
-const GET_JOB_QUERY = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_JOB_QUERY = gql`
   query GetJob($id: String!) {
     job(id: $id) {
       id
@@ -1241,7 +1241,7 @@ const GET_JOB_QUERY = <span class="cstat-no" title="statement not covered" >gql`
 `;
 &nbsp;
 // GraphQL Mutations
-const CREATE_JOB_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const CREATE_JOB_MUTATION = gql`
   mutation CreateJob($input: CreateJobInput!) {
     createJob(input: $input) {
       success
@@ -1252,7 +1252,7 @@ const CREATE_JOB_MUTATION = <span class="cstat-no" title="statement not covered"
 `;
 &nbsp;
 // GraphQL Mutations
-const DELETE_JOB_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const DELETE_JOB_MUTATION = gql`
   mutation DeleteJob($jobId: String!) {
     deleteJob(jobId: $jobId) {
       success
@@ -1262,7 +1262,7 @@ const DELETE_JOB_MUTATION = <span class="cstat-no" title="statement not covered"
   }
 `;
 &nbsp;
-const UPDATE_JOB_MUTATION = <span class="cstat-no" title="statement not covered" >gql`</span>
+const UPDATE_JOB_MUTATION = gql`
   mutation UpdateJob($jobId: String!, $input: UpdateJobInput!) {
     updateJob(jobId: $jobId, input: $input) {
       success
@@ -1273,8 +1273,8 @@ const UPDATE_JOB_MUTATION = <span class="cstat-no" title="statement not covered"
 `;
 &nbsp;
 class GraphQLJobService {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor() {
-<span class="cstat-no" title="statement not covered" >    this.client = apolloClient;</span>
+  constructor() {
+    this.client = apolloClient;
   }
 &nbsp;
   /**
@@ -1684,7 +1684,7 @@ export default new GraphQLJobService();</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-26T23:20:10.560Z
+                at 2025-07-29T04:08:50.069Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

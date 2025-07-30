@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">37.5% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/32</span>
+                <span class='fraction'>12/32</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">7.14% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>1/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">48% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/25</span>
+                <span class='fraction'>12/25</span>
             </div>
         
             
@@ -135,19 +135,9 @@
 <a name='L70'></a><a href='#L70'>70</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -155,9 +145,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -167,20 +160,27 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -204,9 +204,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import React, { createContext, useContext, useState } from 'react';
 import Toast from '../components/Toast';
 &nbsp;
-const ToastContext = <span class="cstat-no" title="statement not covered" >createContext();</span>
+const ToastContext = createContext();
 &nbsp;
-export const useToast = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
+export const useToast = <span class="fstat-no" title="function not covered" >()</span> =&gt; {
   const context = <span class="cstat-no" title="statement not covered" >useContext(ToastContext);</span>
 <span class="cstat-no" title="statement not covered" >  if (!context) {</span>
 <span class="cstat-no" title="statement not covered" >    throw new Error('useToast must be used within a ToastProvider');</span>
@@ -214,10 +214,10 @@ export const useToast = <span class="cstat-no" title="statement not covered" ><s
 <span class="cstat-no" title="statement not covered" >  return context;</span>
 };
 &nbsp;
-export const ToastProvider = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >({</span> children }) =&gt; {</span>
-  const [toasts, setToasts] = <span class="cstat-no" title="statement not covered" >useState([]);</span>
+export const ToastProvider = ({ children }) =&gt; {
+  const [toasts, setToasts] = useState([]);
 &nbsp;
-  const addToast = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>essage, type = <span class="branch-0 cbranch-no" title="branch not covered" >'info',</span> duration = <span class="branch-0 cbranch-no" title="branch not covered" >3000)</span> =&gt; {</span>
+  const addToast = <span class="fstat-no" title="function not covered" >(m</span>essage, type = <span class="branch-0 cbranch-no" title="branch not covered" >'info',</span> duration = <span class="branch-0 cbranch-no" title="branch not covered" >3000)</span> =&gt; {
     const id = <span class="cstat-no" title="statement not covered" >Date.now() + Math.random();</span>
     const newToast = <span class="cstat-no" title="statement not covered" >{ id, message, type, duration };</span>
     
@@ -231,16 +231,16 @@ export const ToastProvider = <span class="cstat-no" title="statement not covered
 <span class="cstat-no" title="statement not covered" >    return id;</span>
   };
 &nbsp;
-  const removeToast = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(i</span>d) =&gt; {</span>
+  const removeToast = <span class="fstat-no" title="function not covered" >(i</span>d) =&gt; {
 <span class="cstat-no" title="statement not covered" >    setToasts(<span class="fstat-no" title="function not covered" >pr</span>ev =&gt; <span class="cstat-no" title="statement not covered" >prev.filter(<span class="fstat-no" title="function not covered" >to</span>ast =&gt; <span class="cstat-no" title="statement not covered" >toast.id !== id)</span>)</span>;</span>
   };
 &nbsp;
-  const showSuccess = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt; <span class="cstat-no" title="statement not covered" >addToast(message, 'success', duration);</span></span>
-  const showError = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt; <span class="cstat-no" title="statement not covered" >addToast(message, 'error', duration);</span></span>
-  const showWarning = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt; <span class="cstat-no" title="statement not covered" >addToast(message, 'warning', duration);</span></span>
-  const showInfo = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt; <span class="cstat-no" title="statement not covered" >addToast(message, 'info', duration);</span></span>
+  const showSuccess = <span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt; <span class="cstat-no" title="statement not covered" >addToast(message, 'success', duration);</span>
+  const showError = <span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt; <span class="cstat-no" title="statement not covered" >addToast(message, 'error', duration);</span>
+  const showWarning = <span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt; <span class="cstat-no" title="statement not covered" >addToast(message, 'warning', duration);</span>
+  const showInfo = <span class="fstat-no" title="function not covered" >(m</span>essage, duration) =&gt; <span class="cstat-no" title="statement not covered" >addToast(message, 'info', duration);</span>
 &nbsp;
-  const value = <span class="cstat-no" title="statement not covered" >{</span>
+  const value = {
     addToast,
     removeToast,
     showSuccess,
@@ -249,7 +249,7 @@ export const ToastProvider = <span class="cstat-no" title="statement not covered
     showInfo
   };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;ToastContext.Provider value={value}&gt;
       {children}
       
@@ -277,7 +277,7 @@ export default ToastContext;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-26T23:20:10.560Z
+                at 2025-07-29T04:08:50.069Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

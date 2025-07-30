@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">5.35% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/168</span>
+                <span class='fraction'>9/168</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">1.49% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/134</span>
+                <span class='fraction'>2/134</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">3.03% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/33</span>
+                <span class='fraction'>1/33</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">5.42% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/166</span>
+                <span class='fraction'>9/166</span>
             </div>
         
             
@@ -915,7 +915,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -939,7 +939,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -960,7 +960,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -976,7 +976,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -996,7 +996,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1009,7 +1009,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1028,8 +1028,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1746,18 +1746,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * Company Research Service - Handles company research and interview preparation
  * Uses GraphQL when available, fallback to mock data for development
  */
 &nbsp;
-import { FallbackService } from './fallbackService';
+// Removed fallbackService import - using mock data directly
 import apolloClient from '../apolloClient';
 import { gql } from '@apollo/client';
 &nbsp;
 // GraphQL Queries for Company Research
-const GET_COMPANY_RESEARCH = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_COMPANY_RESEARCH = gql`
   query GetCompanyResearch($companyId: ID, $limit: Int) {
     companyResearch(companyId: $companyId, limit: $limit) {
       id
@@ -1781,7 +1781,7 @@ const GET_COMPANY_RESEARCH = <span class="cstat-no" title="statement not covered
   }
 `;
 &nbsp;
-const GET_COMPANY_INSIGHTS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_COMPANY_INSIGHTS = gql`
   query GetCompanyInsights($companyId: ID!) {
     companyInsights(companyId: $companyId) {
       id
@@ -1802,7 +1802,7 @@ const GET_COMPANY_INSIGHTS = <span class="cstat-no" title="statement not covered
   }
 `;
 &nbsp;
-const GET_INTERVIEW_QUESTIONS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_INTERVIEW_QUESTIONS = gql`
   query GetInterviewQuestions($category: String, $difficulty: String, $limit: Int) {
     interviewQuestions(category: $category, difficulty: $difficulty, limit: $limit) {
       id
@@ -1818,7 +1818,7 @@ const GET_INTERVIEW_QUESTIONS = <span class="cstat-no" title="statement not cove
 `;
 &nbsp;
 // GraphQL Mutations for Company Research
-const GENERATE_COMPANY_RESEARCH = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GENERATE_COMPANY_RESEARCH = gql`
   mutation GenerateCompanyResearch($companyId: ID!) {
     generateCompanyResearch(companyId: $companyId) {
       success
@@ -1838,7 +1838,7 @@ const GENERATE_COMPANY_RESEARCH = <span class="cstat-no" title="statement not co
   }
 `;
 &nbsp;
-const SAVE_RESEARCH_ITEM = <span class="cstat-no" title="statement not covered" >gql`</span>
+const SAVE_RESEARCH_ITEM = gql`
   mutation SaveResearchItem($researchId: ID!) {
     saveResearchItem(researchId: $researchId) {
       success
@@ -1851,7 +1851,7 @@ const SAVE_RESEARCH_ITEM = <span class="cstat-no" title="statement not covered" 
   }
 `;
 &nbsp;
-const GENERATE_INTERVIEW_QUESTIONS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GENERATE_INTERVIEW_QUESTIONS = gql`
   mutation GenerateInterviewQuestions($category: String!, $difficulty: String!, $count: Int) {
     generateInterviewQuestions(category: $category, difficulty: $difficulty, count: $count) {
       success
@@ -1869,9 +1869,9 @@ const GENERATE_INTERVIEW_QUESTIONS = <span class="cstat-no" title="statement not
 `;
 &nbsp;
 class CompanyResearchService {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor() {
-<span class="cstat-no" title="statement not covered" >    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8001';</span>
-<span class="cstat-no" title="statement not covered" >    this.useGraphQL = process.env.REACT_APP_USE_GRAPHQL === 'true';</span>
+  constructor() {
+    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8001';
+    this.useGraphQL = process.env.REACT_APP_USE_GRAPHQL === 'true';
   }
 &nbsp;
   // Company Research
@@ -2588,7 +2588,7 @@ class CompanyResearchService {
   }
 }
 &nbsp;
-const companyResearchService = <span class="cstat-no" title="statement not covered" >new CompanyResearchService();</span>
+const companyResearchService = new CompanyResearchService();
 export default companyResearchService;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -2596,7 +2596,7 @@ export default companyResearchService;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-26T23:20:10.560Z
+                at 2025-07-29T04:08:50.069Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

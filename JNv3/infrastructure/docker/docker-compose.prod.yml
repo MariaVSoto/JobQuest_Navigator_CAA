@@ -1,0 +1,53 @@
+# Production override configuration for JobQuest Navigator v2
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  backend:
+    environment:
+      # Production Environment Settings
+      ENVIRONMENT: production
+      DEBUG: false
+      
+      # AWS S3 Storage Configuration (Production)
+      AWS_STORAGE_BUCKET_NAME: caa900resume
+      AWS_S3_REGION_NAME: us-east-1
+      # AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"  # Set via environment
+      # AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"  # Set via environment
+      
+      # Production CORS Settings
+      CORS_ORIGINS: "https://jobquest-navigator.com,https://www.jobquest-navigator.com,https://api.jobquest-navigator.com"
+      
+      # Production Database (would be RDS in actual deployment)
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}
+      
+      # Production Redis (would be ElastiCache in actual deployment)
+      REDIS_URL: redis://:${REDIS_PASSWORD}@${REDIS_HOST}:6379/0
+      
+      # Production secrets (should be passed via environment)
+      SECRET_KEY: "${SECRET_KEY}"
+      COGNITO_USER_POOL_ID: "${COGNITO_USER_POOL_ID}"
+      COGNITO_CLIENT_ID: "${COGNITO_CLIENT_ID}"
+    
+    # Production command (no --reload for performance)
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+  frontend:
+    environment:
+      # Production Frontend Settings
+      REACT_APP_ENV: production
+      REACT_APP_DEBUG_MODE: false
+      REACT_APP_BYPASS_AUTH: false
+      REACT_APP_DEV_AUTH_BYPASS: false
+      
+      # Production API endpoints
+      REACT_APP_GRAPHQL_URL: https://api.jobquest-navigator.com/graphql
+      
+      # Build optimizations
+      GENERATE_SOURCEMAP: false
+      DISABLE_ESLINT_PLUGIN: true
+    
+    # Production build command
+    command: ["sh", "-c", "npm run build && serve -s build -l 3000"]
+
+  # Remove MinIO in production since we're using S3
+  # minio service would be commented out or removed

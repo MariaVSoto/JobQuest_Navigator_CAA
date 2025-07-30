@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">10.58% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/85</span>
+                <span class='fraction'>9/85</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">5.71% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>2/35</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">8.33% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>1/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">10.58% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/85</span>
+                <span class='fraction'>9/85</span>
             </div>
         
             
@@ -496,7 +496,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -516,7 +516,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -534,7 +534,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -553,7 +553,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -575,7 +575,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -584,7 +584,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -595,8 +595,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -908,18 +908,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * AI Suggestions Service - Handles AI-powered job suggestions and resume recommendations
  * Uses GraphQL when available, fallback to mock data for development
  */
 &nbsp;
-import { FallbackService } from './fallbackService';
+// Removed fallbackService import - using mock data directly
 import apolloClient from '../apolloClient';
 import { gql } from '@apollo/client';
 &nbsp;
 // GraphQL Queries for AI Suggestions (placeholder - would need backend implementation)
-const GET_AI_SUGGESTIONS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_AI_SUGGESTIONS = gql`
   query GetAISuggestions($resumeId: ID) {
     aiSuggestions(resumeId: $resumeId) {
       id
@@ -939,7 +939,7 @@ const GET_AI_SUGGESTIONS = <span class="cstat-no" title="statement not covered" 
   }
 `;
 &nbsp;
-const GET_JOB_RECOMMENDATIONS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_JOB_RECOMMENDATIONS = gql`
   query GetJobRecommendations($userId: ID!) {
     jobRecommendations(userId: $userId) {
       id
@@ -957,7 +957,7 @@ const GET_JOB_RECOMMENDATIONS = <span class="cstat-no" title="statement not cove
   }
 `;
 &nbsp;
-const GET_AI_ANALYTICS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GET_AI_ANALYTICS = gql`
   query GetAIAnalytics {
     aiAnalytics {
       suggestions {
@@ -976,7 +976,7 @@ const GET_AI_ANALYTICS = <span class="cstat-no" title="statement not covered" >g
 `;
 &nbsp;
 // GraphQL Mutations
-const GENERATE_AI_SUGGESTIONS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const GENERATE_AI_SUGGESTIONS = gql`
   mutation GenerateAISuggestions($resumeId: ID!) {
     generateAISuggestions(resumeId: $resumeId) {
       success
@@ -998,7 +998,7 @@ const GENERATE_AI_SUGGESTIONS = <span class="cstat-no" title="statement not cove
   }
 `;
 &nbsp;
-const UPDATE_SUGGESTION_STATUS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const UPDATE_SUGGESTION_STATUS = gql`
   mutation UpdateSuggestionStatus($suggestionId: ID!, $status: String!) {
     updateSuggestionStatus(suggestionId: $suggestionId, status: $status) {
       success
@@ -1007,7 +1007,7 @@ const UPDATE_SUGGESTION_STATUS = <span class="cstat-no" title="statement not cov
   }
 `;
 &nbsp;
-const UPDATE_RECOMMENDATION_STATUS = <span class="cstat-no" title="statement not covered" >gql`</span>
+const UPDATE_RECOMMENDATION_STATUS = gql`
   mutation UpdateRecommendationStatus($recommendationId: ID!, $action: String!) {
     updateRecommendationStatus(recommendationId: $recommendationId, action: $action) {
       success
@@ -1017,9 +1017,9 @@ const UPDATE_RECOMMENDATION_STATUS = <span class="cstat-no" title="statement not
 `;
 &nbsp;
 class AISuggestionsService {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor() {
-<span class="cstat-no" title="statement not covered" >    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8001';</span>
-<span class="cstat-no" title="statement not covered" >    this.useGraphQL = process.env.REACT_APP_USE_GRAPHQL === 'true';</span>
+  constructor() {
+    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8001';
+    this.useGraphQL = process.env.REACT_APP_USE_GRAPHQL === 'true';
   }
 &nbsp;
   // AI Suggestions
@@ -1331,7 +1331,7 @@ class AISuggestionsService {
   }
 }
 &nbsp;
-const aiSuggestionsService = <span class="cstat-no" title="statement not covered" >new AISuggestionsService();</span>
+const aiSuggestionsService = new AISuggestionsService();
 export default aiSuggestionsService;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -1339,7 +1339,7 @@ export default aiSuggestionsService;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-07-26T23:20:10.560Z
+                at 2025-07-29T04:08:50.069Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

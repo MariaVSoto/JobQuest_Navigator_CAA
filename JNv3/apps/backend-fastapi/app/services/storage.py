@@ -1,6 +1,7 @@
 """
 Storage service for handling file uploads to MinIO/S3
 Provides abstraction layer for different storage backends
+Supports environment-based switching: MinIO (dev) -> S3 (prod)
 """
 
 import os
@@ -11,6 +12,8 @@ from typing import Optional, BinaryIO, Tuple
 from minio import Minio
 from minio.error import S3Error, MinioException
 import magic
+import boto3
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
@@ -18,39 +21,93 @@ logger = logging.getLogger(__name__)
 class StorageService:
     """
     Storage service for handling file operations
-    Supports MinIO (development) and S3 (production)
+    Supports MinIO (development) and S3 (production) with environment-based switching
     """
     
     def __init__(self):
-        self.endpoint = os.getenv('MINIO_ENDPOINT', 'localhost:9000')
-        self.access_key = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
-        self.secret_key = os.getenv('MINIO_SECRET_KEY', 'minioadmin123')
-        self.secure = os.getenv('MINIO_SECURE', 'false').lower() == 'true'
-        self.bucket_name = os.getenv('MINIO_BUCKET_NAME', 'jobquest-resumes')
+        # Determine storage backend based on environment
+        self.environment = os.getenv('ENVIRONMENT', 'development')
+        self.use_s3 = self.environment.lower() in ['production', 'staging']
         
-        # Initialize MinIO client
+        # Common settings
+        self.bucket_name = os.getenv('AWS_STORAGE_BUCKET_NAME', 'jobquest-resumes')
+        
+        if self.use_s3:
+            self._initialize_s3()
+        else:
+            self._initialize_minio()
+    
+    def _initialize_s3(self):
+        """Initialize AWS S3 client for production/staging"""
         try:
-            self.client = Minio(
+            self.aws_region = os.getenv('AWS_S3_REGION_NAME', 'us-east-1')
+            self.access_key = os.getenv('AWS_ACCESS_KEY_ID')
+            self.secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+            
+            if not self.access_key or not self.secret_key:
+                raise Exception("AWS credentials not provided")
+            
+            self.s3_client = boto3.client(
+                's3',
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
+                region_name=self.aws_region
+            )
+            
+            self.client_type = 's3'
+            logger.info(f"S3 client initialized for {self.environment} environment")
+            self._ensure_bucket_exists()
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize S3 client: {e}")
+            self.s3_client = None
+            
+    def _initialize_minio(self):
+        """Initialize MinIO client for development"""
+        try:
+            self.endpoint = os.getenv('MINIO_ENDPOINT', 'localhost:9000')
+            self.access_key = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
+            self.secret_key = os.getenv('MINIO_SECRET_KEY', 'minioadmin123')
+            self.secure = os.getenv('MINIO_SECURE', 'false').lower() == 'true'
+            
+            self.minio_client = Minio(
                 self.endpoint,
                 access_key=self.access_key,
                 secret_key=self.secret_key,
                 secure=self.secure
             )
-            logger.info(f"MinIO client initialized with endpoint: {self.endpoint}")
+            
+            self.client_type = 'minio'
+            logger.info(f"MinIO client initialized for {self.environment} environment with endpoint: {self.endpoint}")
             self._ensure_bucket_exists()
+            
         except Exception as e:
             logger.error(f"Failed to initialize MinIO client: {e}")
-            self.client = None
+            self.minio_client = None
     
     def _ensure_bucket_exists(self):
         """Create bucket if it doesn't exist"""
         try:
-            if not self.client.bucket_exists(self.bucket_name):
-                self.client.make_bucket(self.bucket_name)
-                logger.info(f"Created bucket: {self.bucket_name}")
+            if self.use_s3:
+                # Check S3 bucket
+                try:
+                    self.s3_client.head_bucket(Bucket=self.bucket_name)
+                    logger.info(f"S3 bucket exists: {self.bucket_name}")
+                except ClientError as e:
+                    if e.response['Error']['Code'] == '404':
+                        # Bucket doesn't exist, create it
+                        self.s3_client.create_bucket(Bucket=self.bucket_name)
+                        logger.info(f"Created S3 bucket: {self.bucket_name}")
+                    else:
+                        raise
             else:
-                logger.info(f"Bucket exists: {self.bucket_name}")
-        except S3Error as e:
+                # Check MinIO bucket
+                if not self.minio_client.bucket_exists(self.bucket_name):
+                    self.minio_client.make_bucket(self.bucket_name)
+                    logger.info(f"Created MinIO bucket: {self.bucket_name}")
+                else:
+                    logger.info(f"MinIO bucket exists: {self.bucket_name}")
+        except Exception as e:
             logger.error(f"Error ensuring bucket exists: {e}")
             raise
     
@@ -73,7 +130,7 @@ class StorageService:
         Returns:
             Tuple of (file_path, file_metadata)
         """
-        if not self.client:
+        if (self.use_s3 and not hasattr(self, 's3_client')) or (not self.use_s3 and not hasattr(self, 'minio_client')):
             raise Exception("Storage client not initialized")
         
         try:
@@ -94,21 +151,36 @@ class StorageService:
             # Validate file
             self._validate_resume_file(file_size, content_type, filename)
             
-            # Upload file
-            self.client.put_object(
-                bucket_name=self.bucket_name,
-                object_name=file_path,
-                data=file_data,
-                length=file_size,
-                content_type=content_type,
-                metadata={
-                    'original-filename': filename,
-                    'user-id': user_id,
-                    'upload-timestamp': datetime.utcnow().isoformat()
-                }
-            )
+            # Upload file based on backend
+            if self.use_s3:
+                # Upload to S3
+                self.s3_client.put_object(
+                    Bucket=self.bucket_name,
+                    Key=file_path,
+                    Body=file_data,
+                    ContentType=content_type,
+                    Metadata={
+                        'original-filename': filename,
+                        'user-id': user_id,
+                        'upload-timestamp': datetime.utcnow().isoformat()
+                    }
+                )
+            else:
+                # Upload to MinIO
+                self.minio_client.put_object(
+                    bucket_name=self.bucket_name,
+                    object_name=file_path,
+                    data=file_data,
+                    length=file_size,
+                    content_type=content_type,
+                    metadata={
+                        'original-filename': filename,
+                        'user-id': user_id,
+                        'upload-timestamp': datetime.utcnow().isoformat()
+                    }
+                )
             
-            logger.info(f"File uploaded successfully: {file_path}")
+            logger.info(f"File uploaded successfully to {self.client_type}: {file_path}")
             
             # Return file path and metadata
             file_metadata = {
@@ -121,8 +193,8 @@ class StorageService:
             
             return file_path, file_metadata
             
-        except S3Error as e:
-            logger.error(f"MinIO error uploading file: {e}")
+        except (S3Error, ClientError) as e:
+            logger.error(f"{self.client_type.upper()} error uploading file: {e}")
             raise Exception(f"Storage error: {e}")
         except Exception as e:
             logger.error(f"Error uploading file: {e}")
@@ -139,17 +211,26 @@ class StorageService:
         Returns:
             Pre-signed URL for file access
         """
-        if not self.client:
+        if (self.use_s3 and not hasattr(self, 's3_client')) or (not self.use_s3 and not hasattr(self, 'minio_client')):
             raise Exception("Storage client not initialized")
         
         try:
-            url = self.client.presigned_get_object(
-                bucket_name=self.bucket_name,
-                object_name=file_path,
-                expires=timedelta(seconds=expires_in)
-            )
+            if self.use_s3:
+                # Generate S3 pre-signed URL
+                url = self.s3_client.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': self.bucket_name, 'Key': file_path},
+                    ExpiresIn=expires_in
+                )
+            else:
+                # Generate MinIO pre-signed URL
+                url = self.minio_client.presigned_get_object(
+                    bucket_name=self.bucket_name,
+                    object_name=file_path,
+                    expires=timedelta(seconds=expires_in)
+                )
             return url
-        except S3Error as e:
+        except (S3Error, ClientError) as e:
             logger.error(f"Error generating file URL: {e}")
             raise Exception(f"Storage error: {e}")
     
@@ -163,17 +244,25 @@ class StorageService:
         Returns:
             True if successful, False otherwise
         """
-        if not self.client:
+        if (self.use_s3 and not hasattr(self, 's3_client')) or (not self.use_s3 and not hasattr(self, 'minio_client')):
             raise Exception("Storage client not initialized")
         
         try:
-            self.client.remove_object(
-                bucket_name=self.bucket_name,
-                object_name=file_path
-            )
-            logger.info(f"File deleted successfully: {file_path}")
+            if self.use_s3:
+                # Delete from S3
+                self.s3_client.delete_object(
+                    Bucket=self.bucket_name,
+                    Key=file_path
+                )
+            else:
+                # Delete from MinIO
+                self.minio_client.remove_object(
+                    bucket_name=self.bucket_name,
+                    object_name=file_path
+                )
+            logger.info(f"File deleted successfully from {self.client_type}: {file_path}")
             return True
-        except S3Error as e:
+        except (S3Error, ClientError) as e:
             logger.error(f"Error deleting file: {e}")
             return False
     
@@ -187,24 +276,39 @@ class StorageService:
         Returns:
             Dictionary with file metadata
         """
-        if not self.client:
+        if (self.use_s3 and not hasattr(self, 's3_client')) or (not self.use_s3 and not hasattr(self, 'minio_client')):
             raise Exception("Storage client not initialized")
         
         try:
-            stat = self.client.stat_object(
-                bucket_name=self.bucket_name,
-                object_name=file_path
-            )
-            
-            return {
-                'file_path': file_path,
-                'size': stat.size,
-                'content_type': stat.content_type,
-                'last_modified': stat.last_modified,
-                'etag': stat.etag,
-                'metadata': stat.metadata
-            }
-        except S3Error as e:
+            if self.use_s3:
+                # Get S3 object metadata
+                response = self.s3_client.head_object(
+                    Bucket=self.bucket_name,
+                    Key=file_path
+                )
+                return {
+                    'file_path': file_path,
+                    'size': response['ContentLength'],
+                    'content_type': response['ContentType'],
+                    'last_modified': response['LastModified'],
+                    'etag': response['ETag'],
+                    'metadata': response.get('Metadata', {})
+                }
+            else:
+                # Get MinIO object metadata
+                stat = self.minio_client.stat_object(
+                    bucket_name=self.bucket_name,
+                    object_name=file_path
+                )
+                return {
+                    'file_path': file_path,
+                    'size': stat.size,
+                    'content_type': stat.content_type,
+                    'last_modified': stat.last_modified,
+                    'etag': stat.etag,
+                    'metadata': stat.metadata
+                }
+        except (S3Error, ClientError) as e:
             logger.error(f"Error getting file info: {e}")
             raise Exception(f"Storage error: {e}")
     
@@ -218,16 +322,25 @@ class StorageService:
         Returns:
             File binary data stream
         """
-        if not self.client:
+        if (self.use_s3 and not hasattr(self, 's3_client')) or (not self.use_s3 and not hasattr(self, 'minio_client')):
             raise Exception("Storage client not initialized")
         
         try:
-            response = self.client.get_object(
-                bucket_name=self.bucket_name,
-                object_name=file_path
-            )
-            return response
-        except S3Error as e:
+            if self.use_s3:
+                # Download from S3
+                response = self.s3_client.get_object(
+                    Bucket=self.bucket_name,
+                    Key=file_path
+                )
+                return response['Body']
+            else:
+                # Download from MinIO
+                response = self.minio_client.get_object(
+                    bucket_name=self.bucket_name,
+                    object_name=file_path
+                )
+                return response
+        except (S3Error, ClientError) as e:
             logger.error(f"Error downloading file: {e}")
             raise Exception(f"Storage error: {e}")
     
@@ -278,23 +391,38 @@ class StorageService:
     def health_check(self) -> dict:
         """Check storage service health"""
         try:
-            if not self.client:
+            if (self.use_s3 and not hasattr(self, 's3_client')) or (not self.use_s3 and not hasattr(self, 'minio_client')):
                 return {'status': 'unhealthy', 'error': 'Client not initialized'}
             
-            # Try to list objects in bucket (should not fail even if empty)
-            list(self.client.list_objects(self.bucket_name, max_keys=1))
-            
-            return {
-                'status': 'healthy',
-                'endpoint': self.endpoint,
-                'bucket': self.bucket_name,
-                'secure': self.secure
-            }
+            if self.use_s3:
+                # Try to list objects in S3 bucket
+                self.s3_client.list_objects_v2(Bucket=self.bucket_name, MaxKeys=1)
+                return {
+                    'status': 'healthy',
+                    'backend': 's3',
+                    'environment': self.environment,
+                    'bucket': self.bucket_name,
+                    'region': self.aws_region
+                }
+            else:
+                # Try to list objects in MinIO bucket
+                # Just try to list objects - if bucket exists and is accessible, this will work
+                objects = list(self.minio_client.list_objects(self.bucket_name))[:1] if self.minio_client.bucket_exists(self.bucket_name) else []
+                return {
+                    'status': 'healthy',
+                    'backend': 'minio',
+                    'environment': self.environment,
+                    'endpoint': self.endpoint,
+                    'bucket': self.bucket_name,
+                    'secure': self.secure
+                }
         except Exception as e:
             return {
                 'status': 'unhealthy',
+                'backend': self.client_type,
+                'environment': self.environment,
                 'error': str(e),
-                'endpoint': self.endpoint
+                'endpoint': getattr(self, 'endpoint', 'N/A')
             }
 
 

@@ -239,7 +239,8 @@ module "s3" {
   name_prefix = local.name_prefix
   environment = var.environment
   
-  bucket_name = "${local.name_prefix}-storage"
+  # Use specific bucket name if provided, otherwise generate name
+  bucket_name = var.s3_bucket_name != "" ? var.s3_bucket_name : "${local.name_prefix}-storage"
   
   # Enable versioning for production
   versioning_enabled = var.environment == "production"
