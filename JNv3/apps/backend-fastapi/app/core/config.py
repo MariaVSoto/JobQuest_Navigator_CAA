@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     project_name: str = os.getenv("PROJECT_NAME", "JobQuest Navigator v2")
     version: str = os.getenv("VERSION", "2.0.0")
     
-    # Database - MOVED TO ENVIRONMENT VARIABLES
-    database_url: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:password@localhost:5432/jobquest")
+    # Database - MOVED TO ENVIRONMENT VARIABLES  
+    database_url: str = os.getenv("DATABASE_URL", "")
     
     # Redis - MOVED TO ENVIRONMENT VARIABLES
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     cors_origins: str = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3001")
     
     # Authentication settings - MOVED TO ENVIRONMENT VARIABLES
-    secret_key: str = os.getenv("SECRET_KEY", "dev-only-key-change-in-production")
+    secret_key: str = os.getenv("SECRET_KEY", "")
     algorithm: str = os.getenv("ALGORITHM", "HS256")
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     
@@ -60,6 +60,24 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+    
+    def validate_production_secrets(self):
+        """Validate that required secrets are provided in production"""
+        if self.environment == "production":
+            required_secrets = {
+                "SECRET_KEY": self.secret_key,
+                "DATABASE_URL": self.database_url,
+                "AWS_ACCESS_KEY_ID": self.aws_access_key_id,
+                "AWS_SECRET_ACCESS_KEY": self.aws_secret_access_key,
+            }
+            
+            missing_secrets = [name for name, value in required_secrets.items() if not value]
+            if missing_secrets:
+                raise ValueError(f"Missing required production secrets: {', '.join(missing_secrets)}")
 
 
 settings = Settings()
+
+# Validate production secrets on import
+if settings.environment == "production":
+    settings.validate_production_secrets()

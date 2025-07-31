@@ -66,8 +66,17 @@ class StorageService:
         """Initialize MinIO client for development"""
         try:
             self.endpoint = os.getenv('MINIO_ENDPOINT', 'localhost:9000')
-            self.access_key = os.getenv('MINIO_ACCESS_KEY', 'minioadmin')
-            self.secret_key = os.getenv('MINIO_SECRET_KEY', 'minioadmin123')
+            self.access_key = os.getenv('MINIO_ACCESS_KEY', '')
+            self.secret_key = os.getenv('MINIO_SECRET_KEY', '')
+            
+            # Validate MinIO credentials
+            if not self.access_key or not self.secret_key:
+                if self.environment == 'production':
+                    raise ValueError("MINIO_ACCESS_KEY and MINIO_SECRET_KEY are required for MinIO storage")
+                else:
+                    # Use development defaults only for non-production
+                    self.access_key = self.access_key or 'dev-minio-user'
+                    self.secret_key = self.secret_key or 'dev-minio-password'
             self.secure = os.getenv('MINIO_SECURE', 'false').lower() == 'true'
             
             self.minio_client = Minio(
