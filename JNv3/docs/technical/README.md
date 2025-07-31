@@ -2,14 +2,21 @@
 
 ## 🎯 Project Overview
 
-JobQuest Navigator v3 is an enterprise-level reorganization featuring a comprehensive testing framework and modern architecture:
+JobQuest Navigator v3 is an AI-powered career management platform built around four core systems:
 
-- ✅ **Modern Stack**: FastAPI + Strawberry GraphQL + React 19
-- ✅ **Enterprise Architecture**: Professional project organization
+### Four Core Systems
+1. **Resume Management System** - Intelligent resume building, PDF parsing, multi-version control
+2. **Job Optimization System** - AI-powered job matching and application optimization  
+3. **Skills & Learning System** - Personalized skill development and certification tracking
+4. **Interview Guidance System** - Comprehensive interview preparation and mock practice
+
+### Technical Architecture
+- ✅ **Modern Stack**: FastAPI + Strawberry GraphQL + React 19 + TypeScript
+- ✅ **Enterprise Architecture**: Professional project organization with clear separation of concerns
 - ✅ **Comprehensive Testing**: 230+ tests across unit, integration, E2E, performance, security
-- ✅ **Type Safety**: Full TypeScript integration with shared types
-- ✅ **Cloud Ready**: AWS Cognito + PostgreSQL + Redis
-- ✅ **Docker Environment**: Complete local development stack
+- ✅ **Mobile-First Design**: 85-90% mobile optimization with responsive components
+- ✅ **Cloud Infrastructure**: AWS S3 storage, Cognito authentication, production deployment
+- ✅ **Security**: GitHub Secrets management, multi-layer security scanning
 
 ## 🏗️ Architecture
 

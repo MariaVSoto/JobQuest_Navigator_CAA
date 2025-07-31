@@ -2,7 +2,12 @@
 
 ## Overview
 
-Welcome to the comprehensive documentation for JobQuest Navigator v3, an enterprise-level job search navigation and career management platform with a comprehensive testing framework.
+Welcome to the comprehensive documentation for JobQuest Navigator v3, an AI-powered career management platform built around four core systems:
+
+1. **Resume Management System** - Intelligent resume building and version control
+2. **Job Optimization System** - AI-powered job matching and application optimization
+3. **Skills & Learning System** - Personalized skill development and certification tracking
+4. **Interview Guidance System** - Comprehensive interview preparation and practice
 
 ## 🧪 Testing Framework Highlights
 
