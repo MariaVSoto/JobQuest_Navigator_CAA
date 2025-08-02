@@ -1,0 +1,330 @@
+.signup-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+}
+
+.signup-box {
+  background: #fff;
+  padding: 2.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 370px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.signup-title {
+  font-size: 32px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  line-height: 40px;
+  color: #121417;
+  margin-bottom: 1.5rem;
+}
+
+.signup-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-form label {
+  margin-bottom: 0.5rem;
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.signup-form input {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.signup-form input:focus {
+  border: 1.5px solid #3182ce;
+}
+
+.signup-btn {
+  background: #3182ce;
+  color: #fff;
+  padding: 0.75rem 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.signup-btn:hover,
+.signup-btn:focus {
+  background: #2563eb;
+}
+
+.signup-error {
+  color: #e53e3e;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.signup-footer {
+  margin-top: 1.2rem;
+  font-size: 0.98rem;
+  color: #4a5568;
+}
+
+.signup-footer a {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 0.2rem;
+}
+
+.signup-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ==================== MOBILE OPTIMIZATIONS ==================== */
+
+@media (max-width: 768px) {
+  .signup-container {
+    padding: var(--mobile-padding, 16px);
+    background: #ffffff;
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  }
+
+  .signup-box {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+    width: 100%;
+    border-radius: var(--mobile-border-radius, 8px);
+    box-shadow: none;
+    background: #ffffff;
+    margin: 0 auto;
+  }
+
+  .signup-title {
+    font-size: 28px;
+    line-height: 1.2;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .signup-form input {
+    min-height: var(--touch-target-min, 44px);
+    padding: 12px 16px;
+    font-size: var(--mobile-font-base, 16px);
+    border-radius: var(--mobile-border-radius, 8px);
+    margin-bottom: 1.5rem;
+    box-sizing: border-box;
+    /* Prevent zoom on iOS */
+    font-size: 16px;
+  }
+
+  .signup-form label {
+    font-size: var(--mobile-font-base, 16px);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .signup-btn {
+    min-height: var(--touch-target-min, 44px);
+    padding: 16px 24px;
+    font-size: var(--mobile-font-large, 18px);
+    font-weight: 600;
+    border-radius: var(--mobile-border-radius, 8px);
+    margin-top: 8px;
+    width: 100%;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .signup-btn:active {
+    transform: scale(0.98);
+  }
+
+  .signup-error {
+    font-size: var(--mobile-font-base, 16px);
+    padding: 12px 16px;
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: var(--mobile-border-radius, 8px);
+    margin-bottom: 1.5rem;
+  }
+
+  .signup-footer {
+    margin-top: 2rem;
+    font-size: var(--mobile-font-base, 16px);
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .signup-footer a {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 0 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  .signup-footer a:hover {
+    background-color: #f3f4f6;
+    text-decoration: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .signup-container {
+    padding: var(--mobile-margin, 8px);
+  }
+
+  .signup-box {
+    padding: 1.5rem 1rem;
+    border-radius: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .signup-title {
+    font-size: 24px;
+    margin-bottom: 1.5rem;
+  }
+
+  .signup-form input {
+    margin-bottom: 1.25rem;
+  }
+
+  .signup-footer {
+    margin-top: 1.5rem;
+    font-size: var(--mobile-font-small, 14px);
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .signup-container {
+    padding: 16px;
+  }
+
+  .signup-box {
+    padding: 1.5rem;
+    max-width: 400px;
+    min-height: auto;
+  }
+
+  .signup-title {
+    font-size: 24px;
+    margin-bottom: 1.5rem;
+  }
+
+  .signup-form input {
+    margin-bottom: 1rem;
+  }
+
+  .signup-footer {
+    margin-top: 1.5rem;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .signup-box {
+    border: 2px solid #000;
+  }
+
+  .signup-form input {
+    border: 2px solid #000;
+  }
+
+  .signup-btn {
+    border: 2px solid;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .signup-container {
+    background: #111827;
+  }
+
+  .signup-box {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+
+  .signup-title {
+    color: #f9fafb;
+  }
+
+  .signup-form label {
+    color: #d1d5db;
+  }
+
+  .signup-form input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+
+  .signup-form input:focus {
+    border-color: #60a5fa;
+  }
+
+  .signup-btn {
+    background: #1d4ed8;
+  }
+
+  .signup-btn:hover,
+  .signup-btn:focus {
+    background: #1e40af;
+  }
+
+  .signup-error {
+    background-color: #7f1d1d;
+    border-color: #dc2626;
+    color: #fca5a5;
+  }
+
+  .signup-footer {
+    color: #d1d5db;
+  }
+
+  .signup-footer a {
+    color: #60a5fa;
+  }
+
+  .signup-footer a:hover {
+    background-color: #374151;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .signup-form input,
+  .signup-btn,
+  .signup-footer a {
+    transition: none;
+  }
+
+  .signup-btn:active {
+    transform: none;
+  }
+} 

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Variables Test</title>
+    <style>
+        :root {
+            --neutral-0: #ffffff;
+            --neutral-200: #e5e7eb;
+            --primary-50: #eff6ff;
+            --primary-600: #2563eb;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            background: #f9fafb;
+        }
+        
+        .test-dropdown {
+            position: relative;
+            display: inline-block;
+            margin: 20px;
+        }
+        
+        .test-button {
+            background: var(--primary-600);
+            color: white;
+            border: none;
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+        }
+        
+        .test-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 280px;
+            background: var(--neutral-0);
+            border: 1px solid var(--neutral-200);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: var(--space-2);
+            margin-top: var(--space-2);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .test-dropdown.active .test-dropdown-menu {
+            display: block;
+        }
+        
+        .test-dropdown-item {
+            display: block;
+            padding: var(--space-3) var(--space-4);
+            color: #374151;
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            margin: 2px 0;
+        }
+        
+        .test-dropdown-item:hover {
+            background: var(--primary-50);
+            color: var(--primary-600);
+        }
+        
+        .status {
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        
+        .success { background: #f0fdf4; border-color: #16a34a; }
+        .error { background: #fef2f2; border-color: #dc2626; }
+    </style>
+</head>
+<body>
+    <h1>CSS Variables Test Page</h1>
+    
+    <div class="status success">
+        <h3>✅ CSS Variables Working</h3>
+        <p>If you can see this styled dropdown below, CSS variables are working:</p>
+    </div>
+    
+    <div class="test-dropdown" onclick="this.classList.toggle('active')">
+        <button class="test-button">Test Dropdown (Click Me)</button>
+        <div class="test-dropdown-menu">
+            <a href="#" class="test-dropdown-item">Resume Builder</a>
+            <a href="#" class="test-dropdown-item">Job Optimization</a>
+            <a href="#" class="test-dropdown-item">Skills & Learning</a>
+            <a href="#" class="test-dropdown-item">Company Research</a>
+        </div>
+    </div>
+    
+    <div class="status" id="test-result">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Click the "Test Dropdown" button above</li>
+            <li>You should see a properly styled white dropdown with menu items</li>
+            <li>Items should have hover effects (blue background)</li>
+            <li>If you see a large empty white box instead, CSS variables are failing</li>
+        </ol>
+    </div>
+    
+    <script>
+        // Test CSS variable resolution
+        const testElement = document.createElement('div');
+        testElement.style.background = 'var(--neutral-0)';
+        document.body.appendChild(testElement);
+        
+        const computedStyle = getComputedStyle(testElement);
+        const bgColor = computedStyle.backgroundColor;
+        
+        const resultDiv = document.getElementById('test-result');
+        
+        if (bgColor === 'rgb(255, 255, 255)' || bgColor === '#ffffff' || bgColor === 'white') {
+            resultDiv.className = 'status success';
+            resultDiv.innerHTML = '<h3>✅ CSS Variables Resolution: SUCCESS</h3><p>CSS variables are resolving correctly. Background color: ' + bgColor + '</p>';
+        } else {
+            resultDiv.className = 'status error';
+            resultDiv.innerHTML = '<h3>❌ CSS Variables Resolution: FAILED</h3><p>CSS variables not working. Background color: ' + bgColor + '</p>';
+        }
+        
+        document.body.removeChild(testElement);
+    </script>
+</body>
+</html>

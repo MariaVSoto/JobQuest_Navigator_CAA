@@ -1,0 +1,19 @@
+name: "JobQuest Navigator CodeQL Config"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+  - uses: security-extended
+
+paths:
+  - JNv3/apps/backend-fastapi/
+  - JNv3/apps/frontend-react/src/
+
+paths-ignore:
+  - JNv3/apps/backend-fastapi/tests/
+  - JNv3/apps/frontend-react/build/
+  - JNv3/apps/frontend-react/node_modules/
+  - JNv3/apps/frontend-react/coverage/
+  - '**/*.test.js'
+  - '**/*.test.jsx'

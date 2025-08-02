@@ -1,0 +1,21 @@
+{
+  "query": "mutation CreateJob($input: JobInput!) { createJob(input: $input) { success errors job { id title company { id name } locationText salaryMin salaryMax } } }",
+  "variables": {
+    "input": {
+      "title": "Innovation Advisory Consultant",
+      "companyName": "Amazon Web Services (AWS)",
+      "description": "Would you like to help our customers innovate and deliver breakthrough experiences for their end customers? Would you like to pioneer the use of cloud services as a means to help drive innovation? At Amazon Web Services (AWS), we're hiring Innovation Advisory consultants to work alongside our customers, enabling them to be more agile, experimental and customer-centric. As a member of this team, you will lead engagements that help customers adopt aspects of Amazon's innovation mechanisms by taking customers through an experiential process of identifying a customer-centric challenge or opportunity, developing hypotheses about market fit, testing these through experimentation and launching a net-new scaled deployment.",
+      "requirements": "Basic Qualifications: 8+ years of product management, product marketing, and/or consulting experience in enterprise and startups. Demonstrated experience with creating new products or businesses. Outstanding written and verbal communication skills, including executive presentations. Ability to multitask and successfully lead customer-facing engagements. Data driven with excellent problem-solving skills. Deep expertise in Lean Startup methodology, Design Thinking, User Experience, Product Management, or Behavioral Science. Preferred: 10+ years experience, proven track record taking products from idea to launch, experience with AWS platform and cloud computing.",
+      "benefits": "Opportunity to work with largest enterprises in the world, lead digital transformation projects, develop C-suite relationships, represent AWS best-practices around Digital Transformation and innovation, participate in pre-sales customer visits, help develop execution models based on engagement experience.",
+      "locationText": "Multiple Locations / Remote",
+      "salaryMin": 150000,
+      "salaryMax": 250000,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "yearly",
+      "jobType": "full_time",
+      "contractType": "permanent",
+      "experienceLevel": "senior",
+      "remoteType": "hybrid"
+    }
+  }
+}

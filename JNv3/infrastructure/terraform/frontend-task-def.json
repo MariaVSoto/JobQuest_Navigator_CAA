@@ -1,0 +1,88 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:039444453392:task-definition/jobquest-navigator-v3-frontend:3",
+    "containerDefinitions": [
+        {
+            "name": "frontend",
+            "image": "039444453392.dkr.ecr.us-east-1.amazonaws.com/jobquest-navigator-v3-frontend:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "NODE_ENV",
+                    "value": "production"
+                },
+                {
+                    "name": "REACT_APP_ENV",
+                    "value": "production"
+                },
+                {
+                    "name": "REACT_APP_API_URL",
+                    "value": "http://jobquest-navigator-v3-alb-1532571588.us-east-1.elb.amazonaws.com/api"
+                },
+                {
+                    "name": "REACT_APP_GRAPHQL_URL",
+                    "value": "http://jobquest-navigator-v3-alb-1532571588.us-east-1.elb.amazonaws.com/graphql"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/jobquest-navigator-v3/frontend",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "jobquest-navigator-v3-frontend",
+    "executionRoleArn": "arn:aws:iam::039444453392:role/jobquest-navigator-v3-ecs-execution-role",
+    "networkMode": "awsvpc",
+    "revision": 3,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "1024",
+    "registeredAt": "2025-08-01T14:15:21.683000-04:00",
+    "registeredBy": "arn:aws:iam::039444453392:user/zwang"
+}

@@ -1,0 +1,68 @@
+{
+  "title": "Cloud Advisory Consultant",
+  "summary": "Over 18 years of consulting experience in Digital Transformation/Innovation, Business Processes, IT Services, Cloud, and Infrastructure. Entrepreneurship experience with successful VC investment. Excellent ability in Pre-sales, Consulting and PM.",
+  "experience": [
+    {
+      "title": "AWS Senior Advisory Consultant",
+      "company": "Amazon Web Services",
+      "description": "As AWS professional services consultant to provide AWS digital strategy, cloud strategy pre-sales, consulting, and delivery services for AWS Greater China customers. Engaging with C-level executives to define Enterprise cloud strategies based on business outcomes. Identifying motivators for cloud adoption and unlocking Enterprise challenges. Analyzing application portfolios, identifying dependencies & common infrastructure platform components, and assessing migration feasibility. Architecting hybrid AWS and on-premises solutions for technology clusters and patterns.",
+      "startDate": "2020-01-01",
+      "endDate": "2024-12-31",
+      "isCurrentRole": true
+    },
+    {
+      "title": "Senior Consultant",
+      "company": "Daimler China",
+      "description": "Infrastructure & ITSM Assessment/Optimization Senior Consultant",
+      "startDate": "2018-01-01",
+      "endDate": "2019-12-31",
+      "isCurrentRole": false
+    }
+  ],
+  "skills": [
+    "Digital Transformation",
+    "Cloud Strategy",
+    "AWS Services",
+    "Pre-sales Consulting",
+    "Project Management",
+    "Business Process Optimization",
+    "Infrastructure Architecture",
+    "Hybrid Cloud Solutions",
+    "Enterprise Architecture",
+    "C-level Executive Engagement",
+    "Application Portfolio Analysis",
+    "Cloud Migration",
+    "IaaS",
+    "PaaS",
+    "Docker",
+    "Kubernetes",
+    "API Design",
+    "PMP",
+    "TOGAF",
+    "ITSM",
+    "Agile",
+    "Design Thinking",
+    "Chinese Language",
+    "English Language",
+    "Problem Solving",
+    "Analytical Thinking"
+  ],
+  "education": [
+    {
+      "institution": "Professional Certifications",
+      "degree": "Multiple Certifications",
+      "field": "Cloud Computing & Project Management",
+      "graduationDate": "2020-01-01",
+      "description": "PMP, TOGAF, ITSM, AWS Certifications"
+    }
+  ],
+  "owner": {
+    "fullName": "Cloud Advisory Consultant",
+    "email": "cloud.consultant@demo.com",
+    "currentJobTitle": "AWS Senior Advisory Consultant",
+    "yearsOfExperience": 18,
+    "industry": "Cloud Computing & Consulting",
+    "careerLevel": "senior",
+    "jobSearchStatus": "open_to_opportunities"
+  }
+}

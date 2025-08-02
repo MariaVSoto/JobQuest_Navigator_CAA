@@ -1,0 +1,295 @@
+name: "Comprehensive Security Scanning"
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 3 * * 2'  # Run every Tuesday at 3 AM UTC
+
+env:
+  PYTHON_VERSION: '3.9'
+  NODE_VERSION: '18'
+
+jobs:
+  # =================================================================
+  # Dependency Vulnerability Scanning
+  # =================================================================
+  
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+    
+    - name: Install Python dependencies
+      run: |
+        cd JNv3/apps/backend-fastapi
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install safety pip-audit
+    
+    - name: Python dependency security scan
+      run: |
+        cd JNv3/apps/backend-fastapi
+        echo "## 🐍 Python Dependency Security Scan" >> $GITHUB_STEP_SUMMARY
+        
+        # Safety check
+        if safety check --json --output safety-report.json; then
+          echo "✅ Safety check: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Safety check: Vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          if [ -f safety-report.json ]; then
+            VULN_COUNT=$(jq length safety-report.json)
+            echo "- Vulnerabilities found: $VULN_COUNT" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+        
+        # pip-audit check
+        if pip-audit --format=json --output=pip-audit-report.json; then
+          echo "✅ pip-audit check: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ pip-audit check: Issues found" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Install Node.js dependencies
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+    
+    - name: Node.js dependency security scan
+      run: |
+        cd JNv3/apps/frontend-react
+        echo "## 📦 Node.js Dependency Security Scan" >> $GITHUB_STEP_SUMMARY
+        
+        # npm audit
+        if npm audit --audit-level high; then
+          echo "✅ npm audit: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ npm audit: High/Critical vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level high --json > npm-audit-report.json || true
+        fi
+        
+        # Check for known vulnerable packages
+        echo "Checking for known vulnerable packages..." >> $GITHUB_STEP_SUMMARY
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: dependency-security-reports
+        path: |
+          JNv3/apps/backend-fastapi/safety-report.json
+          JNv3/apps/backend-fastapi/pip-audit-report.json
+          JNv3/apps/frontend-react/npm-audit-report.json
+        retention-days: 30
+
+  # =================================================================
+  # Container Security Scanning
+  # =================================================================
+  
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Build test Docker image for backend
+      run: |
+        cd JNv3/apps/backend-fastapi
+        docker build -t jobquest-backend-test .
+    
+    - name: Run Trivy container scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'jobquest-backend-test'
+        format: 'sarif'
+        output: 'trivy-container-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-container-results.sarif'
+        category: 'container-security'
+
+  # =================================================================
+  # SAST (Static Application Security Testing)
+  # =================================================================
+  
+  sast-analysis:
+    name: Static Application Security Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install Python security tools
+      run: |
+        pip install bandit semgrep
+    
+    - name: Run Bandit SAST scan
+      run: |
+        cd JNv3/apps/backend-fastapi
+        echo "## 🔍 Static Application Security Testing" >> $GITHUB_STEP_SUMMARY
+        
+        bandit -r . -f json -o bandit-report.json -ll || true
+        
+        if [ -f bandit-report.json ]; then
+          HIGH_ISSUES=$(jq '.results | map(select(.issue_severity == "HIGH")) | length' bandit-report.json)
+          MEDIUM_ISSUES=$(jq '.results | map(select(.issue_severity == "MEDIUM")) | length' bandit-report.json)
+          LOW_ISSUES=$(jq '.results | map(select(.issue_severity == "LOW")) | length' bandit-report.json)
+          
+          echo "### Bandit Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔴 High: $HIGH_ISSUES" >> $GITHUB_STEP_SUMMARY
+          echo "- 🟡 Medium: $MEDIUM_ISSUES" >> $GITHUB_STEP_SUMMARY
+          echo "- 🟢 Low: $LOW_ISSUES" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Run Semgrep SAST scan
+      run: |
+        semgrep --config=auto --json --output=semgrep-report.json . || true
+        
+        if [ -f semgrep-report.json ]; then
+          ERROR_COUNT=$(jq '.results | map(select(.extra.severity == "ERROR")) | length' semgrep-report.json)
+          WARNING_COUNT=$(jq '.results | map(select(.extra.severity == "WARNING")) | length' semgrep-report.json)
+          
+          echo "### Semgrep Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔴 Errors: $ERROR_COUNT" >> $GITHUB_STEP_SUMMARY
+          echo "- 🟡 Warnings: $WARNING_COUNT" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Upload SAST reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: sast-security-reports
+        path: |
+          JNv3/apps/backend-fastapi/bandit-report.json
+          semgrep-report.json
+        retention-days: 30
+
+  # =================================================================
+  # Secrets Scanning
+  # =================================================================
+  
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better secret detection
+    
+    - name: Install TruffleHog
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+    
+    - name: Run TruffleHog secrets scan
+      run: |
+        echo "## 🔐 Secrets Detection Scan" >> $GITHUB_STEP_SUMMARY
+        
+        if trufflehog git file://. --json > trufflehog-report.json; then
+          echo "✅ No secrets detected" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Potential secrets detected" >> $GITHUB_STEP_SUMMARY
+          SECRET_COUNT=$(wc -l < trufflehog-report.json)
+          echo "- Potential secrets found: $SECRET_COUNT" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Upload secrets scan report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: secrets-scan-report
+        path: trufflehog-report.json
+        retention-days: 30
+
+  # =================================================================
+  # Security Summary
+  # =================================================================
+  
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs: [dependency-scan, container-scan, sast-analysis, secrets-scan]
+    if: always()
+    
+    steps:
+    - name: Download all security reports
+      uses: actions/download-artifact@v3
+      with:
+        path: security-reports/
+    
+    - name: Generate comprehensive security summary
+      run: |
+        echo "# 🛡️ Comprehensive Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Scan Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "## 📊 Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check job results
+        if [ "${{ needs.dependency-scan.result }}" = "success" ]; then
+          echo "✅ Dependency Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Dependency Vulnerability Scan (issues found)" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.container-scan.result }}" = "success" ]; then
+          echo "✅ Container Security Scan" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Container Security Scan (issues found)" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.sast-analysis.result }}" = "success" ]; then
+          echo "✅ Static Application Security Testing" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Static Application Security Testing (issues found)" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.secrets-scan.result }}" = "success" ]; then
+          echo "✅ Secrets Detection Scan" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Secrets Detection Scan (potential secrets found)" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 📋 Next Steps" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "1. Review security scan artifacts for detailed findings" >> $GITHUB_STEP_SUMMARY
+        echo "2. Check the Security tab for CodeQL analysis results" >> $GITHUB_STEP_SUMMARY
+        echo "3. Address any high-severity vulnerabilities before deployment" >> $GITHUB_STEP_SUMMARY
+        echo "4. Monitor Dependabot PRs for dependency updates" >> $GITHUB_STEP_SUMMARY
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "*Security scanning powered by GitHub Actions*" >> $GITHUB_STEP_SUMMARY

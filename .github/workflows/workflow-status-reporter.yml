@@ -1,0 +1,211 @@
+name: "Workflow Status Reporter"
+
+on:
+  workflow_run:
+    workflows: [
+      "JobQuest Navigator CI/CD Pipeline",
+      "Pull Request Checks", 
+      "Comprehensive Security Scanning",
+      "CodeQL Security Analysis",
+      "Deploy to Test Environment"
+    ]
+    types:
+      - completed
+
+permissions:
+  actions: read
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  report-status:
+    name: Report Workflow Status
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Get workflow run details
+      id: workflow
+      run: |
+        echo "workflow_name=${{ github.event.workflow_run.name }}" >> $GITHUB_OUTPUT
+        echo "workflow_status=${{ github.event.workflow_run.conclusion }}" >> $GITHUB_OUTPUT
+        echo "workflow_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+        echo "head_sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
+        echo "run_number=${{ github.event.workflow_run.run_number }}" >> $GITHUB_OUTPUT
+        echo "head_branch=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_OUTPUT
+        echo "event=${{ github.event.workflow_run.event }}" >> $GITHUB_OUTPUT
+    
+    - name: Generate status report
+      id: report
+      run: |
+        STATUS="${{ steps.workflow.outputs.workflow_status }}"
+        WORKFLOW="${{ steps.workflow.outputs.workflow_name }}"
+        RUN_ID="${{ steps.workflow.outputs.workflow_id }}"
+        
+        # Set status icon
+        if [ "$STATUS" = "success" ]; then
+          ICON="✅"
+          COLOR="success"
+        elif [ "$STATUS" = "failure" ]; then
+          ICON="❌"
+          COLOR="failure"
+        elif [ "$STATUS" = "cancelled" ]; then
+          ICON="⚠️"
+          COLOR="warning"
+        else
+          ICON="🔄"
+          COLOR="neutral"
+        fi
+        
+        echo "status_icon=$ICON" >> $GITHUB_OUTPUT
+        echo "status_color=$COLOR" >> $GITHUB_OUTPUT
+        
+        # Generate detailed message
+        MESSAGE="$ICON **$WORKFLOW** - $STATUS"
+        echo "message=$MESSAGE" >> $GITHUB_OUTPUT
+    
+    - name: Find associated pull request
+      if: github.event.workflow_run.event == 'pull_request'
+      id: find_pr
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { data: pullRequests } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            head: `${context.repo.owner}:${{ steps.workflow.outputs.head_branch }}`,
+          });
+          
+          if (pullRequests.length > 0) {
+            const pr = pullRequests[0];
+            core.setOutput('pr_number', pr.number);
+            core.setOutput('pr_title', pr.title);
+            return pr.number;
+          } else {
+            core.setOutput('pr_number', '');
+            return null;
+          }
+    
+    - name: Comment on Pull Request
+      if: steps.find_pr.outputs.pr_number != ''
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const prNumber = ${{ steps.find_pr.outputs.pr_number }};
+          const workflowName = "${{ steps.workflow.outputs.workflow_name }}";
+          const status = "${{ steps.workflow.outputs.workflow_status }}";
+          const icon = "${{ steps.report.outputs.status_icon }}";
+          const runId = "${{ steps.workflow.outputs.workflow_id }}";
+          
+          // Create or update status comment
+          const commentBody = `
+          ## ${ icon } Workflow Status Update
+          
+          **Workflow:** ${workflowName}  
+          **Status:** ${status}  
+          **Run:** [#${{ steps.workflow.outputs.run_number }}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId})  
+          **Commit:** ${{ steps.workflow.outputs.head_sha }}  
+          **Updated:** ${new Date().toLocaleString()}
+          
+          ${status === 'success' ? 
+            '🎉 All checks passed! This PR is ready for review.' : 
+            status === 'failure' ? 
+            '🚨 Some checks failed. Please review the workflow logs and fix any issues.' :
+            '⏳ Workflow is still in progress...'}
+          `;
+          
+          // Look for existing workflow status comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+          });
+          
+          const existingComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('Workflow Status Update') &&
+            comment.body.includes(workflowName)
+          );
+          
+          if (existingComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: commentBody
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: commentBody
+            });
+          }
+    
+    - name: Create check run
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const status = "${{ steps.workflow.outputs.workflow_status }}";
+          const workflowName = "${{ steps.workflow.outputs.workflow_name }}";
+          const headSha = "${{ steps.workflow.outputs.head_sha }}";
+          const runId = "${{ steps.workflow.outputs.workflow_id }}";
+          
+          const conclusion = status === 'success' ? 'success' : 
+                            status === 'failure' ? 'failure' : 
+                            status === 'cancelled' ? 'cancelled' : 'neutral';
+          
+          await github.rest.checks.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            name: `Status: ${workflowName}`,
+            head_sha: headSha,
+            status: 'completed',
+            conclusion: conclusion,
+            details_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`,
+            output: {
+              title: `${workflowName} - ${status}`,
+              summary: `Workflow completed with status: ${status}`,
+              text: `View detailed results: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`
+            }
+          });
+    
+    - name: Update commit status
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const status = "${{ steps.workflow.outputs.workflow_status }}";
+          const workflowName = "${{ steps.workflow.outputs.workflow_name }}";
+          const headSha = "${{ steps.workflow.outputs.head_sha }}";
+          const runId = "${{ steps.workflow.outputs.workflow_id }}";
+          
+          const state = status === 'success' ? 'success' : 
+                       status === 'failure' ? 'failure' : 
+                       status === 'cancelled' ? 'error' : 'pending';
+          
+          await github.rest.repos.createCommitStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            sha: headSha,
+            state: state,
+            target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`,
+            description: `${workflowName} ${status}`,
+            context: `ci/${workflowName.toLowerCase().replace(/\s+/g, '-')}`
+          });
+    
+    - name: Log workflow metrics
+      run: |
+        echo "## 📊 Workflow Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow:** ${{ steps.workflow.outputs.workflow_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ steps.report.outputs.status_icon }} ${{ steps.workflow.outputs.workflow_status }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** ${{ steps.workflow.outputs.head_branch }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Event:** ${{ steps.workflow.outputs.event }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Run:** [#${{ steps.workflow.outputs.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ steps.workflow.outputs.workflow_id }})" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ steps.find_pr.outputs.pr_number }}" != "" ]; then
+          echo "**PR:** [#${{ steps.find_pr.outputs.pr_number }}](${{ github.server_url }}/${{ github.repository }}/pull/${{ steps.find_pr.outputs.pr_number }})" >> $GITHUB_STEP_SUMMARY
+        fi

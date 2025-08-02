@@ -1,0 +1,44 @@
+# JobQuest Navigator - Code Owners
+# This file defines who should review specific parts of the codebase
+
+# Global owners - these users are requested for review on all changes
+* @jobquest-team @project-maintainer
+
+# Backend code
+backend/ @backend-team @senior-developer
+backend/core/ @backend-team @architect
+backend/core/settings*.py @devops-team @security-team
+backend/requirements*.txt @backend-team @security-team
+
+# Frontend code
+frontend/ @frontend-team @ui-ux-team
+frontend/src/services/ @frontend-team @backend-team
+frontend/package*.json @frontend-team @security-team
+
+# Infrastructure and deployment
+infrastructure/ @devops-team @architect
+.github/workflows/ @devops-team @ci-cd-team
+scripts/ @devops-team @backend-team
+configs/ @devops-team @security-team
+
+# Documentation
+docs/ @documentation-team @project-manager
+README.md @project-maintainer @documentation-team
+*.md @documentation-team
+
+# Security-sensitive files
+.github/workflows/*.yml @security-team @devops-team
+backend/core/security.py @security-team @senior-developer
+infrastructure/terraform/modules/security/ @security-team @devops-team
+
+# Database migrations
+backend/*/migrations/ @backend-team @database-admin @architect
+
+# Configuration and environment files
+configs/environment.env @devops-team @security-team
+terraform.tfvars* @devops-team @security-team
+zappa_settings*.json @devops-team @backend-team
+
+# Release and versioning
+CHANGELOG.md @project-maintainer @release-manager
+VERSION @project-maintainer @release-manager

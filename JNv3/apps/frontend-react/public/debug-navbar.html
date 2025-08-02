@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NavBar Debug</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f9fafb;
+        }
+        
+        .debug-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .test-frame {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        
+        .instructions {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <h1>🔍 NavBar Dropdown Debug Tool</h1>
+        <p><strong>Purpose:</strong> This page embeds the main React app to debug navigation dropdown issues.</p>
+        <p><strong>Current Status:</strong> All Docker services are running healthy</p>
+        <ul>
+            <li>Frontend: <a href="http://localhost:3001" target="_blank">http://localhost:3001</a></li>
+            <li>Backend: <a href="http://localhost:8001/graphql" target="_blank">http://localhost:8001/graphql</a></li>
+            <li>CSS Test: <a href="http://localhost:3001/test-css-vars.html" target="_blank">CSS Variables Test</a></li>
+        </ul>
+    </div>
+    
+    <div class="instructions">
+        <h3>🧪 Testing Instructions:</h3>
+        <ol>
+            <li><strong>Test CSS Variables:</strong> First click <a href="http://localhost:3001/test-css-vars.html" target="_blank">CSS Variables Test</a> to verify CSS variables work</li>
+            <li><strong>Test Main App:</strong> Open the main app below or in a new tab</li>
+            <li><strong>Login:</strong> Login to access navigation dropdown menus</li>
+            <li><strong>Test Dropdowns:</strong> Hover/click on navigation items to test dropdowns</li>
+            <li><strong>Check Console:</strong> Open browser DevTools (F12) → Console tab for any JavaScript errors</li>
+            <li><strong>Inspect Elements:</strong> Right-click dropdown area → Inspect Element to see actual HTML/CSS</li>
+        </ol>
+    </div>
+    
+    <div class="debug-info">
+        <h3>📱 React App (Embedded)</h3>
+        <iframe src="http://localhost:3001" class="test-frame" title="JobQuest Navigator App"></iframe>
+    </div>
+    
+    <div class="debug-info">
+        <h3>🔧 Debugging Checklist</h3>
+        <p>If dropdown shows empty white box, check:</p>
+        <ul>
+            <li>✅ <strong>CSS Variables:</strong> Use the CSS test page above</li>
+            <li>🔍 <strong>JavaScript Errors:</strong> Check browser console (F12)</li>
+            <li>🔍 <strong>Authentication State:</strong> Are you logged in?</li>
+            <li>🔍 <strong>DOM Structure:</strong> Does the dropdown HTML render properly?</li>
+            <li>🔍 <strong>CSS Loading:</strong> Are styles being applied?</li>
+            <li>🔍 <strong>React State:</strong> Is activeDropdown state changing?</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Add some basic debugging info
+        console.log('🔍 NavBar Debug Tool Loaded');
+        console.log('📍 Current URL:', window.location.href);
+        console.log('🕐 Timestamp:', new Date().toISOString());
+        
+        // Monitor iframe for errors
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'error') {
+                console.error('🚨 iframe Error:', event.data);
+            }
+        });
+    </script>
+</body>
+</html>
