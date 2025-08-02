@@ -1,0 +1,80 @@
+version: 2
+updates:
+  # Enable version updates for Python (backend)
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "jobquest-team"
+    assignees:
+      - "jobquest-team"
+    commit-message:
+      prefix: "deps(backend):"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "python"
+
+  # Enable version updates for npm (frontend)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"  
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "jobquest-team"
+    assignees:
+      - "jobquest-team"
+    commit-message:
+      prefix: "deps(frontend):"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "javascript"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "jobquest-team"
+    assignees:
+      - "jobquest-team"
+    commit-message:
+      prefix: "deps(actions):"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Enable version updates for Terraform
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/terraform"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "jobquest-team"
+    assignees:
+      - "jobquest-team"
+    commit-message:
+      prefix: "deps(terraform):"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "terraform"
+      - "infrastructure"

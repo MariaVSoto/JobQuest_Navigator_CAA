@@ -1,4 +1,4 @@
-# JobQuest Navigator v2 - Terraform Outputs
+# JobQuest Navigator v3 - Terraform Outputs
 # Important information for deployment and operations
 
 # ============================================================================
@@ -7,197 +7,148 @@
 
 output "vpc_id" {
   description = "ID of the VPC"
-  value       = module.vpc.vpc_id
+  value       = aws_vpc.main.id
 }
 
 output "vpc_cidr_block" {
   description = "CIDR block of the VPC"
-  value       = module.vpc.vpc_cidr_block
+  value       = aws_vpc.main.cidr_block
 }
 
 output "public_subnet_ids" {
   description = "List of public subnet IDs"
-  value       = module.vpc.public_subnet_ids
+  value       = aws_subnet.public[*].id
 }
 
 output "private_subnet_ids" {
   description = "List of private subnet IDs"
-  value       = module.vpc.private_subnet_ids
+  value       = aws_subnet.private[*].id
 }
 
 output "database_subnet_ids" {
   description = "List of database subnet IDs"
-  value       = module.vpc.database_subnet_ids
+  value       = aws_subnet.database[*].id
 }
 
-output "nat_gateway_ips" {
-  description = "List of public Elastic IPs of NAT Gateways"
-  value       = module.vpc.nat_gateway_ips
+output "nat_gateway_ip" {
+  description = "Public IP of NAT Gateway"
+  value       = aws_eip.nat.public_ip
 }
 
 # ============================================================================
 # LOAD BALANCER OUTPUTS
 # ============================================================================
 
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = module.alb.alb_dns_name
+output "load_balancer_dns" {
+  description = "DNS name of the load balancer"
+  value       = aws_lb.main.dns_name
 }
 
-output "alb_zone_id" {
-  description = "Zone ID of the Application Load Balancer"
-  value       = module.alb.alb_zone_id
+output "load_balancer_zone_id" {
+  description = "Zone ID of the load balancer"
+  value       = aws_lb.main.zone_id
 }
 
-output "alb_url" {
-  description = "URL of the Application Load Balancer"
-  value       = "https://${module.alb.alb_dns_name}"
+output "application_url" {
+  description = "URL of the deployed application"
+  value       = "http://${aws_lb.main.dns_name}"
 }
 
 output "backend_target_group_arn" {
   description = "ARN of the backend target group"
-  value       = module.alb.backend_target_group_arn
+  value       = aws_lb_target_group.backend.arn
 }
 
 output "frontend_target_group_arn" {
   description = "ARN of the frontend target group"
-  value       = module.alb.frontend_target_group_arn
+  value       = aws_lb_target_group.frontend.arn
 }
 
 # ============================================================================
 # DATABASE OUTPUTS
 # ============================================================================
 
-output "rds_endpoint" {
-  description = "RDS instance endpoint"
-  value       = module.rds.endpoint
+output "database_endpoint" {
+  description = "RDS database endpoint"
+  value       = aws_db_instance.main.endpoint
   sensitive   = true
 }
 
-output "rds_port" {
-  description = "RDS instance port"
-  value       = module.rds.port
+output "database_port" {
+  description = "RDS database port"
+  value       = aws_db_instance.main.port
 }
 
-output "rds_instance_id" {
-  description = "RDS instance ID"
-  value       = module.rds.instance_id
+output "database_name" {
+  description = "Name of the database"
+  value       = aws_db_instance.main.db_name
 }
 
-output "database_url" {
-  description = "Database connection URL"
-  value       = "postgresql+asyncpg://${var.database_username}:***@${module.rds.endpoint}:${module.rds.port}/${var.database_name}"
+output "database_connection_string" {
+  description = "Database connection string"
+  value       = "postgresql://${aws_db_instance.main.username}:${random_password.db_password.result}@${aws_db_instance.main.endpoint}:${aws_db_instance.main.port}/${aws_db_instance.main.db_name}"
   sensitive   = true
-}
-
-# ============================================================================
-# CACHE OUTPUTS
-# ============================================================================
-
-output "redis_endpoint" {
-  description = "Redis cluster endpoint"
-  value       = module.elasticache.primary_endpoint
-}
-
-output "redis_port" {
-  description = "Redis cluster port"
-  value       = module.elasticache.port
-}
-
-output "redis_url" {
-  description = "Redis connection URL"
-  value       = "redis://${module.elasticache.primary_endpoint}:${module.elasticache.port}/0"
 }
 
 # ============================================================================
 # CONTAINER REGISTRY OUTPUTS
 # ============================================================================
 
-output "ecr_repository_urls" {
-  description = "Map of ECR repository URLs"
-  value       = module.ecr.repository_urls
+output "backend_ecr_repository_url" {
+  description = "URL of the ECR repository for backend"
+  value       = aws_ecr_repository.backend.repository_url
+}
+
+output "frontend_ecr_repository_url" {
+  description = "URL of the ECR repository for frontend"
+  value       = aws_ecr_repository.frontend.repository_url
 }
 
 output "ecr_repository_arns" {
-  description = "Map of ECR repository ARNs"
-  value       = module.ecr.repository_arns
+  description = "ARNs of ECR repositories"
+  value = {
+    backend  = aws_ecr_repository.backend.arn
+    frontend = aws_ecr_repository.frontend.arn
+  }
 }
 
 # ============================================================================
 # ECS OUTPUTS
 # ============================================================================
 
-output "ecs_cluster_id" {
-  description = "ID of the ECS cluster"
-  value       = module.ecs.cluster_id
-}
-
 output "ecs_cluster_name" {
   description = "Name of the ECS cluster"
-  value       = module.ecs.cluster_name
+  value       = aws_ecs_cluster.main.name
+}
+
+output "ecs_cluster_id" {
+  description = "ID of the ECS cluster"
+  value       = aws_ecs_cluster.main.id
 }
 
 output "ecs_cluster_arn" {
   description = "ARN of the ECS cluster"
-  value       = module.ecs.cluster_arn
+  value       = aws_ecs_cluster.main.arn
 }
 
 output "backend_service_name" {
   description = "Name of the backend ECS service"
-  value       = module.ecs.backend_service_name
+  value       = aws_ecs_service.backend.name
 }
 
 output "frontend_service_name" {
   description = "Name of the frontend ECS service"
-  value       = module.ecs.frontend_service_name
+  value       = aws_ecs_service.frontend.name
 }
 
 output "backend_task_definition_arn" {
   description = "ARN of the backend task definition"
-  value       = module.ecs.backend_task_definition_arn
+  value       = aws_ecs_task_definition.backend.arn
 }
 
 output "frontend_task_definition_arn" {
   description = "ARN of the frontend task definition"
-  value       = module.ecs.frontend_task_definition_arn
-}
-
-# ============================================================================
-# STORAGE OUTPUTS
-# ============================================================================
-
-output "s3_bucket_name" {
-  description = "Name of the S3 bucket"
-  value       = module.s3.bucket_name
-}
-
-output "s3_bucket_arn" {
-  description = "ARN of the S3 bucket"
-  value       = module.s3.bucket_arn
-}
-
-output "s3_bucket_domain_name" {
-  description = "Domain name of the S3 bucket"
-  value       = module.s3.bucket_domain_name
-}
-
-# ============================================================================
-# IAM OUTPUTS
-# ============================================================================
-
-output "ecs_task_execution_role_arn" {
-  description = "ARN of the ECS task execution role"
-  value       = module.iam.ecs_task_execution_role_arn
-}
-
-output "ecs_task_role_arn" {
-  description = "ARN of the ECS task role"
-  value       = module.iam.ecs_task_role_arn
-}
-
-output "deployment_role_arn" {
-  description = "ARN of the deployment role for CI/CD"
-  value       = module.iam.deployment_role_arn
+  value       = aws_ecs_task_definition.frontend.arn
 }
 
 # ============================================================================
@@ -207,38 +158,31 @@ output "deployment_role_arn" {
 output "security_group_ids" {
   description = "Map of security group IDs"
   value = {
-    alb      = module.security_groups.alb_security_group_id
-    backend  = module.security_groups.backend_security_group_id
-    frontend = module.security_groups.frontend_security_group_id
-    rds      = module.security_groups.rds_security_group_id
-    redis    = module.security_groups.redis_security_group_id
+    alb = aws_security_group.alb.id
+    ecs = aws_security_group.ecs.id
+    rds = aws_security_group.rds.id
   }
 }
 
 # ============================================================================
-# SECRETS OUTPUTS
+# IAM OUTPUTS
 # ============================================================================
 
-output "secrets_manager_arns" {
-  description = "ARNs of secrets in AWS Secrets Manager"
-  value = {
-    database_password = aws_secretsmanager_secret.db_password.arn
-    app_secret_key    = aws_secretsmanager_secret.app_secret_key.arn
-  }
+output "ecs_task_execution_role_arn" {
+  description = "ARN of the ECS task execution role"
+  value       = aws_iam_role.ecs_task_execution_role.arn
 }
 
 # ============================================================================
-# MONITORING OUTPUTS
+# LOGGING OUTPUTS
 # ============================================================================
 
 output "cloudwatch_log_groups" {
   description = "CloudWatch log group names"
-  value       = module.cloudwatch.log_group_names
-}
-
-output "cloudwatch_dashboard_url" {
-  description = "URL to the CloudWatch dashboard"
-  value       = module.cloudwatch.dashboard_url
+  value = {
+    backend  = aws_cloudwatch_log_group.backend.name
+    frontend = aws_cloudwatch_log_group.frontend.name
+  }
 }
 
 # ============================================================================
@@ -246,46 +190,44 @@ output "cloudwatch_dashboard_url" {
 # ============================================================================
 
 output "deployment_info" {
-  description = "Key information for deployment scripts"
+  description = "Complete deployment information"
   value = {
-    environment        = var.environment
-    aws_region        = var.aws_region
-    project_name      = var.project_name
-    
     # Application URLs
-    app_url           = "https://${module.alb.alb_dns_name}"
-    backend_url       = "https://${module.alb.alb_dns_name}/api"
-    graphql_url       = "https://${module.alb.alb_dns_name}/graphql"
-    
+    application_url  = "http://${aws_lb.main.dns_name}"
+    backend_api_url  = "http://${aws_lb.main.dns_name}/api"
+    health_check_url = "http://${aws_lb.main.dns_name}/health"
+
     # Container registries
-    backend_ecr_url   = module.ecr.repository_urls["jobquest-backend"]
-    frontend_ecr_url  = module.ecr.repository_urls["jobquest-frontend"]
-    
+    backend_repo_url  = aws_ecr_repository.backend.repository_url
+    frontend_repo_url = aws_ecr_repository.frontend.repository_url
+
     # ECS information
-    cluster_name      = module.ecs.cluster_name
-    backend_service   = module.ecs.backend_service_name
-    frontend_service  = module.ecs.frontend_service_name
-    
+    cluster_name     = aws_ecs_cluster.main.name
+    backend_service  = aws_ecs_service.backend.name
+    frontend_service = aws_ecs_service.frontend.name
+
     # Database information
-    database_endpoint = module.rds.endpoint
-    redis_endpoint    = module.elasticache.primary_endpoint
-    
-    # Storage
-    s3_bucket        = module.s3.bucket_name
+    database_endpoint = aws_db_instance.main.endpoint
+
+    # Environment
+    environment  = var.environment
+    aws_region   = var.aws_region
+    project_name = var.project_name
   }
 }
 
 # ============================================================================
-# COST OPTIMIZATION OUTPUTS
+# RESOURCE IDENTIFIERS
 # ============================================================================
 
-output "cost_optimization_info" {
-  description = "Information for cost optimization"
+output "resource_identifiers" {
+  description = "Important resource identifiers for management"
   value = {
-    single_nat_gateway = var.single_nat_gateway
-    rds_instance_class = var.rds_instance_class
-    redis_node_type    = var.redis_node_type
-    backup_enabled     = var.backup_retention_period > 0
-    multi_az_enabled   = var.environment == "production"
+    vpc_id              = aws_vpc.main.id
+    cluster_name        = aws_ecs_cluster.main.name
+    load_balancer_arn   = aws_lb.main.arn
+    database_identifier = aws_db_instance.main.identifier
+    backend_repo_name   = aws_ecr_repository.backend.name
+    frontend_repo_name  = aws_ecr_repository.frontend.name
   }
 }

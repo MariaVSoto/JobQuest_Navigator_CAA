@@ -31,12 +31,13 @@ class ResumeMutations:
         """Create a new resume from form data"""
         try:
             # Get user from context
-            user = getattr(info.context, 'user', None)
-            if not user:
+            auth_context = info.context.get('auth')
+            if not auth_context or not auth_context.is_authenticated:
                 return ResumeResponse(
                     success=False,
                     errors=["Authentication required"]
                 )
+            user = auth_context.user
             
             # Validate input
             if not input.title or not input.title.strip():
@@ -89,12 +90,13 @@ class ResumeMutations:
         """Update an existing resume"""
         try:
             # Get user from context
-            user = getattr(info.context, 'user', None)
-            if not user:
+            auth_context = info.context.get('auth')
+            if not auth_context or not auth_context.is_authenticated:
                 return ResumeResponse(
                     success=False,
                     errors=["Authentication required"]
                 )
+            user = auth_context.user
             
             async with AsyncSessionLocal() as session:
                 # Find resume
@@ -148,12 +150,13 @@ class ResumeMutations:
         """Upload a PDF resume file"""
         try:
             # Get user from context
-            user = getattr(info.context, 'user', None)
-            if not user:
+            auth_context = info.context.get('auth')
+            if not auth_context or not auth_context.is_authenticated:
                 return FileUploadResponse(
                     success=False,
                     errors=["Authentication required"]
                 )
+            user = auth_context.user
             
             # Validate input
             if not input.title or not input.title.strip():
@@ -246,12 +249,13 @@ class ResumeMutations:
         """Process uploaded PDF to extract resume data"""
         try:
             # Get user from context
-            user = getattr(info.context, 'user', None)
-            if not user:
+            auth_context = info.context.get('auth')
+            if not auth_context or not auth_context.is_authenticated:
                 return ProcessPDFResponse(
                     success=False,
                     errors=["Authentication required"]
                 )
+            user = auth_context.user
             
             async with AsyncSessionLocal() as session:
                 # Find resume
@@ -378,12 +382,13 @@ class ResumeMutations:
         """Delete a resume"""
         try:
             # Get user from context
-            user = getattr(info.context, 'user', None)
-            if not user:
+            auth_context = info.context.get('auth')
+            if not auth_context or not auth_context.is_authenticated:
                 return ResumeResponse(
                     success=False,
                     errors=["Authentication required"]
                 )
+            user = auth_context.user
             
             async with AsyncSessionLocal() as session:
                 # Find resume

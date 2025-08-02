@@ -17,10 +17,10 @@ const getGraphQLEndpoint = () => {
   const useFastAPI = process.env.REACT_APP_USE_FASTAPI_JOBS === 'true';
   
   if (useFastAPI) {
-    return process.env.REACT_APP_GRAPHQL_URL || 'http://localhost:8001/graphql';
+    return process.env.REACT_APP_GRAPHQL_URL || 'http://jobquest-navigator-v3-alb-1113097093.us-east-1.elb.amazonaws.com/graphql';
   } else {
-    // Use Django endpoint during migration phase
-    return '/graphql/';
+    // Use correct GraphQL endpoint without trailing slash
+    return '/graphql';
   }
 };
 

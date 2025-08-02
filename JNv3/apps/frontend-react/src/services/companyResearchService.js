@@ -649,7 +649,16 @@ class CompanyResearchService {
   }
 
   getFallbackInterviewQuestions() {
-    const interviewData = FallbackService.getMockInterviewData();
+    // Mock interview data directly defined
+    const interviewData = {
+      practiceQuestions: [
+        { question: "Tell me about yourself", category: "General", difficulty: "easy" },
+        { question: "What is your experience with React?", category: "React", difficulty: "medium" },
+        { question: "How do you handle state management?", category: "React", difficulty: "medium" },
+        { question: "Describe a challenging project", category: "General", difficulty: "medium" },
+        { question: "Why do you want to work here?", category: "General", difficulty: "easy" }
+      ]
+    };
     return {
       results: interviewData.practiceQuestions.map((q, index) => ({
         id: `question-${index + 1}`,

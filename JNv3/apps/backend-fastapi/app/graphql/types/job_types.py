@@ -132,6 +132,9 @@ class JobInput:
     remoteType: Optional[str] = "on_site"
 
 
+# Frontend alias - must be defined after JobInput class
+CreateJobInput = JobInput
+
 @strawberry.input
 class JobApplicationInput:
     """Input type for job applications"""

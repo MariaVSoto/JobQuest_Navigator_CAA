@@ -10,7 +10,7 @@ const Login = () => {
   const { login, isAuthenticated, loading } = useAuth();
   
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -36,8 +36,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.email || !formData.password) {
-      setError('Please enter both email and password.');
+    if (!formData.username || !formData.password) {
+      setError('Please enter both username/email and password.');
       return;
     }
 
@@ -61,7 +61,7 @@ const Login = () => {
         } else if (result.error?.message) {
           setError(result.error.message);
         } else {
-          setError('Invalid email or password.');
+          setError('Invalid username/email or password.');
         }
       }
     } catch (error) {
@@ -77,14 +77,14 @@ const Login = () => {
         {/* <img src={logo} alt="JobQuest Logo" className="login-logo" /> */}
         <h1 className="login-title">JobQuest Navigator</h1>
         <form className="login-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">Email</label>
+          <label htmlFor="username">Username or Email</label>
           <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
+            type="text"
+            id="username"
+            name="username"
+            value={formData.username}
             onChange={handleInputChange}
-            placeholder="Enter your email"
+            placeholder="Enter your username or email"
             disabled={isSubmitting}
             required
           />

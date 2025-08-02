@@ -1,0 +1,12 @@
+{
+  "query": "mutation RegisterUser($input: UserRegistrationInput\!) { register(input: $input) { success message user { id email username fullName } token errors } }",
+  "variables": {
+    "input": {
+      "email": "test-cognito@example.com",
+      "username": "testcognito",
+      "password": "TempPassword123\!",
+      "fullName": "Test Cognito User"
+    }
+  }
+}
+EOF < /dev/null

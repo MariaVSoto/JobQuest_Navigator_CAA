@@ -1,0 +1,7 @@
+{
+  "query": "mutation Login($username: String!, $password: String!) { login(username: $username, password: $password) { success message token user { id email username fullName } errors } }",
+  "variables": {
+    "username": "34e8c458-b011-70a5-dadd-68e0551a2fc9",
+    "password": "TestPassword123!"
+  }
+}

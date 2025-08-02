@@ -1,5 +1,5 @@
-# JobQuest Navigator v2 - Terraform Variables
-# All configurable parameters for the infrastructure
+# JobQuest Navigator v3 - Terraform Variables
+# All configurable parameters for production infrastructure
 
 # ============================================================================
 # PROJECT CONFIGURATION
@@ -8,21 +8,16 @@
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "jobquest-navigator-v2"
-}
-
-variable "project_owner" {
-  description = "Owner of the project"
-  type        = string
-  default     = "JobQuest Team"
+  default     = "jobquest-navigator-v3"
 }
 
 variable "environment" {
-  description = "Environment name (development, staging, production)"
+  description = "Environment name (production, staging, development)"
   type        = string
-  
+  default     = "production"
+
   validation {
-    condition = contains(["development", "staging", "production"], var.environment)
+    condition     = contains(["development", "staging", "production"], var.environment)
     error_message = "Environment must be one of: development, staging, production."
   }
 }
@@ -33,6 +28,17 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "secret_key" {
+  description = "Secret key for application security"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.secret_key) >= 32
+    error_message = "Secret key must be at least 32 characters long."
+  }
+}
+
 # ============================================================================
 # NETWORKING CONFIGURATION
 # ============================================================================
@@ -41,17 +47,6 @@ variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
   default     = "10.0.0.0/16"
-}
-
-variable "az_count" {
-  description = "Number of availability zones to use"
-  type        = number
-  default     = 2
-  
-  validation {
-    condition = var.az_count >= 2 && var.az_count <= 6
-    error_message = "AZ count must be between 2 and 6."
-  }
 }
 
 variable "public_subnet_cidrs" {
@@ -69,19 +64,7 @@ variable "private_subnet_cidrs" {
 variable "database_subnet_cidrs" {
   description = "CIDR blocks for database subnets"
   type        = list(string)
-  default     = ["10.0.30.0/24", "10.0.40.0/24"]
-}
-
-variable "enable_nat_gateway" {
-  description = "Enable NAT Gateway for private subnets"
-  type        = bool
-  default     = true
-}
-
-variable "single_nat_gateway" {
-  description = "Use a single NAT Gateway for cost optimization"
-  type        = bool
-  default     = true
+  default     = ["10.0.21.0/24", "10.0.30.0/24"]
 }
 
 # ============================================================================
@@ -91,7 +74,7 @@ variable "single_nat_gateway" {
 variable "postgres_version" {
   description = "PostgreSQL version"
   type        = string
-  default     = "15.4"
+  default     = "15.13"
 }
 
 variable "rds_instance_class" {
@@ -115,7 +98,7 @@ variable "rds_max_allocated_storage" {
 variable "database_name" {
   description = "Name of the initial database"
   type        = string
-  default     = "jobquest_navigator_v2"
+  default     = "jobquest"
 }
 
 variable "database_username" {
@@ -133,41 +116,13 @@ variable "backup_retention_period" {
 variable "backup_window" {
   description = "Preferred backup window (UTC)"
   type        = string
-  default     = "03:00-04:00"
+  default     = "07:00-09:00"
 }
 
 variable "maintenance_window" {
   description = "Preferred maintenance window (UTC)"
   type        = string
-  default     = "sun:04:00-sun:05:00"
-}
-
-# ============================================================================
-# CACHE CONFIGURATION (ElastiCache Redis)
-# ============================================================================
-
-variable "redis_version" {
-  description = "Redis engine version"
-  type        = string
-  default     = "7.0"
-}
-
-variable "redis_node_type" {
-  description = "ElastiCache node type"
-  type        = string
-  default     = "cache.t3.micro"
-}
-
-variable "redis_num_nodes" {
-  description = "Number of cache nodes"
-  type        = number
-  default     = 1
-}
-
-variable "redis_parameter_group" {
-  description = "Parameter group for Redis"
-  type        = string
-  default     = "default.redis7"
+  default     = "sun:09:00-sun:11:00"
 }
 
 # ============================================================================
@@ -177,19 +132,19 @@ variable "redis_parameter_group" {
 variable "backend_cpu" {
   description = "CPU units for backend container (1024 = 1 vCPU)"
   type        = number
-  default     = 512
+  default     = 256
 }
 
 variable "backend_memory" {
   description = "Memory for backend container in MB"
   type        = number
-  default     = 1024
+  default     = 512
 }
 
 variable "backend_desired_count" {
   description = "Desired number of backend containers"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "frontend_cpu" {
@@ -207,119 +162,68 @@ variable "frontend_memory" {
 variable "frontend_desired_count" {
   description = "Desired number of frontend containers"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 # ============================================================================
 # APPLICATION CONFIGURATION
 # ============================================================================
 
-variable "cognito_user_pool_id" {
-  description = "AWS Cognito User Pool ID"
-  type        = string
-  default     = ""
+variable "backend_port" {
+  description = "Port for backend container"
+  type        = number
+  default     = 8000
 }
 
-variable "cognito_client_id" {
-  description = "AWS Cognito Client ID"
-  type        = string
-  default     = ""
+variable "frontend_port" {
+  description = "Port for frontend container"
+  type        = number
+  default     = 3000
 }
 
-variable "cors_origins" {
-  description = "Allowed CORS origins"
-  type        = string
-  default     = "*"
+variable "alb_port" {
+  description = "Port for Application Load Balancer"
+  type        = number
+  default     = 80
 }
 
-variable "ssl_certificate_arn" {
-  description = "ARN of SSL certificate for HTTPS"
+variable "backend_target_group_name" {
+  description = "Name for backend target group"
   type        = string
-  default     = ""
+  default     = "jqnav-v3-backend-tg"
 }
 
-variable "s3_bucket_name" {
-  description = "Name of the S3 bucket for file storage (production use)"
+variable "frontend_target_group_name" {
+  description = "Name for frontend target group"
   type        = string
-  default     = "caa900resume"
+  default     = "jqnav-v3-frontend-tg"
+}
+
+variable "health_check_path" {
+  description = "Health check path for backend"
+  type        = string
+  default     = "/health"
+}
+
+variable "api_path_patterns" {
+  description = "Path patterns for API routing"
+  type        = list(string)
+  default     = ["/api/*", "/graphql/*", "/health"]
 }
 
 # ============================================================================
-# ENVIRONMENT-SPECIFIC OVERRIDES
+# LOGGING CONFIGURATION
 # ============================================================================
 
-variable "environment_config" {
-  description = "Environment-specific configuration overrides"
-  type = map(object({
-    rds_instance_class    = string
-    redis_node_type      = string
-    backend_cpu          = number
-    backend_memory       = number
-    backend_desired_count = number
-    frontend_cpu         = number
-    frontend_memory      = number
-    frontend_desired_count = number
-    enable_backup        = bool
-    multi_az            = bool
-  }))
-  
-  default = {
-    development = {
-      rds_instance_class     = "db.t3.micro"
-      redis_node_type       = "cache.t3.micro"
-      backend_cpu           = 256
-      backend_memory        = 512
-      backend_desired_count  = 1
-      frontend_cpu          = 256
-      frontend_memory       = 512
-      frontend_desired_count = 1
-      enable_backup         = false
-      multi_az             = false
-    }
-    
-    staging = {
-      rds_instance_class     = "db.t3.small"
-      redis_node_type       = "cache.t3.small"
-      backend_cpu           = 512
-      backend_memory        = 1024
-      backend_desired_count  = 2
-      frontend_cpu          = 256
-      frontend_memory       = 512
-      frontend_desired_count = 2
-      enable_backup         = true
-      multi_az             = false
-    }
-    
-    production = {
-      rds_instance_class     = "db.t3.medium"
-      redis_node_type       = "cache.t3.medium"
-      backend_cpu           = 1024
-      backend_memory        = 2048
-      backend_desired_count  = 3
-      frontend_cpu          = 512
-      frontend_memory       = 1024
-      frontend_desired_count = 3
-      enable_backup         = true
-      multi_az             = true
-    }
-  }
+variable "log_retention_days" {
+  description = "Number of days to retain CloudWatch logs"
+  type        = number
+  default     = 30
 }
 
 # ============================================================================
 # FEATURE FLAGS
 # ============================================================================
-
-variable "enable_monitoring" {
-  description = "Enable CloudWatch monitoring and alerting"
-  type        = bool
-  default     = true
-}
-
-variable "enable_auto_scaling" {
-  description = "Enable auto scaling for ECS services"
-  type        = bool
-  default     = true
-}
 
 variable "enable_container_insights" {
   description = "Enable ECS Container Insights"
@@ -327,24 +231,14 @@ variable "enable_container_insights" {
   default     = true
 }
 
-variable "enable_backup" {
-  description = "Enable automated backups"
+variable "enable_deletion_protection" {
+  description = "Enable deletion protection for critical resources"
+  type        = bool
+  default     = false
+}
+
+variable "skip_final_snapshot" {
+  description = "Skip final snapshot when deleting RDS instance"
   type        = bool
   default     = true
-}
-
-# ============================================================================
-# COST OPTIMIZATION
-# ============================================================================
-
-variable "enable_spot_instances" {
-  description = "Use spot instances for cost optimization (non-production)"
-  type        = bool
-  default     = false
-}
-
-variable "enable_scheduled_scaling" {
-  description = "Enable scheduled scaling to reduce costs during off-hours"
-  type        = bool
-  default     = false
 }

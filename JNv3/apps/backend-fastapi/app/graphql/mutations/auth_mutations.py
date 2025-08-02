@@ -28,19 +28,18 @@ class AuthMutation:
             email=input.email,
             username=input.username,
             password=input.password,
-            firstName=input.firstName,
-            lastName=input.lastName
+            fullName=input.fullName
         )
     
     @strawberry.mutation
-    async def registerUser(self, email: str, username: str, password: str, firstName: str = None, lastName: str = None) -> AuthResponse:
+    async def registerUser(self, email: str, username: str, password: str, fullName: str = None) -> AuthResponse:
         """
         User registration mutation - matches frontend expectations
         Will integrate with AWS Cognito
         """
         try:
-            # Create full name from first and last name
-            fullName = f"{firstName or ''} {lastName or ''}".strip() or username
+            # Use provided full name or default to username
+            fullName = fullName or username
             
             # Check if Cognito is configured
             if not settings.cognito_user_pool_id or not settings.cognito_client_id:
@@ -71,31 +70,78 @@ class AuthMutation:
                 )
             
             # Production mode - integrate with AWS Cognito
-            # TODO: Replace with actual Cognito registration flow
-            cognito_mock_user = User(
-                id=f"cognito-{email.replace('@', '-').replace('.', '-')}",
-                email=email,
-                username=username,
-                fullName=fullName,
-                bio="Cognito registered user",
-                currentJobTitle="",
-                yearsOfExperience=0,
-                industry="",
-                careerLevel="entry",
-                jobSearchStatus="not_looking",
-                preferredWorkType="office"
-            )
+            import boto3
+            from botocore.exceptions import ClientError
             
-            # Create Cognito-style JWT token
-            cognito_token = create_mock_token(cognito_mock_user.email, cognito_mock_user.id)
-            
-            return AuthResponse(
-                success=True,
-                user=cognito_mock_user,
-                token=cognito_token,
-                message="Cognito registration successful",
-                errors=None
-            )
+            try:
+                # Initialize Cognito client
+                cognito_client = boto3.client('cognito-idp', region_name=settings.cognito_region)
+                
+                # Create user in Cognito
+                response = cognito_client.admin_create_user(
+                    UserPoolId=settings.cognito_user_pool_id,
+                    Username=username,
+                    UserAttributes=[
+                        {'Name': 'email', 'Value': email},
+                        {'Name': 'email_verified', 'Value': 'true'},
+                        {'Name': 'name', 'Value': fullName}
+                    ],
+                    TemporaryPassword=password,
+                    MessageAction='SUPPRESS'  # Don't send welcome email
+                )
+                
+                # Set permanent password
+                cognito_client.admin_set_user_password(
+                    UserPoolId=settings.cognito_user_pool_id,
+                    Username=username,
+                    Password=password,
+                    Permanent=True
+                )
+                
+                # Create user object
+                cognito_user = User(
+                    id=response['User']['Username'],
+                    email=email,
+                    username=username,
+                    fullName=fullName,
+                    bio="",
+                    currentJobTitle="",
+                    yearsOfExperience=0,
+                    industry="",
+                    careerLevel="entry",
+                    jobSearchStatus="not_looking",
+                    preferredWorkType="office"
+                )
+                
+                # Create mock token for now (in production, use actual Cognito auth flow)
+                cognito_token = create_mock_token(cognito_user.email, cognito_user.id)
+                
+                return AuthResponse(
+                    success=True,
+                    user=cognito_user,
+                    token=cognito_token,
+                    message="Registration successful - user created in Cognito",
+                    errors=None
+                )
+                
+            except ClientError as e:
+                error_code = e.response['Error']['Code']
+                if error_code == 'UsernameExistsException':
+                    return AuthResponse(
+                        success=False,
+                        user=None,
+                        token=None,
+                        message="Registration failed",
+                        errors=["Username already exists"]
+                    )
+                else:
+                    return AuthResponse(
+                        success=False,
+                        user=None,
+                        token=None,
+                        message="Registration failed",
+                        errors=[f"Cognito error: {e.response['Error']['Message']}"]
+                    )
             
         except Exception as e:
             return AuthResponse(
@@ -141,38 +187,83 @@ class AuthMutation:
                 )
             
             # Production mode - integrate with AWS Cognito
-            # Note: This would typically involve:
-            # 1. Making a request to Cognito InitiateAuth API
-            # 2. Handling MFA challenges if required
-            # 3. Extracting JWT tokens from Cognito response
-            # 4. Creating user object from Cognito user attributes
+            import boto3
+            from botocore.exceptions import ClientError
             
-            # For now, return mock success with proper Cognito-style token
-            # TODO: Replace with actual Cognito authentication flow
-            cognito_mock_user = User(
-                id=f"cognito-{username.replace('@', '-').replace('.', '-')}",
-                email=username if '@' in username else f"{username}@example.com",
-                username=username,
-                fullName=f"Cognito User {username.capitalize()}",
-                bio="Cognito authenticated user",
-                currentJobTitle="Software Developer",
-                yearsOfExperience=3,
-                industry="Technology",
-                careerLevel="mid",
-                jobSearchStatus="actively_looking",
-                preferredWorkType="remote"
-            )
-            
-            # Create Cognito-style JWT token
-            cognito_token = create_mock_token(cognito_mock_user.email, cognito_mock_user.id)
-            
-            return AuthResponse(
-                success=True,
-                user=cognito_mock_user,
-                token=cognito_token,
-                message="Cognito login successful",
-                errors=None
-            )
+            try:
+                # Initialize Cognito client
+                cognito_client = boto3.client('cognito-idp', region_name=settings.cognito_region)
+                
+                # Authenticate with Cognito
+                response = cognito_client.admin_initiate_auth(
+                    UserPoolId=settings.cognito_user_pool_id,
+                    ClientId=settings.cognito_client_id,
+                    AuthFlow='ADMIN_NO_SRP_AUTH',
+                    AuthParameters={
+                        'USERNAME': username,
+                        'PASSWORD': password
+                    }
+                )
+                
+                # Get authentication result
+                auth_result = response['AuthenticationResult']
+                access_token = auth_result['AccessToken']
+                
+                # Get user information from Cognito
+                user_response = cognito_client.get_user(AccessToken=access_token)
+                
+                # Extract user attributes
+                user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
+                
+                # Create user object from Cognito data
+                cognito_user = User(
+                    id=user_response['Username'],
+                    email=user_attributes.get('email', username if '@' in username else f"{username}@example.com"),
+                    username=user_response['Username'],
+                    fullName=user_attributes.get('name', f"User {username.capitalize()}"),
+                    bio="",
+                    currentJobTitle="",
+                    yearsOfExperience=0,
+                    industry="",
+                    careerLevel="entry",
+                    jobSearchStatus="not_looking",
+                    preferredWorkType="office"
+                )
+                
+                return AuthResponse(
+                    success=True,
+                    user=cognito_user,
+                    token=access_token,
+                    message="Login successful",
+                    errors=None
+                )
+                
+            except ClientError as e:
+                error_code = e.response['Error']['Code']
+                if error_code == 'NotAuthorizedException':
+                    return AuthResponse(
+                        success=False,
+                        user=None,
+                        token=None,
+                        message="Login failed",
+                        errors=["Invalid username or password"]
+                    )
+                elif error_code == 'UserNotFoundException':
+                    return AuthResponse(
+                        success=False,
+                        user=None,
+                        token=None,
+                        message="Login failed",
+                        errors=["User not found"]
+                    )
+                else:
+                    return AuthResponse(
+                        success=False,
+                        user=None,
+                        token=None,
+                        message="Login failed",
+                        errors=[f"Authentication error: {e.response['Error']['Message']}"]
+                    )
             
         except Exception as e:
             return AuthResponse(

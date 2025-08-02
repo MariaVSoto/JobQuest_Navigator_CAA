@@ -91,7 +91,7 @@ class GraphQLAuthService {
         throw new Error('Username/email and password are required');
       }
       
-      console.log('Calling tokenAuth with:', { username, password: '***' });
+      console.log('Calling login mutation with:', { username, password: '***' });
       
       const { data } = await client.mutate({
         mutation: TOKEN_AUTH,
@@ -101,14 +101,14 @@ class GraphQLAuthService {
         },
       });
 
-      console.log('GraphQL tokenAuth response:', data.tokenAuth);
+      console.log('GraphQL login response:', data.login);
       
-      if (data.tokenAuth && data.tokenAuth.success && data.tokenAuth.token) {
+      if (data.login && data.login.success && data.login.token) {
         // Store the token
-        localStorage.setItem(this.tokenKey, data.tokenAuth.token);
+        localStorage.setItem(this.tokenKey, data.login.token);
         
         // Use user data from response if available, otherwise get current user
-        let userData = data.tokenAuth.user;
+        let userData = data.login.user;
         if (!userData) {
           userData = await this.getCurrentUser();
         }
@@ -125,15 +125,15 @@ class GraphQLAuthService {
               username: username,
               email: credentials.email || username,
             },
-            tokens: { access: data.tokenAuth.token }
+            tokens: { access: data.login.token }
           },
-          message: data.tokenAuth.message || 'Login successful'
+          message: data.login.message || 'Login successful'
         };
       } else {
         return {
           success: false,
           error: {
-            message: data.tokenAuth?.message || 'Login failed - invalid response'
+            message: data.login?.message || 'Login failed - invalid response'
           }
         };
       }

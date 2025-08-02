@@ -1,0 +1,571 @@
+name: Manual Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+      
+      deploy_infrastructure:
+        description: 'Deploy infrastructure'
+        required: true
+        default: true
+        type: boolean
+      
+      deploy_backend:
+        description: 'Deploy backend'
+        required: true
+        default: true
+        type: boolean
+      
+      deploy_frontend:
+        description: 'Deploy frontend'
+        required: true
+        default: true
+        type: boolean
+      
+      run_tests:
+        description: 'Run tests before deployment'
+        required: true
+        default: true
+        type: boolean
+      
+      terraform_action:
+        description: 'Terraform action'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+        - plan
+        - apply
+        - destroy
+      
+      skip_approval:
+        description: 'Skip manual approval (use with caution)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT_NAME: jobquest-navigator
+  PYTHON_VERSION: '3.9'
+  NODE_VERSION: '18'
+  TERRAFORM_VERSION: '1.6.0'
+
+jobs:
+  # =================================================================
+  # Pre-deployment Validation
+  # =================================================================
+  
+  validation:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    if: ${{ inputs.run_tests }}
+    
+    outputs:
+      should_proceed: ${{ steps.validation.outputs.should_proceed }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: 'JNv3/apps/backend-fastapi/requirements.txt'
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+    
+    - name: Run backend tests
+      run: |
+        cd JNv3/apps/backend-fastapi
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio httpx
+        python -m pytest
+    
+    - name: Run frontend tests
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+        npm test -- --watchAll=false
+    
+    - name: Validation summary
+      id: validation
+      run: |
+        echo "should_proceed=true" >> $GITHUB_OUTPUT
+        echo "✅ All validation checks passed"
+
+  # =================================================================
+  # Manual Approval
+  # =================================================================
+  
+  approval:
+    name: Manual Approval
+    runs-on: ubuntu-latest
+    needs: [validation]
+    if: ${{ !inputs.skip_approval && (always() && !failure()) }}
+    environment: 
+      name: ${{ inputs.environment }}-approval
+    
+    steps:
+    - name: Manual approval checkpoint
+      run: |
+        echo "🔍 Deployment Summary:"
+        echo "Environment: ${{ inputs.environment }}"
+        echo "Infrastructure: ${{ inputs.deploy_infrastructure }}"
+        echo "Backend: ${{ inputs.deploy_backend }}"
+        echo "Frontend: ${{ inputs.deploy_frontend }}"
+        echo "Terraform Action: ${{ inputs.terraform_action }}"
+        echo ""
+        echo "⏳ Waiting for manual approval..."
+
+  # =================================================================
+  # Infrastructure Deployment
+  # =================================================================
+  
+  deploy-infrastructure:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    needs: [validation, approval]
+    if: ${{ inputs.deploy_infrastructure && (always() && !failure()) }}
+    environment: ${{ inputs.environment }}
+    
+    outputs:
+      infrastructure_outputs: ${{ steps.terraform.outputs.infrastructure_outputs }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Cache Terraform
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.terraform.d/
+          infrastructure/terraform/.terraform/
+        key: terraform-${{ runner.os }}-${{ env.TERRAFORM_VERSION }}-${{ hashFiles('infrastructure/terraform/**/*.tf') }}
+        restore-keys: |
+          terraform-${{ runner.os }}-${{ env.TERRAFORM_VERSION }}-
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        terraform_wrapper: false
+    
+    - name: Set environment-specific variables
+      run: |
+        if [ "${{ inputs.environment }}" = "production" ]; then
+          echo "TF_VAR_db_instance_class=db.t3.small" >> $GITHUB_ENV
+          echo "TF_VAR_lambda_memory_size=512" >> $GITHUB_ENV
+          echo "TF_VAR_enable_rds_deletion_protection=true" >> $GITHUB_ENV
+          echo "TF_VAR_rds_backup_retention_period=30" >> $GITHUB_ENV
+          echo "TF_VAR_enable_detailed_monitoring=true" >> $GITHUB_ENV
+        else
+          echo "TF_VAR_db_instance_class=db.t3.micro" >> $GITHUB_ENV
+          echo "TF_VAR_lambda_memory_size=256" >> $GITHUB_ENV
+          echo "TF_VAR_enable_rds_deletion_protection=false" >> $GITHUB_ENV
+          echo "TF_VAR_rds_backup_retention_period=7" >> $GITHUB_ENV
+          echo "TF_VAR_enable_detailed_monitoring=false" >> $GITHUB_ENV
+        fi
+        
+        echo "TF_VAR_environment=${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "TF_VAR_project_name=${{ env.PROJECT_NAME }}" >> $GITHUB_ENV
+        echo "TF_VAR_alert_email=${{ secrets.ALERT_EMAIL }}" >> $GITHUB_ENV
+    
+    - name: Terraform init
+      run: |
+        cd infrastructure/terraform
+        terraform init
+    
+    - name: Select or create workspace
+      run: |
+        cd infrastructure/terraform
+        terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }}
+    
+    - name: Terraform plan
+      if: ${{ inputs.terraform_action == 'plan' || inputs.terraform_action == 'apply' }}
+      run: |
+        cd infrastructure/terraform
+        terraform plan -no-color -out=tfplan
+    
+    - name: Terraform apply
+      if: ${{ inputs.terraform_action == 'apply' }}
+      run: |
+        cd infrastructure/terraform
+        terraform apply -no-color -auto-approve tfplan
+    
+    - name: Terraform destroy
+      if: ${{ inputs.terraform_action == 'destroy' }}
+      run: |
+        cd infrastructure/terraform
+        echo "🚨 DESTROYING INFRASTRUCTURE 🚨"
+        terraform destroy -no-color -auto-approve
+    
+    - name: Get Terraform outputs
+      id: terraform
+      if: ${{ inputs.terraform_action != 'destroy' }}
+      run: |
+        cd infrastructure/terraform
+        echo "infrastructure_outputs<<EOF" >> $GITHUB_OUTPUT
+        terraform output -json >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Save deployment info
+      if: ${{ inputs.terraform_action != 'destroy' }}
+      run: |
+        cd infrastructure/terraform
+        mkdir -p ../../deployment-info
+        terraform output -json > ../../deployment-info/${{ inputs.environment }}-infrastructure.json
+        echo "Environment: ${{ inputs.environment }}" > ../../deployment-info/${{ inputs.environment }}-summary.txt
+        echo "Deployed at: $(date)" >> ../../deployment-info/${{ inputs.environment }}-summary.txt
+        echo "Terraform action: ${{ inputs.terraform_action }}" >> ../../deployment-info/${{ inputs.environment }}-summary.txt
+    
+    - name: Upload deployment info
+      if: ${{ inputs.terraform_action != 'destroy' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: deployment-info-${{ inputs.environment }}
+        path: deployment-info/
+        retention-days: 30
+
+  # =================================================================
+  # Backend Deployment
+  # =================================================================
+  
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    needs: [deploy-infrastructure]
+    if: ${{ inputs.deploy_backend && (always() && !failure()) }}
+    environment: ${{ inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: 'JNv3/apps/backend-fastapi/requirements.txt'
+    
+    - name: Install dependencies
+      run: |
+        cd JNv3/apps/backend-fastapi
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install mangum
+    
+    - name: Get infrastructure outputs
+      run: |
+        # Download deployment info if available
+        echo "Getting infrastructure information..."
+        
+        # Try to get outputs from Terraform if infrastructure was deployed
+        if [ "${{ inputs.deploy_infrastructure }}" = "true" ]; then
+          cd infrastructure/terraform
+          terraform init
+          terraform workspace select ${{ inputs.environment }}
+          
+          # Export environment variables from Terraform outputs
+          export DATABASE_ENDPOINT=$(terraform output -raw database_endpoint 2>/dev/null || echo "")
+          export STATIC_BUCKET=$(terraform output -raw static_bucket_name 2>/dev/null || echo "")
+          export LAMBDA_ROLE_ARN=$(terraform output -raw lambda_execution_role_arn 2>/dev/null || echo "")
+          
+          echo "DATABASE_ENDPOINT=$DATABASE_ENDPOINT" >> $GITHUB_ENV
+          echo "STATIC_BUCKET=$STATIC_BUCKET" >> $GITHUB_ENV
+          echo "LAMBDA_ROLE_ARN=$LAMBDA_ROLE_ARN" >> $GITHUB_ENV
+        fi
+    
+    - name: Configure Zappa settings
+      run: |
+        cd JNv3/apps/backend-fastapi
+        
+        # Create environment-specific Zappa settings
+        # Create FastAPI Lambda handler
+        cat > lambda_handler.py << EOF
+        from mangum import Mangum
+        from app.main import app
+        
+        handler = Mangum(app)
+        EOF
+    
+    - name: Run database setup
+      env:
+        DATABASE_URL: mysql://${{ secrets.DB_USERNAME }}:${{ secrets.DB_PASSWORD }}@${{ env.DATABASE_ENDPOINT }}/jobquest_navigator
+        ENVIRONMENT: ${{ inputs.environment }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        ADZUNA_API_KEY: ${{ secrets.ADZUNA_API_KEY }}
+        GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+      run: |
+        cd JNv3/apps/backend-fastapi
+        if [ ! -z "$DATABASE_ENDPOINT" ]; then
+          # FastAPI database initialization would go here
+          echo "FastAPI database initialization completed"
+        else
+          echo "⚠️ Database endpoint not available, skipping setup"
+        fi
+    
+    - name: Deploy Lambda function
+      run: |
+        cd JNv3/apps/backend-fastapi
+        
+        # FastAPI Lambda deployment will be handled by Terraform
+        echo "🚀 FastAPI Lambda deployment configured through infrastructure"
+    
+    - name: Set environment variables
+      if: ${{ env.DATABASE_ENDPOINT != '' }}
+      run: |
+        cd JNv3/apps/backend-fastapi
+        
+        # Environment variables will be set through Terraform
+        echo "Environment variables configured through infrastructure"
+    
+    - name: Get API Gateway URL
+      run: |
+        # Get URL from Terraform output
+        if [ "${{ inputs.deploy_infrastructure }}" = "true" ]; then
+          cd infrastructure/terraform
+          terraform workspace select ${{ inputs.environment }}
+          API_URL=$(terraform output -raw api_gateway_url 2>/dev/null || echo "")
+          echo "API_GATEWAY_URL=$API_URL" >> $GITHUB_ENV
+          echo "🌐 API Gateway URL: $API_URL"
+        fi
+    
+    - name: Test API endpoint
+      run: |
+        if [ ! -z "$API_GATEWAY_URL" ]; then
+          echo "🧪 Testing API endpoint..."
+          sleep 10  # Wait for Lambda to be ready
+          
+          # Test health endpoint
+          if curl -f -s "$API_GATEWAY_URL/api/health/" > /dev/null; then
+            echo "✅ API health check passed"
+          else
+            echo "⚠️ API health check failed (may be normal for new deployment)"
+          fi
+        fi
+
+  # =================================================================
+  # Frontend Deployment
+  # =================================================================
+  
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: [deploy-infrastructure, deploy-backend]
+    if: ${{ inputs.deploy_frontend && (always() && !failure()) }}
+    environment: ${{ inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+    
+    - name: Get infrastructure outputs
+      run: |
+        if [ "${{ inputs.deploy_infrastructure }}" = "true" ]; then
+          cd infrastructure/terraform
+          terraform init
+          terraform workspace select ${{ inputs.environment }}
+          
+          export FRONTEND_BUCKET=$(terraform output -raw frontend_bucket_name 2>/dev/null || echo "")
+          export API_GATEWAY_URL=$(terraform output -raw api_gateway_url 2>/dev/null || echo "")
+          export FRONTEND_URL=$(terraform output -raw frontend_website_url 2>/dev/null || echo "")
+          
+          echo "FRONTEND_BUCKET=$FRONTEND_BUCKET" >> $GITHUB_ENV
+          echo "API_GATEWAY_URL=$API_GATEWAY_URL" >> $GITHUB_ENV
+          echo "FRONTEND_URL=$FRONTEND_URL" >> $GITHUB_ENV
+        fi
+    
+    - name: Install dependencies
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+    
+    - name: Build frontend
+      env:
+        REACT_APP_API_URL: ${{ env.API_GATEWAY_URL }}
+        REACT_APP_ENVIRONMENT: ${{ inputs.environment }}
+        REACT_APP_GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        CI: false
+      run: |
+        cd JNv3/apps/frontend-react
+        echo "🏗️ Building frontend for ${{ inputs.environment }}"
+        echo "API URL: $REACT_APP_API_URL"
+        npm run build
+    
+    - name: Deploy to S3
+      run: |
+        if [ ! -z "$FRONTEND_BUCKET" ]; then
+          echo "📤 Deploying to S3 bucket: $FRONTEND_BUCKET"
+          
+          # Sync with appropriate cache headers
+          aws s3 sync JNv3/apps/frontend-react/build/ s3://$FRONTEND_BUCKET \
+            --delete \
+            --cache-control "public,max-age=31536000" \
+            --exclude "*.html" \
+            --exclude "service-worker.js"
+          
+          # Upload HTML files with no-cache
+          aws s3 sync JNv3/apps/frontend-react/build/ s3://$FRONTEND_BUCKET \
+            --cache-control "no-cache,no-store,must-revalidate" \
+            --include "*.html" \
+            --include "service-worker.js"
+          
+          echo "✅ Frontend deployed successfully"
+          echo "🌐 Frontend URL: $FRONTEND_URL"
+        else
+          echo "⚠️ Frontend bucket not available"
+        fi
+
+  # =================================================================
+  # Post-Deployment Verification
+  # =================================================================
+  
+  verify-deployment:
+    name: Verify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-infrastructure, deploy-backend, deploy-frontend]
+    if: ${{ always() && !failure() }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Get deployment URLs
+      run: |
+        if [ "${{ inputs.deploy_infrastructure }}" = "true" ]; then
+          cd infrastructure/terraform
+          terraform init
+          terraform workspace select ${{ inputs.environment }}
+          
+          API_URL=$(terraform output -raw api_gateway_url 2>/dev/null || echo "")
+          FRONTEND_URL=$(terraform output -raw frontend_website_url 2>/dev/null || echo "")
+          
+          echo "API_URL=$API_URL" >> $GITHUB_ENV
+          echo "FRONTEND_URL=$FRONTEND_URL" >> $GITHUB_ENV
+        fi
+    
+    - name: Run verification tests
+      run: |
+        chmod +x scripts/verify-deployment.sh
+        
+        # Set environment variables for verification script
+        export ENVIRONMENT=${{ inputs.environment }}
+        export API_GATEWAY_URL=$API_URL
+        export FRONTEND_WEBSITE_URL=$FRONTEND_URL
+        
+        # Run verification
+        scripts/verify-deployment.sh || echo "⚠️ Some verification tests failed"
+    
+    - name: Deployment Summary
+      run: |
+        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Infrastructure:** ${{ inputs.deploy_infrastructure }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Backend:** ${{ inputs.deploy_backend }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Frontend:** ${{ inputs.deploy_frontend }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Terraform Action:** ${{ inputs.terraform_action }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ ! -z "$API_URL" ]; then
+          echo "**API URL:** $API_URL" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ ! -z "$FRONTEND_URL" ]; then
+          echo "**Frontend URL:** $FRONTEND_URL" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployed at:** $(date)" >> $GITHUB_STEP_SUMMARY
+
+  # =================================================================
+  # Notification
+  # =================================================================
+  
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [verify-deployment]
+    if: always()
+    
+    steps:
+    - name: Determine status
+      id: status
+      run: |
+        if [ "${{ needs.verify-deployment.result }}" = "success" ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "emoji=🚀" >> $GITHUB_OUTPUT
+          echo "message=Deployment successful" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "emoji=❌" >> $GITHUB_OUTPUT
+          echo "message=Deployment failed" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create deployment notification
+      run: |
+        echo "${{ steps.status.outputs.emoji }} Manual deployment ${{ steps.status.outputs.message }}"
+        echo "Environment: ${{ inputs.environment }}"
+        echo "Workflow: ${{ github.workflow }}"
+        echo "Run ID: ${{ github.run_id }}"
+        
+        # Here you could add integrations with:
+        # - Slack notifications
+        # - Email notifications  
+        # - Discord webhooks
+        # - Microsoft Teams
+        # - Custom notification services

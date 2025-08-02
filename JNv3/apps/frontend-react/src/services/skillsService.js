@@ -526,7 +526,16 @@ class SkillsService {
 
   // Fallback Data Methods
   getFallbackUserSkills() {
-    const skillsData = FallbackService.getMockSkills();
+    // Mock skills data directly defined
+    const skillsData = {
+      userSkills: [
+        { name: "JavaScript", level: "Advanced", experience: "5 years" },
+        { name: "React", level: "Advanced", experience: "4 years" },
+        { name: "Python", level: "Intermediate", experience: "3 years" },
+        { name: "Node.js", level: "Intermediate", experience: "3 years" },
+        { name: "SQL", level: "Intermediate", experience: "2 years" }
+      ]
+    };
     return {
       results: skillsData.userSkills.map((skill, index) => ({
         id: `user-skill-${index + 1}`,

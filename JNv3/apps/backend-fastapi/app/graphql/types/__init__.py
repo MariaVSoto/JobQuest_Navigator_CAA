@@ -31,6 +31,7 @@ from .job_types import (
     JobApplication,
     SavedJob,
     JobInput,
+    CreateJobInput,  # Frontend alias
     JobApplicationInput,
     SavedJobInput,
     JobResponse,
@@ -94,6 +95,7 @@ __all__ = [
     "JobApplication",
     "SavedJob",
     "JobInput",
+    "CreateJobInput",
     "JobApplicationInput",
     "SavedJobInput",
     "JobResponse",

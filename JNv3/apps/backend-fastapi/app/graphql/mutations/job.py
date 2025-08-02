@@ -12,9 +12,9 @@ from datetime import datetime
 from app.core.database import get_db
 from app.graphql.types import (
     JobApplicationResponse, SavedJobResponse, StandardResponse,
-    JobApplicationInput, UpdateApplicationStatusInput,
+    JobApplicationInput, UpdateApplicationStatusInput, JobInput,
     JobApplication as JobApplicationType, SavedJob as SavedJobType, 
-    Job as JobType, Company as CompanyType
+    Job as JobType, Company as CompanyType, JobResponse
 )
 from app.models import Job, JobApplication, SavedJob, User, Company
 from app.graphql.auth import get_current_user
@@ -23,6 +23,97 @@ from app.graphql.auth import get_current_user
 @strawberry.type
 class JobMutation:
     """Job-related mutations."""
+
+    @strawberry.mutation
+    async def create_job(
+        self,
+        info,
+        input: JobInput,
+        current_user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+    ) -> JobResponse:
+        """Create a new job posting."""
+        try:
+            # Check if company exists, or create it
+            company_result = await db.execute(
+                select(Company).where(Company.name == input.companyName)
+            )
+            company = company_result.scalar_one_or_none()
+            
+            if not company:
+                # Create new company
+                company = Company(
+                    name=input.companyName,
+                    description=f"Company for {input.companyName}",
+                    slug=input.companyName.lower().replace(" ", "-").replace("'", ""),
+                    industry="Technology"  # Default value
+                )
+                db.add(company)
+                await db.flush()  # Get the company ID
+            
+            # Create job
+            job = Job(
+                title=input.title,
+                company_id=company.id,
+                description=input.description,
+                requirements=input.requirements or "",
+                benefits=input.benefits or "",
+                location_text=input.locationText or "",
+                salary_min=input.salaryMin,
+                salary_max=input.salaryMax,
+                salary_currency=input.salaryCurrency or "USD",
+                salary_period=input.salaryPeriod or "yearly",
+                job_type=input.jobType or "full_time",
+                contract_type=input.contractType or "permanent",
+                experience_level=input.experienceLevel or "",
+                remote_type=input.remoteType or "on_site",
+                user_input=True,
+                source="user_input",
+                posted_date=datetime.utcnow(),
+                is_active=True
+            )
+            
+            db.add(job)
+            await db.commit()
+            await db.refresh(job)
+            await db.refresh(company)
+            
+            # Create response
+            job_type = JobType(
+                id=str(job.id),
+                title=job.title,
+                description=job.description,
+                requirements=job.requirements,
+                benefits=job.benefits,
+                locationText=job.location_text,
+                salaryMin=job.salary_min,
+                salaryMax=job.salary_max,
+                salaryCurrency=job.salary_currency,
+                salaryPeriod=job.salary_period,
+                jobType=job.job_type,
+                contractType=job.contract_type,
+                experienceLevel=job.experience_level,
+                remoteType=job.remote_type,
+                userInput=job.user_input,
+                source=job.source,
+                postedDate=job.posted_date,
+                expiresDate=job.expires_date,
+                # Set company info for the response
+                _company_id=str(company.id)
+            )
+            
+            return JobResponse(
+                job=job_type,
+                success=True,
+                errors=[]
+            )
+            
+        except Exception as e:
+            await db.rollback()
+            return JobResponse(
+                success=False,
+                errors=[f"Job creation failed: {str(e)}"]
+            )
 
     @strawberry.mutation
     async def apply_to_job(

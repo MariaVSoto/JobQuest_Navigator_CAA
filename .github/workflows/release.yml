@@ -1,0 +1,610 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+      environment:
+        description: 'Target environment for release'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+      create_github_release:
+        description: 'Create GitHub release'
+        required: true
+        default: true
+        type: boolean
+      deploy_to_environment:
+        description: 'Deploy to target environment'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  AWS_REGION: us-east-1
+  PROJECT_NAME: jobquest-navigator
+  PYTHON_VERSION: '3.9'
+  NODE_VERSION: '18'
+  TERRAFORM_VERSION: '1.6.0'
+
+jobs:
+  # =================================================================
+  # Pre-release Validation
+  # =================================================================
+  
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for changelog generation
+    
+    - name: Determine version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ inputs.version }}"
+        else
+          VERSION="${{ github.ref_name }}"
+        fi
+        
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Check if it's a prerelease (contains alpha, beta, rc)
+        if [[ $VERSION =~ (alpha|beta|rc) ]]; then
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_prerelease=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "Release version: $VERSION" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Validate version format
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[0-9]+)?)?$ ]]; then
+          echo "❌ Invalid version format: $VERSION"
+          echo "Expected format: v1.0.0 or v1.0.0-alpha.1"
+          exit 1
+        fi
+        echo "✅ Version format valid: $VERSION"
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get the latest tag (excluding current one)
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -v "${{ steps.version.outputs.version }}" | head -1)
+        
+        if [ -z "$PREVIOUS_TAG" ]; then
+          echo "No previous tag found, generating changelog from first commit"
+          CHANGELOG=$(git log --pretty=format:"* %s (%h)" --no-merges)
+        else
+          echo "Generating changelog from $PREVIOUS_TAG to ${{ steps.version.outputs.version }}"
+          CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"* %s (%h)" --no-merges)
+        fi
+        
+        # Save changelog to file and output
+        echo "$CHANGELOG" > CHANGELOG.md
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Upload changelog
+      uses: actions/upload-artifact@v3
+      with:
+        name: changelog
+        path: CHANGELOG.md
+        retention-days: 30
+
+  # =================================================================
+  # Build Release Artifacts
+  # =================================================================
+  
+  build-release:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: [validate-release]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+    
+    - name: Build backend package
+      run: |
+        cd JNv3/apps/backend-fastapi
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+        # Create production-ready package
+        # FastAPI static assets handled by frontend build
+        echo "Backend package ready for deployment"
+        
+        # Create deployment package
+        mkdir -p ../release/backend
+        cp -r . ../release/backend/
+        
+        # Clean up development files
+        find ../release/backend -name "*.pyc" -delete
+        find ../release/backend -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+        rm -rf ../release/backend/venv
+        rm -f ../release/backend/db.sqlite3
+    
+    - name: Build frontend package
+      env:
+        REACT_APP_VERSION: ${{ needs.validate-release.outputs.version }}
+        REACT_APP_ENVIRONMENT: production
+        CI: false
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+        
+        # Build for production
+        npm run build
+        
+        # Create deployment package
+        mkdir -p ../release/frontend
+        cp -r build/* ../release/frontend/
+        
+        # Add build info
+        echo '{"version": "${{ needs.validate-release.outputs.version }}", "buildTime": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' > ../release/frontend/build-info.json
+    
+    - name: Create deployment package
+      run: |
+        # Copy infrastructure and scripts
+        cp -r infrastructure release/
+        cp -r scripts release/
+        cp -r configs release/
+        cp -r docs release/
+        
+        # Create release README
+        cat > release/README.md << EOF
+        # JobQuest Navigator Release ${{ needs.validate-release.outputs.version }}
+        
+        **Version:** ${{ needs.validate-release.outputs.version }}
+        **Build Date:** $(date -u +%Y-%m-%dT%H:%M:%SZ)
+        **Environment:** Production
+        
+        ## Quick Deploy
+        
+        1. Configure environment:
+           \`\`\`bash
+           cp configs/environment.env .env
+           # Edit .env with your AWS configuration
+           \`\`\`
+        
+        2. Deploy infrastructure:
+           \`\`\`bash
+           scripts/deploy-terraform.sh --action apply
+           \`\`\`
+        
+        3. Deploy application:
+           \`\`\`bash
+           scripts/deploy-backend.sh
+           scripts/deploy-frontend.sh
+           \`\`\`
+        
+        4. Verify deployment:
+           \`\`\`bash
+           scripts/verify-deployment.sh
+           \`\`\`
+        
+        ## Changelog
+        
+        ${{ needs.validate-release.outputs.changelog }}
+        
+        ---
+        *Generated by JobQuest Navigator Release Pipeline*
+        EOF
+        
+        # Create version file
+        echo "${{ needs.validate-release.outputs.version }}" > release/VERSION
+        
+        # Create package archive
+        tar -czf jobquest-navigator-${{ needs.validate-release.outputs.version }}.tar.gz release/
+        zip -r jobquest-navigator-${{ needs.validate-release.outputs.version }}.zip release/
+    
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-artifacts-${{ needs.validate-release.outputs.version }}
+        path: |
+          jobquest-navigator-${{ needs.validate-release.outputs.version }}.tar.gz
+          jobquest-navigator-${{ needs.validate-release.outputs.version }}.zip
+          release/
+        retention-days: 90
+
+  # =================================================================
+  # Security and Quality Checks
+  # =================================================================
+  
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: [validate-release]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Run security audit
+      run: |
+        cd JNv3/apps/backend-fastapi
+        pip install bandit safety
+        
+        echo "## Security Audit Results" >> $GITHUB_STEP_SUMMARY
+        
+        # Bandit scan
+        if bandit -r . -f json -o bandit-release-report.json; then
+          echo "✅ Bandit security scan: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Bandit security scan: Issues found" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f bandit-release-report.json ]; then
+            HIGH_ISSUES=$(jq '.results | map(select(.issue_severity == "HIGH")) | length' bandit-release-report.json)
+            MEDIUM_ISSUES=$(jq '.results | map(select(.issue_severity == "MEDIUM")) | length' bandit-release-report.json)
+            
+            echo "- High severity issues: $HIGH_ISSUES" >> $GITHUB_STEP_SUMMARY
+            echo "- Medium severity issues: $MEDIUM_ISSUES" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$HIGH_ISSUES" -gt "0" ]; then
+              echo "❌ High severity security issues found. Release blocked."
+              exit 1
+            fi
+          fi
+        fi
+        
+        # Safety check
+        if safety check --json --output safety-release-report.json; then
+          echo "✅ Dependency vulnerability scan: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Dependency vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Frontend security audit
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+        
+        # npm audit
+        if npm audit --audit-level=moderate; then
+          echo "✅ Frontend dependency audit: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Frontend dependency vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports-${{ needs.validate-release.outputs.version }}
+        path: |
+          backend/bandit-release-report.json
+          backend/safety-release-report.json
+        retention-days: 90
+
+  # =================================================================
+  # Release Testing
+  # =================================================================
+  
+  release-tests:
+    name: Release Tests
+    runs-on: ubuntu-latest
+    needs: [validate-release, build-release]
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_password
+          MYSQL_DATABASE: test_jobquest_navigator
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+    
+    - name: Run comprehensive backend tests
+      env:
+        DATABASE_URL: mysql://root:test_password@127.0.0.1:3306/test_jobquest_navigator
+        ENVIRONMENT: test
+        SECRET_KEY: test-secret-key-for-release
+      run: |
+        cd JNv3/apps/backend-fastapi
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install coverage pytest pytest-asyncio pytest-cov httpx
+        
+        # Run all FastAPI tests with coverage
+        python -m pytest --cov=app --cov-report=xml --cov-report=term-missing
+        coverage report
+        
+        # Check coverage threshold
+        COVERAGE_PERCENT=$(coverage report --format=total)
+        echo "Backend coverage: ${COVERAGE_PERCENT}%" >> $GITHUB_STEP_SUMMARY
+        
+        if (( $(echo "$COVERAGE_PERCENT >= 80" | bc -l) )); then
+          echo "✅ Backend coverage meets release threshold (80%)" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Backend coverage below release threshold (80%)" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+    
+    - name: Run frontend tests
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+        npm test -- --coverage --watchAll=false
+        
+        echo "✅ Frontend tests passed" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Integration tests
+      run: |
+        echo "## Integration Test Results" >> $GITHUB_STEP_SUMMARY
+        
+        # Test build processes
+        cd JNv3/apps/backend-fastapi
+        python -c "from app.main import app; print('FastAPI app validation passed')"
+        
+        cd ../frontend
+        REACT_APP_VERSION=${{ needs.validate-release.outputs.version }} npm run build
+        
+        echo "✅ Integration tests passed" >> $GITHUB_STEP_SUMMARY
+
+  # =================================================================
+  # Create GitHub Release
+  # =================================================================
+  
+  create-github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate-release, build-release, security-audit, release-tests]
+    if: ${{ inputs.create_github_release != false }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download release artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: release-artifacts-${{ needs.validate-release.outputs.version }}
+    
+    - name: Download changelog
+      uses: actions/download-artifact@v3
+      with:
+        name: changelog
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ needs.validate-release.outputs.version }}
+        release_name: JobQuest Navigator ${{ needs.validate-release.outputs.version }}
+        body_path: ./CHANGELOG.md
+        draft: false
+        prerelease: ${{ needs.validate-release.outputs.is_prerelease }}
+    
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./jobquest-navigator-${{ needs.validate-release.outputs.version }}.tar.gz
+        asset_name: jobquest-navigator-${{ needs.validate-release.outputs.version }}.tar.gz
+        asset_content_type: application/gzip
+    
+    - name: Upload zip asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./jobquest-navigator-${{ needs.validate-release.outputs.version }}.zip
+        asset_name: jobquest-navigator-${{ needs.validate-release.outputs.version }}.zip
+        asset_content_type: application/zip
+
+  # =================================================================
+  # Deploy to Environment
+  # =================================================================
+  
+  deploy-release:
+    name: Deploy Release
+    runs-on: ubuntu-latest
+    needs: [validate-release, create-github-release]
+    if: ${{ inputs.deploy_to_environment != false }}
+    environment: ${{ inputs.environment || 'production' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        terraform_wrapper: false
+    
+    - name: Set release environment variables
+      run: |
+        ENVIRONMENT="${{ inputs.environment || 'production' }}"
+        
+        echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+        echo "TF_VAR_environment=$ENVIRONMENT" >> $GITHUB_ENV
+        echo "TF_VAR_project_name=${{ env.PROJECT_NAME }}" >> $GITHUB_ENV
+        echo "TF_VAR_alert_email=${{ secrets.ALERT_EMAIL }}" >> $GITHUB_ENV
+        
+        # Production-specific settings
+        if [ "$ENVIRONMENT" = "production" ]; then
+          echo "TF_VAR_db_instance_class=db.t3.small" >> $GITHUB_ENV
+          echo "TF_VAR_lambda_memory_size=512" >> $GITHUB_ENV
+          echo "TF_VAR_enable_rds_deletion_protection=true" >> $GITHUB_ENV
+          echo "TF_VAR_rds_backup_retention_period=30" >> $GITHUB_ENV
+          echo "TF_VAR_enable_detailed_monitoring=true" >> $GITHUB_ENV
+        fi
+    
+    - name: Deploy infrastructure
+      run: |
+        cd infrastructure/terraform
+        terraform init
+        terraform workspace select $ENVIRONMENT || terraform workspace new $ENVIRONMENT
+        terraform plan -out=release.tfplan
+        terraform apply -auto-approve release.tfplan
+        
+        echo "✅ Infrastructure deployed" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Deploy backend
+      run: |
+        cd JNv3/apps/backend-fastapi
+        pip install zappa
+        
+        # Deploy or update
+        if zappa status $ENVIRONMENT 2>/dev/null; then
+          zappa update $ENVIRONMENT
+        else
+          zappa deploy $ENVIRONMENT
+        fi
+        
+        # Tag deployment
+        zappa set_env $ENVIRONMENT RELEASE_VERSION "${{ needs.validate-release.outputs.version }}"
+        
+        echo "✅ Backend deployed" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Deploy frontend
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+        
+        # Get S3 bucket from Terraform
+        cd ../infrastructure/terraform
+        FRONTEND_BUCKET=$(terraform output -raw frontend_bucket_name)
+        
+        cd ../../frontend
+        
+        # Build with release version
+        REACT_APP_VERSION=${{ needs.validate-release.outputs.version }} \
+        REACT_APP_ENVIRONMENT=$ENVIRONMENT \
+        npm run build
+        
+        # Deploy to S3
+        aws s3 sync build/ s3://$FRONTEND_BUCKET --delete
+        
+        echo "✅ Frontend deployed to S3" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Verify deployment
+      run: |
+        chmod +x scripts/verify-deployment.sh
+        scripts/verify-deployment.sh
+        
+        echo "✅ Deployment verification completed" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Update deployment status
+      run: |
+        cd infrastructure/terraform
+        API_URL=$(terraform output -raw api_gateway_url)
+        FRONTEND_URL=$(terraform output -raw frontend_website_url)
+        
+        echo "## 🚀 Release Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ needs.validate-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+        echo "**API URL:** $API_URL" >> $GITHUB_STEP_SUMMARY
+        echo "**Frontend URL:** $FRONTEND_URL" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployed at:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
+
+  # =================================================================
+  # Post-Release Tasks
+  # =================================================================
+  
+  post-release:
+    name: Post-Release Tasks
+    runs-on: ubuntu-latest
+    needs: [validate-release, deploy-release]
+    if: always() && needs.deploy-release.result == 'success'
+    
+    steps:
+    - name: Post-release notifications
+      run: |
+        echo "🎉 Release ${{ needs.validate-release.outputs.version }} deployed successfully!"
+        
+        # Here you could add:
+        # - Slack notifications
+        # - Email notifications
+        # - Update monitoring dashboards
+        # - Trigger documentation updates
+        # - Notify stakeholders
+    
+    - name: Update release metrics
+      run: |
+        echo "📊 Recording release metrics..."
+        
+        # Record deployment time, success rate, etc.
+        # This could integrate with monitoring systems
+    
+    - name: Schedule post-deployment monitoring
+      run: |
+        echo "📈 Setting up post-deployment monitoring..."
+        
+        # Could trigger extended monitoring or health checks
+        # Set up alerts for the new release

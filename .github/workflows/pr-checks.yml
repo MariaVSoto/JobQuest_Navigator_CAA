@@ -1,0 +1,537 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+env:
+  PYTHON_VERSION: '3.9'
+  NODE_VERSION: '18'
+  TERRAFORM_VERSION: '1.6.0'
+
+jobs:
+  # =================================================================
+  # Code Quality and Linting
+  # =================================================================
+  
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better analysis
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+    
+    - name: Install Python dependencies
+      run: |
+        cd JNv3/apps/backend-fastapi
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 black isort pylint bandit safety mypy
+    
+    - name: Python code formatting
+      run: |
+        cd JNv3/apps/backend-fastapi
+        echo "## Python Code Formatting" >> $GITHUB_STEP_SUMMARY
+        
+        # Check Black formatting
+        if black --check --diff . > black_output.txt 2>&1; then
+          echo "✅ Black formatting: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Black formatting: FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Black formatting issues</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```diff' >> $GITHUB_STEP_SUMMARY
+          cat black_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Check isort
+        if isort --check-only --diff . > isort_output.txt 2>&1; then
+          echo "✅ Import sorting: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Import sorting: FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Import sorting issues</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```diff' >> $GITHUB_STEP_SUMMARY
+          cat isort_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Python linting
+      run: |
+        cd JNv3/apps/backend-fastapi
+        echo "## Python Linting" >> $GITHUB_STEP_SUMMARY
+        
+        # Flake8 critical errors
+        if flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics > flake8_critical.txt 2>&1; then
+          echo "✅ Critical linting issues: NONE" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Critical linting issues found" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Critical linting issues</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat flake8_critical.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Flake8 all issues (non-blocking)
+        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics > flake8_all.txt 2>&1 || true
+        echo "<details><summary>All linting results</summary>" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat flake8_all.txt >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "</details>" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Frontend code quality
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+        
+        echo "## Frontend Code Quality" >> $GITHUB_STEP_SUMMARY
+        
+        # ESLint
+        if npm run lint > eslint_output.txt 2>&1; then
+          echo "✅ ESLint: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ ESLint: FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>ESLint issues</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat eslint_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Prettier (if configured)
+        if npm run format:check > prettier_output.txt 2>&1; then
+          echo "✅ Prettier formatting: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Prettier formatting: Issues found (non-blocking)" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  # =================================================================
+  # Security Scanning
+  # =================================================================
+  
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Python security scan
+      run: |
+        cd JNv3/apps/backend-fastapi
+        pip install bandit safety
+        
+        echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+        
+        # Bandit security scan
+        if bandit -r . -f json -o bandit-report.json; then
+          echo "✅ Bandit security scan: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Bandit security scan: Issues found" >> $GITHUB_STEP_SUMMARY
+          
+          # Parse and display results
+          if [ -f bandit-report.json ]; then
+            HIGH_ISSUES=$(jq '.results | map(select(.issue_severity == "HIGH")) | length' bandit-report.json)
+            MEDIUM_ISSUES=$(jq '.results | map(select(.issue_severity == "MEDIUM")) | length' bandit-report.json)
+            LOW_ISSUES=$(jq '.results | map(select(.issue_severity == "LOW")) | length' bandit-report.json)
+            
+            echo "- High severity: $HIGH_ISSUES" >> $GITHUB_STEP_SUMMARY
+            echo "- Medium severity: $MEDIUM_ISSUES" >> $GITHUB_STEP_SUMMARY
+            echo "- Low severity: $LOW_ISSUES" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+        
+        # Safety dependency check
+        if safety check --json --output safety-report.json; then
+          echo "✅ Safety dependency check: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Safety dependency check: Vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports-pr-${{ github.event.number }}
+        path: |
+          backend/bandit-report.json
+          backend/safety-report.json
+        retention-days: 30
+
+  # =================================================================
+  # Testing
+  # =================================================================
+  
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_password
+          MYSQL_DATABASE: test_jobquest_navigator
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        cd JNv3/apps/backend-fastapi
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install coverage pytest pytest-asyncio pytest-cov pytest-xdist httpx
+    
+    - name: Wait for MySQL
+      run: |
+        while ! mysqladmin ping -h"127.0.0.1" -P3306 -uroot -ptest_password --silent; do
+          sleep 1
+        done
+    
+    - name: Run tests with coverage
+      env:
+        DATABASE_URL: mysql://root:test_password@127.0.0.1:3306/test_jobquest_navigator
+        ENVIRONMENT: test
+        SECRET_KEY: test-secret-key-for-ci
+      run: |
+        cd JNv3/apps/backend-fastapi
+        
+        # Run FastAPI tests with coverage
+        python -m pytest --cov=app --cov-report=xml --cov-report=term-missing
+        coverage report --show-missing
+        
+        # Generate coverage summary for PR
+        COVERAGE_PERCENT=$(coverage report --format=total)
+        echo "## Backend Test Coverage" >> $GITHUB_STEP_SUMMARY
+        echo "Coverage: ${COVERAGE_PERCENT}%" >> $GITHUB_STEP_SUMMARY
+        
+        if (( $(echo "$COVERAGE_PERCENT >= 80" | bc -l) )); then
+          echo "✅ Coverage meets minimum threshold (80%)" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Coverage below minimum threshold (80%)" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: backend/coverage.xml
+        flags: backend
+        name: backend-coverage-pr-${{ github.event.number }}
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+    
+    - name: Install dependencies
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+    
+    - name: Run tests
+      run: |
+        cd JNv3/apps/frontend-react
+        npm test -- --coverage --watchAll=false --testResultsProcessor=jest-sonar-reporter
+        
+        # Generate test summary
+        echo "## Frontend Test Results" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f coverage/lcov-report/index.html ]; then
+          # Extract coverage percentage (this is a simple approach)
+          COVERAGE_PERCENT=$(grep -o '[0-9]*\.[0-9]*%' coverage/lcov-report/index.html | head -1 | sed 's/%//')
+          echo "Coverage: ${COVERAGE_PERCENT}%" >> $GITHUB_STEP_SUMMARY
+          
+          if (( $(echo "$COVERAGE_PERCENT >= 70" | bc -l) )); then
+            echo "✅ Coverage meets minimum threshold (70%)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Coverage below minimum threshold (70%)" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: frontend/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage-pr-${{ github.event.number }}
+
+  # =================================================================
+  # Infrastructure Validation
+  # =================================================================
+  
+  infrastructure-validation:
+    name: Infrastructure Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+    
+    - name: Check for infrastructure changes
+      id: changes
+      run: |
+        if git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -E "^infrastructure/"; then
+          echo "infrastructure_changed=true" >> $GITHUB_OUTPUT
+          echo "Infrastructure files changed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "infrastructure_changed=false" >> $GITHUB_OUTPUT
+          echo "No infrastructure changes detected" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Terraform validation
+      if: steps.changes.outputs.infrastructure_changed == 'true'
+      run: |
+        echo "## Infrastructure Validation" >> $GITHUB_STEP_SUMMARY
+        
+        cd infrastructure/terraform
+        
+        # Format check
+        if terraform fmt -check -recursive; then
+          echo "✅ Terraform formatting: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Terraform formatting: FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "Run 'terraform fmt -recursive' to fix formatting" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Initialize and validate
+        terraform init -backend=false
+        
+        if terraform validate; then
+          echo "✅ Terraform validation: PASSED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Terraform validation: FAILED" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: CloudFormation validation
+      if: steps.changes.outputs.infrastructure_changed == 'true'
+      run: |
+        # Install cfn-lint
+        pip install cfn-lint
+        
+        echo "## CloudFormation Validation" >> $GITHUB_STEP_SUMMARY
+        
+        if cfn-lint infrastructure/cloudformation-template.yaml; then
+          echo "✅ CloudFormation template: VALID" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ CloudFormation template: INVALID" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  # =================================================================
+  # Build Validation
+  # =================================================================
+  
+  build-validation:
+    name: Build Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'JNv3/apps/frontend-react/package-lock.json'
+    
+    - name: Validate backend build
+      run: |
+        cd JNv3/apps/backend-fastapi
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+        # Test FastAPI startup
+        python -c "from app.main import app; print('FastAPI app initialized successfully')"
+        
+        echo "✅ Backend build validation passed" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Validate frontend build
+      run: |
+        cd JNv3/apps/frontend-react
+        npm ci
+        
+        # Test build process
+        REACT_APP_API_URL=https://api.placeholder.com npm run build
+        
+        # Check build output
+        if [ -f build/index.html ]; then
+          echo "✅ Frontend build validation passed" >> $GITHUB_STEP_SUMMARY
+          
+          # Check bundle size
+          BUILD_SIZE=$(du -sh build/ | cut -f1)
+          echo "Build size: $BUILD_SIZE" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Frontend build validation failed" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
+  # =================================================================
+  # PR Summary
+  # =================================================================
+  
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-scan, backend-tests, frontend-tests, infrastructure-validation, build-validation]
+    if: always() && github.event.pull_request.draft == false
+    
+    steps:
+    - name: Generate PR summary
+      run: |
+        echo "# 📋 Pull Request Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**PR:** #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** ${{ github.head_ref }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Target:** ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Author:** ${{ github.event.pull_request.user.login }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "## 🔍 Check Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check job results
+        if [ "${{ needs.code-quality.result }}" = "success" ]; then
+          echo "✅ Code Quality" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Code Quality" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.security-scan.result }}" = "success" ]; then
+          echo "✅ Security Scan" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ Security Scan (warnings found)" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.backend-tests.result }}" = "success" ]; then
+          echo "✅ Backend Tests" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Backend Tests" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.frontend-tests.result }}" = "success" ]; then
+          echo "✅ Frontend Tests" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Frontend Tests" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.infrastructure-validation.result }}" = "success" ]; then
+          echo "✅ Infrastructure Validation" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Infrastructure Validation" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.build-validation.result }}" = "success" ]; then
+          echo "✅ Build Validation" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Build Validation" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "*Automated by GitHub Actions*" >> $GITHUB_STEP_SUMMARY
+
+  # =================================================================
+  # Auto-merge (if all checks pass)
+  # =================================================================
+  
+  auto-merge:
+    name: Auto-merge
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-scan, backend-tests, frontend-tests, infrastructure-validation, build-validation]
+    if: |
+      always() && 
+      github.event.pull_request.draft == false &&
+      contains(github.event.pull_request.labels.*.name, 'auto-merge') &&
+      needs.code-quality.result == 'success' &&
+      needs.backend-tests.result == 'success' &&
+      needs.frontend-tests.result == 'success' &&
+      needs.infrastructure-validation.result == 'success' &&
+      needs.build-validation.result == 'success'
+    
+    steps:
+    - name: Auto-merge PR
+      uses: pascalgn/merge-action@v0.15.6
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        merge_method: squash
+        merge_commit_title: "${{ github.event.pull_request.title }}"
+        merge_commit_message: "${{ github.event.pull_request.body }}"

@@ -1,12 +1,162 @@
+# System Files
 .DS_Store
 **/.DS_Store
+Thumbs.db
+
+# Python
 *.pyc
+*.pyo
+*.pyd
 __pycache__/
-node_modules/
-.env
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python Virtual Environments
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
 *.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+.static_root/
+
+# FastAPI/Alembic
+alembic/versions/*.py
+!alembic/versions/__init__.py
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# React Build
+build/
+dist/
+.next/
+out/
+.nuxt/
+
+# Coverage
+coverage/
+*.coverage
+.nyc_output
+.coverage.*
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+*.env
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+tfplan
+tfplan.*
+.terraformrc
+terraform.rc
+crash.log
+crash.*.log
+
+# AWS
+*.pem
+.aws/
+aws-exports.js
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .cursor/
-.github/
 .roo/
 .taskmaster/
-.venv/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Backup and Temporary Files
+*.backup
+*.bak
+*.tmp
+*.temp
+*~
+.#*
+\#*#
+
+# OS Generated Files
+*.pid
+*.seed
+*.pid.lock
+
+# Deployment and Build Artifacts
+backend-task-def-*.json
+frontend-task-def-*.json
+tfbak/
+deploy-complete.sh
+
+# Development Tools and Scripts
+scripts/generate-db-password.py
+scripts/pre-deployment-check.sh
+
+# Security and Secrets
+secrets/
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Local Development
+.local/
+tmp/

@@ -1,0 +1,197 @@
+name: Deploy to AWS ECS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 039444453392
+  ECR_BACKEND_REPOSITORY: jobquest-navigator-v3-backend
+  ECR_FRONTEND_REPOSITORY: jobquest-navigator-v3-frontend
+  ECS_CLUSTER: jobquest-navigator-v3-cluster
+  ECS_BACKEND_SERVICE: jobquest-navigator-v3-backend-service
+  ECS_FRONTEND_SERVICE: jobquest-navigator-v3-frontend-service
+  BACKEND_TASK_DEFINITION: jobquest-navigator-v3-backend
+  FRONTEND_TASK_DEFINITION: jobquest-navigator-v3-frontend
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'apps/frontend-react/package-lock.json'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install frontend dependencies
+      working-directory: ./apps/frontend-react
+      run: npm ci
+
+    - name: Run frontend tests
+      working-directory: ./apps/frontend-react
+      run: npm test -- --coverage --watchAll=false
+
+    - name: Install backend dependencies
+      working-directory: ./apps/backend-fastapi
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run backend tests
+      working-directory: ./apps/backend-fastapi
+      run: |
+        # Add backend tests here when available
+        echo "Backend tests would run here"
+
+  build-and-deploy:
+    name: Build and Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build, tag, and push backend image to Amazon ECR
+      id: build-backend-image
+      working-directory: ./apps/backend-fastapi
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build AMD64 docker container and push it to ECR
+        docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG . --push
+        docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:latest . --push
+        echo "image=$ECR_REGISTRY/$ECR_BACKEND_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Build, tag, and push frontend image to Amazon ECR
+      id: build-frontend-image
+      working-directory: ./apps/frontend-react
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build AMD64 docker container and push it to ECR
+        docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG . --push
+        docker buildx build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:latest . --push
+        echo "image=$ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Download backend task definition
+      run: |
+        aws ecs describe-task-definition --task-definition $BACKEND_TASK_DEFINITION --query taskDefinition > backend-task-definition.json
+
+    - name: Update backend task definition environment variables
+      run: |
+        # Get ALB DNS name for CORS configuration
+        ALB_DNS=$(aws elbv2 describe-load-balancers --names "jobquest-navigator-v3-alb" --query 'LoadBalancers[0].DNSName' --output text)
+        
+        # Update environment variables in task definition (AWS credentials handled by ECS task role)
+        jq --arg cors_origin "http://$ALB_DNS" \
+           --arg secret_key "${{ secrets.SECRET_KEY }}" \
+           --arg aws_region "$AWS_REGION" \
+           --arg log_level "info" \
+           --arg debug "false" \
+           --arg workers "2" \
+           '.containerDefinitions[0].environment = [
+             (.containerDefinitions[0].environment[] | select(.name != "SECRET_KEY" and .name != "AWS_DEFAULT_REGION" and .name != "CORS_ORIGINS" and .name != "LOG_LEVEL" and .name != "DEBUG" and .name != "WORKERS")),
+             {"name": "SECRET_KEY", "value": $secret_key},
+             {"name": "AWS_DEFAULT_REGION", "value": $aws_region},
+             {"name": "CORS_ORIGINS", "value": $cors_origin},
+             {"name": "LOG_LEVEL", "value": $log_level},
+             {"name": "DEBUG", "value": $debug},
+             {"name": "WORKERS", "value": $workers}
+           ]' backend-task-definition.json > backend-task-definition-updated.json
+        mv backend-task-definition-updated.json backend-task-definition.json
+
+    - name: Fill in the new image ID in the Amazon ECS backend task definition
+      id: backend-task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: backend-task-definition.json
+        container-name: backend
+        image: ${{ steps.build-backend-image.outputs.image }}
+
+    - name: Deploy Amazon ECS backend task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.backend-task-def.outputs.task-definition }}
+        service: ${{ env.ECS_BACKEND_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
+
+    - name: Download frontend task definition
+      run: |
+        aws ecs describe-task-definition --task-definition $FRONTEND_TASK_DEFINITION --query taskDefinition > frontend-task-definition.json
+
+    - name: Update frontend task definition environment variables
+      run: |
+        # Get ALB DNS name for API configuration
+        ALB_DNS=$(aws elbv2 describe-load-balancers --names "jobquest-navigator-v3-alb" --query 'LoadBalancers[0].DNSName' --output text)
+        
+        # Update environment variables in task definition
+        jq --arg api_url "http://$ALB_DNS/api" \
+           --arg graphql_url "http://$ALB_DNS/graphql" \
+           --arg node_env "production" \
+           --arg react_env "production" \
+           '.containerDefinitions[0].environment = [
+             (.containerDefinitions[0].environment[] | select(.name != "REACT_APP_API_URL" and .name != "REACT_APP_GRAPHQL_URL" and .name != "NODE_ENV" and .name != "REACT_APP_ENV")),
+             {"name": "REACT_APP_API_URL", "value": $api_url},
+             {"name": "REACT_APP_GRAPHQL_URL", "value": $graphql_url},
+             {"name": "NODE_ENV", "value": $node_env},
+             {"name": "REACT_APP_ENV", "value": $react_env}
+           ]' frontend-task-definition.json > frontend-task-definition-updated.json
+        mv frontend-task-definition-updated.json frontend-task-definition.json
+
+    - name: Fill in the new image ID in the Amazon ECS frontend task definition
+      id: frontend-task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: frontend-task-definition.json
+        container-name: frontend
+        image: ${{ steps.build-frontend-image.outputs.image }}
+
+    - name: Deploy Amazon ECS frontend task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.frontend-task-def.outputs.task-definition }}
+        service: ${{ env.ECS_FRONTEND_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
+
+    - name: Verify deployment
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "Frontend: http://jobquest-navigator-v3-alb-1532571588.us-east-1.elb.amazonaws.com"
+        echo "Backend API: http://jobquest-navigator-v3-alb-1532571588.us-east-1.elb.amazonaws.com/api"
+        echo "GraphQL: http://jobquest-navigator-v3-alb-1532571588.us-east-1.elb.amazonaws.com/graphql"

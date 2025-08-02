@@ -14,7 +14,8 @@ from .types import (
     DashboardStats, DashboardData, ApplicationStatusStats, DashboardFilters,
     UserRegistrationInput, AuthResponse,
     ResumeType, ResumeListResponse, CreateResumeInput, UploadResumeFileInput,
-    ResumeResponse, FileUploadResponse, ProcessPDFResponse
+    ResumeResponse, FileUploadResponse, ProcessPDFResponse,
+    JobInput, CreateJobInput, JobResponse
 )
 
 # Import queries and dashboard functionality
@@ -30,6 +31,7 @@ except ImportError as e:
 from .mutations.auth_mutations import AuthMutation
 from .mutations.user_mutations import UserMutation
 from .mutations.resume_mutations import ResumeMutations
+from .mutations.job import JobMutation
 
 # Import queries
 from .queries.resume_queries import ResumeQueries
@@ -256,12 +258,11 @@ class Mutation:
         email: str, 
         username: str, 
         password: str, 
-        firstName: Optional[str] = None, 
-        lastName: Optional[str] = None
+        fullName: Optional[str] = None
     ) -> AuthResponse:
         """User registration - delegates to AuthMutation"""
         auth_mutation = AuthMutation()
-        return await auth_mutation.registerUser(email, username, password, firstName, lastName)
+        return await auth_mutation.registerUser(email, username, password, fullName)
     
     # Resume mutations
     @strawberry.field
@@ -293,6 +294,33 @@ class Mutation:
         """Delete a resume"""
         resume_mutations = ResumeMutations()
         return await resume_mutations.delete_resume(resume_id, info)
+    
+    # Job mutations
+    @strawberry.field
+    async def createJob(self, input: "CreateJobInput", info) -> "JobResponse":
+        """Create a new job posting"""
+        from app.core.database import get_db
+        from app.graphql.auth import get_current_user
+        from app.models import User
+        from sqlalchemy.ext.asyncio import AsyncSession
+        
+        # Get authenticated user
+        auth_context = info.context.get('auth')
+        if not auth_context or not auth_context.is_authenticated:
+            return JobResponse(
+                success=False,
+                errors=["Authentication required"]
+            )
+        
+        # Get database session
+        db = get_db()
+        db_session = await db.__anext__()
+        
+        try:
+            job_mutation = JobMutation()
+            return await job_mutation.create_job(job_mutation, info, input, auth_context.user, db_session)
+        finally:
+            await db_session.close()
 
 
 # Create the schema

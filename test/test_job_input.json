@@ -1,0 +1,21 @@
+{
+  "query": "mutation CreateJob($input: JobInput!) { createJob(input: $input) { success errors job { id title } } }",
+  "variables": {
+    "input": {
+      "title": "Senior Cloud Engineer",
+      "companyName": "TechStart Inc",
+      "description": "We are looking for a senior cloud engineer to join our team and help build scalable cloud infrastructure using AWS services.",
+      "requirements": "5+ years experience with AWS, Kubernetes, and Infrastructure as Code",
+      "benefits": "Health insurance, 401k, flexible hours, remote work options",
+      "locationText": "San Francisco, CA",
+      "salaryMin": 130000,
+      "salaryMax": 170000,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "yearly",
+      "jobType": "full_time",
+      "contractType": "permanent",
+      "experienceLevel": "senior",
+      "remoteType": "hybrid"
+    }
+  }
+}
