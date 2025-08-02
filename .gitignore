@@ -160,3 +160,7 @@ secrets/
 # Local Development
 .local/
 tmp/
+
+# Additional cleanup items
+.terraform.lock.hcl
+test/tmp/
