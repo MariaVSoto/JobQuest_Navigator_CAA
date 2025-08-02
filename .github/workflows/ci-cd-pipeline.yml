@@ -100,7 +100,7 @@ jobs:
         ./.github/scripts/check-hardcoded-secrets.sh
     
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-reports
@@ -318,7 +318,7 @@ jobs:
         echo 'handler = Mangum(app)' >> lambda_handler.py
     
     - name: Upload backend artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: backend-package
         path: JNv3/apps/backend-fastapi/
@@ -356,7 +356,7 @@ jobs:
         npm run build
     
     - name: Upload frontend artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: frontend-build
         path: JNv3/apps/frontend-react/build/

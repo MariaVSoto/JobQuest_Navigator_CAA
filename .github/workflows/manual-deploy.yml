@@ -245,7 +245,7 @@ jobs:
     
     - name: Upload deployment info
       if: ${{ inputs.terraform_action != 'destroy' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: deployment-info-${{ inputs.environment }}
         path: deployment-info/

@@ -89,7 +89,7 @@ jobs:
         echo "Checking for known vulnerable packages..." >> $GITHUB_STEP_SUMMARY
     
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: dependency-security-reports
@@ -183,7 +183,7 @@ jobs:
         fi
     
     - name: Upload SAST reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: sast-security-reports
@@ -223,7 +223,7 @@ jobs:
         fi
     
     - name: Upload secrets scan report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: secrets-scan-report
