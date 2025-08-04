@@ -267,7 +267,7 @@ jobs:
         fi
     
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: backend/coverage.xml
         flags: backend
@@ -315,7 +315,7 @@ jobs:
         fi
     
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: frontend/coverage/lcov.info
         flags: frontend

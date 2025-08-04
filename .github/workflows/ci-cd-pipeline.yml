@@ -163,7 +163,7 @@ jobs:
         coverage xml
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: JNv3/apps/backend-fastapi/coverage.xml
         flags: backend
@@ -195,7 +195,7 @@ jobs:
         npm test -- --coverage --watchAll=false
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: JNv3/apps/frontend-react/coverage/lcov.info
         flags: frontend
