@@ -461,7 +461,7 @@ jobs:
         terraform apply -auto-approve -no-color
     
     - name: Download backend package
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v5
       with:
         name: backend-package
         path: JNv3/apps/backend-fastapi/
@@ -476,7 +476,7 @@ jobs:
         echo "FastAPI deployment configured for serverless"
     
     - name: Download frontend build
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v5
       with:
         name: frontend-build
         path: JNv3/apps/frontend-react/build/
@@ -534,7 +534,7 @@ jobs:
         terraform apply -auto-approve -no-color
     
     - name: Download backend package
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v5
       with:
         name: backend-package
         path: JNv3/apps/backend-fastapi/
@@ -549,7 +549,7 @@ jobs:
         echo "FastAPI deployment configured for serverless"
     
     - name: Download frontend build
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v5
       with:
         name: frontend-build
         path: JNv3/apps/frontend-react/build/
