@@ -52,7 +52,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0  # Full history for changelog generation
     
@@ -124,7 +124,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -253,7 +253,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -341,7 +341,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -414,7 +414,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Download release artifacts
       uses: actions/download-artifact@v3
@@ -471,7 +471,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4

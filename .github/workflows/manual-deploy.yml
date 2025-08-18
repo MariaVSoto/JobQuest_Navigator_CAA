@@ -74,7 +74,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -150,7 +150,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -264,7 +264,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -390,7 +390,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -475,7 +475,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
